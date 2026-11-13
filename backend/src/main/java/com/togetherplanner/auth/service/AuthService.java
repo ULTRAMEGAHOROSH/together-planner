@@ -1,13 +1,10 @@
 package com.togetherplanner.auth.service;
 
-import com.togetherplanner.auth.dto.AuthResponse;
 import com.togetherplanner.auth.dto.LoginRequest;
 import com.togetherplanner.auth.dto.MeResponse;
 import com.togetherplanner.auth.dto.RegisterRequest;
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
-import com.togetherplanner.security.IssuedAccessToken;
-import com.togetherplanner.security.JwtService;
 import com.togetherplanner.user.dto.UserCredentials;
 import com.togetherplanner.user.dto.UserResponse;
 import com.togetherplanner.user.service.UserService;
@@ -21,7 +18,12 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
-/** spec §8.3, §10.2. */
+/**
+ * spec §8.3, §10.2. Выдачу токенов этот класс не делает — её после успешной
+ * проверки делает {@code AuthController} через {@code RefreshTokenService}
+ * (один вызов даёт и access-, и refresh-токен, spec §10.4), чтобы не
+ * выпускать access-токен дважды с разными {@code iat}.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -29,7 +31,6 @@ public class AuthService {
     private static final int MAX_PASSWORD_BYTES = 72;
 
     private final UserService userService;
-    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
     // Вычисляется один раз при старте (A-25): сравнение с ним при отсутствующем
@@ -42,7 +43,7 @@ public class AuthService {
         this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
-    public AuthResponse register(RegisterRequest request) {
+    public UserResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.email());
         requirePasswordFitsBcryptLimit(request.password());
 
@@ -55,10 +56,10 @@ public class AuthService {
 
         String passwordHash = passwordEncoder.encode(request.password());
         UUID userId = userService.create(email, request.displayName(), passwordHash);
-        return authResponseFor(userId);
+        return userService.getById(userId);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public UserResponse login(LoginRequest request) {
         String email = normalizeEmail(request.email());
         Optional<UserCredentials> credentials = userService.findCredentialsByEmail(email);
         String hashToCompare = credentials.map(UserCredentials::passwordHash).orElse(dummyHash);
@@ -70,19 +71,13 @@ public class AuthService {
             throw new ApiException(ErrorCode.INVALID_CREDENTIALS, "Invalid email or password");
         }
 
-        return authResponseFor(credentials.get().id());
+        return userService.getById(credentials.get().id());
     }
 
     public MeResponse me(UUID userId) {
         UserResponse user = userService.getById(userId);
         // workspace всегда null: пространств ещё нет (появится в этапе 3.2).
         return new MeResponse(user, null);
-    }
-
-    private AuthResponse authResponseFor(UUID userId) {
-        UserResponse user = userService.getById(userId);
-        IssuedAccessToken issued = jwtService.issue(userId);
-        return new AuthResponse(issued.token(), "Bearer", issued.expiresInSeconds(), user);
     }
 
     private String normalizeEmail(String email) {

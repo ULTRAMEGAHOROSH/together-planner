@@ -3,8 +3,6 @@ package com.togetherplanner.auth.service;
 import com.togetherplanner.auth.dto.RegisterRequest;
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
-import com.togetherplanner.security.IssuedAccessToken;
-import com.togetherplanner.security.JwtService;
 import com.togetherplanner.user.dto.UserResponse;
 import com.togetherplanner.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,9 +25,8 @@ import static org.mockito.Mockito.when;
 class AuthServiceTest {
 
     private final UserService userService = mock(UserService.class);
-    private final JwtService jwtService = mock(JwtService.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
-    private final AuthService authService = new AuthService(userService, jwtService, passwordEncoder);
+    private final AuthService authService = new AuthService(userService, passwordEncoder);
 
     @BeforeEach
     void initDummyHash() {
@@ -51,16 +48,16 @@ class AuthServiceTest {
 
     @Test
     void emailIsTrimmedAndLowercasedBeforeLookupAndCreate() {
+        UUID userId = UUID.randomUUID();
         when(userService.findCredentialsByEmail("a@x.com")).thenReturn(Optional.empty());
-        when(userService.create(eq("a@x.com"), eq("Alice"), eq("dummy-hash"))).thenReturn(UUID.randomUUID());
-        when(userService.getById(any()))
-                .thenReturn(new UserResponse(UUID.randomUUID(), "a@x.com", "Alice", Instant.now()));
-        when(jwtService.issue(any())).thenReturn(new IssuedAccessToken("token", 900L));
+        when(userService.create(eq("a@x.com"), eq("Alice"), eq("dummy-hash"))).thenReturn(userId);
+        when(userService.getById(userId)).thenReturn(new UserResponse(userId, "a@x.com", "Alice", Instant.now()));
 
-        authService.register(new RegisterRequest("  A@X.com ", "password1", "Alice"));
+        UserResponse result = authService.register(new RegisterRequest("  A@X.com ", "password1", "Alice"));
 
         verify(userService).findCredentialsByEmail("a@x.com");
         verify(userService).create("a@x.com", "Alice", "dummy-hash");
+        assertThat(result.email()).isEqualTo("a@x.com");
     }
 
     @Test

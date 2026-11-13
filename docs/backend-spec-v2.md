@@ -477,6 +477,8 @@ private Set<UUID> participantIds = new HashSet<>();
 
 **N+1 и пакетная загрузка.** `hibernate.default_batch_fetch_size: 50`: участники N событий загружаются пачками. `JOIN FETCH` коллекции вместе с пагинацией не используем: Hibernate выполнит пагинацию в памяти (HHH90003004).
 
+**`char` в миграции ↔ тип поля в сущности.** Для колонок, объявленных в миграции как `char(n)` (например, `refresh_token.token_hash` — SHA-256 в hex, всегда ровно 64 символа), обычный `@Column(length = n)` на `String`-поле недостаточен: Hibernate по умолчанию ожидает `varchar(n)`, и `ddl-auto: validate` не запустится (`SchemaManagementException: wrong column type`). `@Column(columnDefinition = "char(n)")` эту проверку **не** исправляет: в режиме `validate` Hibernate сравнивает JDBC-тип поля, а не строку `columnDefinition`. Нужен `@JdbcTypeCode(SqlTypes.CHAR)` (`org.hibernate.annotations.JdbcTypeCode` + `org.hibernate.type.SqlTypes`).
+
 ### 5.6. Enum-ы
 
 ```java
@@ -1422,6 +1424,7 @@ SecurityFilterChain api(HttpSecurity http, ProblemAuthenticationEntryPoint entry
 
 - **Уровень изоляции — `READ COMMITTED`** (по умолчанию в PostgreSQL). `REPEATABLE READ` не включать: после блокировки нужно видеть свежие данные.
 - **Репозиторий:** `@Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select w from Workspace w where w.id = :id") Optional<Workspace> findByIdForUpdate(UUID id)`.
+- **Custom `@Modifying`-запросы нужна явная транзакция.** Базовые методы `JpaRepository` (`save`, `delete`, …) транзакционны сами по себе, но произвольный `@Modifying @Query` (`revokeIfActive`, `revokeAllActive`, `deleteExpired` и аналогичные) — нет: без вызывающего `@Transactional` Spring Data бросает `InvalidDataAccessApiUsageException: No active transaction`. Каждый сервисный метод, который зовёт такой запрос не из уже транзакционного метода (как `revoke`, `revokeAll`, `RefreshTokenCleanupJob`), должен быть явно `@Transactional`.
 
 ---
 
