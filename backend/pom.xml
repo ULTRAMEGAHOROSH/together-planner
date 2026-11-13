@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>com.togetherplanner</groupId>
-    <artifactId>backend</artifactId>
+    <artifactId>together-planner-backend</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>together-planner-backend</name>
     <description>Together Planner — backend (spec: docs/backend-spec-v2.md)</description>
