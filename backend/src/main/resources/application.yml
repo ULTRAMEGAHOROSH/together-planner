@@ -1,0 +1,33 @@
+spring:
+  application.name: together-planner
+  config.import: "optional:file:.env[.properties],optional:file:../.env[.properties]"
+  datasource:
+    url: ${DB_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.default_batch_fetch_size: 50
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_inserts: true
+  flyway.enabled: true
+
+server.forward-headers-strategy: framework
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET}
+    jwt-issuer: together-planner
+    access-token-ttl: 15m
+    refresh-token-ttl: 30d
+    refresh-rotation-grace: 10s
+    refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:true}
+  invites.ttl: 7d
+
+management.endpoints.web.exposure.include: health
+springdoc:
+  api-docs.enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui.path: /swagger-ui.html
