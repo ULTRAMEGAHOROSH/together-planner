@@ -727,7 +727,7 @@ private static final Map<String, ErrorCode> BY_CONSTRAINT = Map.of(
 
 - Базовый путь `/api/v1`, JSON, UTF-8. Entity наружу не отдаются никогда — только DTO-`record`.
 - Аутентификация: `Authorization: Bearer <accessToken>`. Refresh-токен — cookie `tp_refresh` (§10.4).
-- Все POST на `/api/v1/auth/**` требуют заголовок `X-Requested-With: XMLHttpRequest` (§10.5).
+- POST на `/api/v1/auth/register`, `/login`, `/refresh`, `/logout` требуют заголовок `X-Requested-With: XMLHttpRequest` (§10.5) — это единственные эндпоинты, где запрос может быть аутентифицирован cookie `tp_refresh` без Bearer-токена. `/auth/logout-all` в этот список **не входит**: доступ туда только `bearer` (§8.1, A5), а значит подделать такой запрос межсайтово и так нельзя — чужой сайт не может приложить заголовок `Authorization` жертвы.
 - Форматы:
 
 | Java | JSON | Пример |
@@ -1250,11 +1250,12 @@ SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA256");
 JwtEncoder encoder = NimbusJwtEncoder.withSecretKey(key).build();
 
 NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
-JwtTimestampValidator timestamps = new JwtTimestampValidator();
-timestamps.setClock(clock);                         // тот же Clock, что и у выдачи (важно для тестов)
+JwtTimestampValidator timestamps = new JwtTimestampValidator(Duration.ZERO);  // без допуска на расхождение часов —
+timestamps.setClock(clock);           // у конструктора без аргумента допуск 60 с (тот же Clock важен для тестов)
 decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestamps, new JwtIssuerValidator("together-planner")));
 ```
 
+- **Явный нулевой допуск.** `new JwtTimestampValidator()` по умолчанию прощает до 60 секунд просрочки — «истёкший 50 секунд назад» токен пройдёт. Для access-токена с 15-минутным сроком это не нужно: `Duration.ZERO` делает истечение точным.
 - Claims: `iss = together-planner`, `sub = userId`, `iat`, `exp = iat + 15 мин`. Заголовок `JwsHeader.with(MacAlgorithm.HS256)`.
 - **Пространства в токене нет**: членство проверяется по БД на каждом запросе, изменения действуют сразу.
 - **Почему `Clock` в валидаторе.** Тесты фиксируют `Clock` на 2026-11-06. Если валидатор проверяет срок по системным часам, все тестовые токены окажутся «истёкшими».
@@ -1764,6 +1765,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 | Оптимистическая блокировка (PUT) | I-16, C-04, T4-diff |
 | DELETE требует актуальную версию | I-23, I-24, C-06 |
 | Смена пояса не сдвигает события | I-26 |
+| Аутентификация JWT: нет токена, поддельная подпись, чужой `iss`, истёк | S-01, S-02, S-03 (на `/auth/me`, `AuthIT`) |
 | Доступ к чужому пространству | S-04, S-05, S-06 |
 | Лимит участников | I-02, C-01 |
 | Refresh: ротация, повтор, гонка | RT1–RT6, I-17, I-18, C-03, S-09 |
