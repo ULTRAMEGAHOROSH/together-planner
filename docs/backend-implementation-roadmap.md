@@ -78,7 +78,8 @@
 
 ### 1.5. Swagger
 - **Классы:** `OpenApiConfig` — информация об API и схема безопасности `bearerAuth` (HTTP bearer, JWT).
-- **DoD:** `http://localhost:8080/swagger-ui.html` открывается.
+- **Важно:** `spring-boot-starter-security` уже в `pom.xml` (задача 1.1), а `SecurityConfig` появится только в задаче 2.2. До тех пор auto-config Spring Security сам создаёт `SecurityFilterChain`, требующий логин для всех путей, включая `/swagger-ui/**` — это ожидаемо, а не ошибка задачи 1.5.
+- **DoD:** OpenAPI-документ формируется корректно (бин `OpenAPI` собирается, в нём есть схема `bearerAuth`). Проверить без постоянного кода безопасности — временным запуском с `--spring.autoconfigure.exclude=org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration,org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration,org.springframework.boot.security.autoconfigure.actuate.web.servlet.ManagementWebSecurityAutoConfiguration` (только для проверки, не коммитится) или тестом `@AutoConfigureMockMvc(addFilters = false)`. `http://localhost:8080/swagger-ui.html` буквально открывается в браузере только после задачи 2.2, когда `SecurityConfig` явно разрешит `/swagger-ui/**` и `/v3/api-docs/**` (spec §10.7).
 
 ### 1.6. Тестовая инфраструктура (`src/test`)
 | Класс | Ответственность |
@@ -391,6 +392,7 @@
 | 11 | I-22 в первой редакции менял и набор удаления, и набор восстановления, поэтому не проверял именно восстановление | Сценарий с перенесённым на другую неделю событием: меняется только `restoredDeleted` |
 | 12 | spec §10.5 утверждал, что `SameSite=Strict` не даёт установить cookie из межсайтового ответа; для навигации верхнего уровня это неверно | Login CSRF закрывается обязательным заголовком; S-07 проверяет A1 и A2 |
 | 13 | `DELETE_CONFIRMATION_REQUIRED` больше не описывал смысл: подтверждается и восстановление | Код переименован в `REPLACE_CONFIRMATION_REQUIRED` во всех документах |
+| 14 | Обнаружено при реализации: DoD задачи 1.5 («Swagger UI открывается») невыполним буквально, так как `spring-boot-starter-security` уже на classpath с задачи 1.1, а `SecurityConfig` появляется только в 2.2 — до тех пор auto-config Spring Security блокирует все пути логином | DoD 1.5 переформулирован: проверка через временное исключение автоконфигурации безопасности или `addFilters = false`; полноценное открытие в браузере — факт задачи 2.2 |
 
 ### Что проверено и совпадает
 
