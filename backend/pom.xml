@@ -145,6 +145,23 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!--
+                Surefire запускает только *Test (unit); *IT (интеграционные,
+                spec §14.3 и далее) без этого плагина не выполняются вовсе —
+                ни `mvnw test`, ни `mvnw verify` их не находят.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
