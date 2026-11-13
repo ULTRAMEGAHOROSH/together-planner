@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    env_file: .env
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql]      # с PG 18 образ хранит данные в /var/lib/postgresql/18/docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    profiles: ["app"]
+    build: ./backend
+    env_file: .env
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres: { condition: service_healthy }
+    ports: ["8080:8080"]      # в продакшене убрать: доступ только через nginx
+
+volumes:
+  pgdata:
