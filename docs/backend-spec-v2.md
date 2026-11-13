@@ -1580,8 +1580,9 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Unit:** JUnit Jupiter (версия из BOM Boot, API `org.junit.jupiter.*`) + Mockito, без Spring. Чистые классы (`ApplyPlanner`, `TimeRules`, `EventValidator`) — без моков.
 - **Интеграционные:** `AbstractIntegrationTest`:
   - `@SpringBootTest` + `@AutoConfigureMockMvc`;
-  - `@Testcontainers`, `@Container @ServiceConnection static PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine")` (класс `org.testcontainers.postgresql.PostgreSQLContainer`);
-  - один контейнер на все тесты: статическое поле, кеш контекста Spring.
+  - `@ServiceConnection static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine")` (класс `org.testcontainers.postgresql.PostgreSQLContainer`), запущен в статическом инициализаторе — **без** `@Testcontainers`/`@Container`.
+  - **Почему не `@Testcontainers`/`@Container`.** Эти аннотации делят контейнер только в пределах одного тестового класса: `afterAll` останавливает его при переходе к следующему `*IT`-классу, и там `HikariPool` ловит `CannotGetJdbcConnection` после тайм-аута (30 с) — сам Testcontainers документирует это как известное ограничение. Запуск в статическом инициализаторе — официальный приём для контейнера, общего на весь прогон; закрывает его Ryuk при завершении JVM.
+  - один контейнер на все тесты: статическое поле в статическом инициализаторе + кеш контекста Spring (переиспользует один и тот же `ApplicationContext`, а с ним и `DataSource`, между классами с одинаковой конфигурацией).
 - **Время:** тестовый `@Primary MutableClock` (свой подкласс `Clock` с `setInstant` / `advance`), стартует с `2026-11-06T06:00:00Z`. Нужен для окна ротации и сроков приглашений.
 - **Очистка:** `DatabaseCleaner` в `@BeforeEach` — `TRUNCATE … CASCADE` всех таблиц, кроме `flyway_schema_history`. На тестовых классах **нет** `@Transactional`: запросы MockMvc должны коммитить, как в реальности.
 - **Помощники:** `TestApi` с методами `register(...)`, `createWorkspace(...)`, `invite(...)`, `join(...)`, возвращающими токены и id.

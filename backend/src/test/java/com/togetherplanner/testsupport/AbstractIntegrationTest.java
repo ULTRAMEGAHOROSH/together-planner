@@ -7,26 +7,34 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Базовый класс всех {@code *IT} (spec §14.1). Один контейнер PostgreSQL на
- * весь прогон тестов (статическое поле — Spring кеширует контекст между
- * тестовыми классами с одинаковой конфигурацией). На тестовых классах нет
- * {@code @Transactional}: запросы через {@link MockMvc} должны коммитить,
- * как в реальности — иначе проверки гонок (этап 9) были бы бессмысленны.
+ * весь прогон тестов — не через {@code @Testcontainers}/{@code @Container}:
+ * эти аннотации делят статическое поле только в пределах ОДНОГО тестового
+ * класса, а между классами каждый {@code afterAll} его останавливает (сам
+ * Testcontainers документирует это как известное ограничение). Для общего
+ * на весь прогон контейнера официальный приём — запуск в статическом
+ * инициализаторе, без JUnit5-аннотаций вообще; закрывает его Ryuk при
+ * завершении JVM. Spring кеширует {@code ApplicationContext} между классами
+ * с одинаковой конфигурацией, так что сам Spring-контекст всё равно один.
+ *
+ * <p>На тестовых классах нет {@code @Transactional}: запросы через
+ * {@link MockMvc} должны коммитить, как в реальности — иначе проверки
+ * гонок (этап 9) были бы бессмысленны.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestClockConfig.class)
-@Testcontainers
 public abstract class AbstractIntegrationTest {
 
-    @Container
     @ServiceConnection
-    static PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine");
+
+    static {
+        POSTGRES.start();
+    }
 
     @Autowired
     protected MockMvc mockMvc;
