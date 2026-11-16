@@ -1208,6 +1208,8 @@ static void requireVersion(Long expected, long actual) {
 
 JPA запрещает менять поле `@Version` вручную, поэтому версию от клиента сравниваем сами, а не подставляем в сущность.
 
+**После изменения полей — `flush()` перед ответом.** Hibernate увеличивает `@Version` во время самого `UPDATE`, а без явного `flush()` этот `UPDATE` выполняется только при коммите транзакции — позже, чем сервисный метод строит ответ. Без `flush()` клиент получит в ответе старую версию и у него не будет значения, которое реально нужно передать в следующий PUT/DELETE. Правило касается любого PUT, который меняет сущность с `@Version` и возвращает её тем же запросом (E5, позже T4).
+
 ### 9.8. Обновление шаблона (T4): diff по id
 
 Список `events` в запросе — полное новое состояние. Применяется как diff:
@@ -1425,6 +1427,7 @@ SecurityFilterChain api(HttpSecurity http, ProblemAuthenticationEntryPoint entry
 - **Уровень изоляции — `READ COMMITTED`** (по умолчанию в PostgreSQL). `REPEATABLE READ` не включать: после блокировки нужно видеть свежие данные.
 - **Репозиторий:** `@Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select w from Workspace w where w.id = :id") Optional<Workspace> findByIdForUpdate(UUID id)`.
 - **Custom `@Modifying`-запросы нужна явная транзакция.** Базовые методы `JpaRepository` (`save`, `delete`, …) транзакционны сами по себе, но произвольный `@Modifying @Query` (`revokeIfActive`, `revokeAllActive`, `deleteExpired` и аналогичные) — нет: без вызывающего `@Transactional` Spring Data бросает `InvalidDataAccessApiUsageException: No active transaction`. Каждый сервисный метод, который зовёт такой запрос не из уже транзакционного метода (как `revoke`, `revokeAll`, `RefreshTokenCleanupJob`), должен быть явно `@Transactional`.
+- **Чтение ленивых коллекций — тоже нужна открытая транзакция.** Метод, который загружает сущность с `@ElementCollection`/`@OneToMany` и сразу маппит её в DTO (например, `EventService.get` → `EventMapper.toResponse` → `event.getParticipantIds()`), должен быть `@Transactional(readOnly = true)`. Без неё репозиторий открывает и сразу закрывает сессию, а маппер читает ленивую коллекцию уже без сессии — `LazyInitializationException`. Сервисные методы, которые полностью заменяют коллекцию через сеттер (как `EventService.update`) или строят сущность вручную перед `save()` (как `EventService.create`), этой проблемы не имеют — но она есть везде, где сущность после `findById`-подобного чтения просто возвращается/маппится без изменений.
 
 ---
 

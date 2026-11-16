@@ -1,6 +1,8 @@
 package com.togetherplanner.testsupport;
 
 import com.jayway.jsonpath.JsonPath;
+import com.togetherplanner.event.dto.EventRequest;
+import com.togetherplanner.event.dto.EventResponse;
 import com.togetherplanner.workspace.dto.InviteResponse;
 import com.togetherplanner.workspace.dto.WorkspaceResponse;
 import org.springframework.http.MediaType;
@@ -14,7 +16,10 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -80,6 +85,38 @@ public class TestApi {
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"code\":\"%s\"}".formatted(code)));
+    }
+
+    public ResultActions postEvent(String accessToken, UUID wsId, EventRequest request) throws Exception {
+        return mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/events")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)));
+    }
+
+    public EventResponse createEvent(String accessToken, UUID wsId, EventRequest request) throws Exception {
+        MvcResult result = postEvent(accessToken, wsId, request).andExpect(status().isCreated()).andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), EventResponse.class);
+    }
+
+    public ResultActions putEvent(String accessToken, UUID wsId, UUID eventId, EventRequest request) throws Exception {
+        return mockMvc.perform(put("/api/v1/workspaces/" + wsId + "/events/" + eventId)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)));
+    }
+
+    public ResultActions deleteEvent(String accessToken, UUID wsId, UUID eventId, Long version) throws Exception {
+        String url = "/api/v1/workspaces/" + wsId + "/events/" + eventId + (version != null ? "?version=" + version : "");
+        return mockMvc.perform(delete(url).header("Authorization", "Bearer " + accessToken));
+    }
+
+    public EventResponse getEvent(String accessToken, UUID wsId, UUID eventId) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/" + wsId + "/events/" + eventId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), EventResponse.class);
     }
 
     private RegisteredUser toRegisteredUser(MvcResult result) throws java.io.UnsupportedEncodingException {
