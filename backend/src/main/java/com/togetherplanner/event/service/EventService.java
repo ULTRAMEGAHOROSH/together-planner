@@ -3,6 +3,8 @@ package com.togetherplanner.event.service;
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
 import com.togetherplanner.common.error.VersionGuard;
+import com.togetherplanner.common.time.TimeService;
+import com.togetherplanner.common.web.PageResponse;
 import com.togetherplanner.event.dto.EventRequest;
 import com.togetherplanner.event.dto.EventResponse;
 import com.togetherplanner.event.dto.TemplateOccurrenceDeletedEvent;
@@ -13,12 +15,18 @@ import com.togetherplanner.event.repository.EventRepository;
 import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,11 +35,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EventService {
 
+    private static final int MAX_RANGE_DAYS = 93;
+
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
     private final EventValidator eventValidator;
     private final WorkspaceAccessService workspaceAccessService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TimeService timeService;
     private final Clock clock;
 
     /** E3: {@code source = null}, {@code createdBy = updatedBy = текущий}. */
@@ -107,6 +118,32 @@ public class EventService {
             eventPublisher.publishEvent(new TemplateOccurrenceDeletedEvent(
                     wsId, source.getTemplateEventId(), source.getWeekStart(), userId));
         }
+    }
+
+    /** E1: {@code from}/{@code to} включительно → пересечение с {@code [from 00:00; to+1 00:00)}; диапазон ≤ 93 дня. */
+    @Transactional(readOnly = true)
+    public List<EventResponse> listRange(UUID wsId, UUID userId, LocalDate from, LocalDate to) {
+        workspaceAccessService.requireMember(wsId, userId);
+        long inclusiveDays = ChronoUnit.DAYS.between(from, to) + 1;
+        if (to.isBefore(from) || inclusiveDays > MAX_RANGE_DAYS) {
+            throw new ApiException(ErrorCode.INVALID_DATE_RANGE,
+                    "Range must cover between 1 and " + MAX_RANGE_DAYS + " days");
+        }
+        LocalDateTime fromDateTime = from.atStartOfDay();
+        LocalDateTime toDateTime = to.plusDays(1).atStartOfDay();
+        return eventRepository.findOverlapping(wsId, fromDateTime, toDateTime).stream()
+                .map(eventMapper::toResponse)
+                .toList();
+    }
+
+    /** E2: {@code end > now} в поясе пространства — идущие сейчас события включены. */
+    @Transactional(readOnly = true)
+    public PageResponse<EventResponse> upcoming(UUID wsId, UUID userId, Pageable pageable) {
+        workspaceAccessService.requireMember(wsId, userId);
+        ZoneId zone = workspaceAccessService.zoneOf(wsId);
+        LocalDateTime now = timeService.now(zone);
+        Page<Event> page = eventRepository.findUpcoming(wsId, now, pageable);
+        return PageResponse.of(page, eventMapper::toResponse);
     }
 
     private Event findOwned(UUID wsId, UUID eventId) {
