@@ -8,6 +8,7 @@ import com.togetherplanner.common.error.ErrorCode;
 import com.togetherplanner.user.dto.UserCredentials;
 import com.togetherplanner.user.dto.UserResponse;
 import com.togetherplanner.user.service.UserService;
+import com.togetherplanner.workspace.service.WorkspaceService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +32,7 @@ public class AuthService {
     private static final int MAX_PASSWORD_BYTES = 72;
 
     private final UserService userService;
+    private final WorkspaceService workspaceService;
     private final PasswordEncoder passwordEncoder;
 
     // Вычисляется один раз при старте (A-25): сравнение с ним при отсутствующем
@@ -76,8 +78,7 @@ public class AuthService {
 
     public MeResponse me(UUID userId) {
         UserResponse user = userService.getById(userId);
-        // workspace всегда null: пространств ещё нет (появится в этапе 3.2).
-        return new MeResponse(user, null);
+        return new MeResponse(user, workspaceService.findForUser(userId).orElse(null));
     }
 
     private String normalizeEmail(String email) {

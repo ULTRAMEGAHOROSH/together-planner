@@ -43,6 +43,9 @@ public abstract class AbstractIntegrationTest {
     protected MutableClock clock;
 
     @Autowired
+    protected TestApi testApi;
+
+    @Autowired
     private DatabaseCleaner databaseCleaner;
 
     @BeforeEach

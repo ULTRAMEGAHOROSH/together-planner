@@ -5,6 +5,7 @@ import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
 import com.togetherplanner.user.dto.UserResponse;
 import com.togetherplanner.user.service.UserService;
+import com.togetherplanner.workspace.service.WorkspaceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,8 +26,9 @@ import static org.mockito.Mockito.when;
 class AuthServiceTest {
 
     private final UserService userService = mock(UserService.class);
+    private final WorkspaceService workspaceService = mock(WorkspaceService.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
-    private final AuthService authService = new AuthService(userService, passwordEncoder);
+    private final AuthService authService = new AuthService(userService, workspaceService, passwordEncoder);
 
     @BeforeEach
     void initDummyHash() {

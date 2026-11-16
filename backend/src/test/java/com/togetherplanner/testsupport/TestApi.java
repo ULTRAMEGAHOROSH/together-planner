@@ -1,0 +1,94 @@
+package com.togetherplanner.testsupport;
+
+import com.jayway.jsonpath.JsonPath;
+import com.togetherplanner.workspace.dto.InviteResponse;
+import com.togetherplanner.workspace.dto.WorkspaceResponse;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.databind.json.JsonMapper;
+
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * Помощник для IT-тестов (spec §14.1): register/login/createWorkspace/createInvite/join,
+ * возвращающие токены и id, вместо повторения HTTP-деталей в каждом тесте.
+ */
+@Component
+public class TestApi {
+
+    private static final String DEFAULT_PASSWORD = "password1";
+    private static final Pattern COOKIE_VALUE = Pattern.compile("tp_refresh=([^;]*)");
+
+    private final MockMvc mockMvc;
+    private final JsonMapper jsonMapper;
+
+    public TestApi(MockMvc mockMvc, JsonMapper jsonMapper) {
+        this.mockMvc = mockMvc;
+        this.jsonMapper = jsonMapper;
+    }
+
+    public RegisteredUser register(String email, String displayName) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/register")
+                        .header("X-Requested-With", "XMLHttpRequest")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"password\":\"%s\",\"displayName\":\"%s\"}"
+                                .formatted(email, DEFAULT_PASSWORD, displayName)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return toRegisteredUser(result);
+    }
+
+    public RegisteredUser login(String email) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                        .header("X-Requested-With", "XMLHttpRequest")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, DEFAULT_PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return toRegisteredUser(result);
+    }
+
+    public WorkspaceResponse createWorkspace(String accessToken, String name, String timeZone) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/workspaces")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"%s\",\"timeZone\":\"%s\"}".formatted(name, timeZone)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), WorkspaceResponse.class);
+    }
+
+    public InviteResponse createInvite(String accessToken, UUID wsId) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/invites")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), InviteResponse.class);
+    }
+
+    /** Результат не проверяется здесь — тесты сами задают ожидания (200 или конкретная ошибка). */
+    public ResultActions join(String accessToken, String code) throws Exception {
+        return mockMvc.perform(post("/api/v1/workspaces/join")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"code\":\"%s\"}".formatted(code)));
+    }
+
+    private RegisteredUser toRegisteredUser(MvcResult result) throws java.io.UnsupportedEncodingException {
+        String body = result.getResponse().getContentAsString();
+        String accessToken = JsonPath.read(body, "$.accessToken");
+        String userId = JsonPath.read(body, "$.user.id");
+        String setCookie = result.getResponse().getHeader("Set-Cookie");
+        Matcher matcher = COOKIE_VALUE.matcher(setCookie == null ? "" : setCookie);
+        String refreshCookie = matcher.find() ? matcher.group(1) : null;
+        return new RegisteredUser(UUID.fromString(userId), accessToken, refreshCookie);
+    }
+}
