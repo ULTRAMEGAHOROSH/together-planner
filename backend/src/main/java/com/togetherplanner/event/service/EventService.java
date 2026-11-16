@@ -7,6 +7,7 @@ import com.togetherplanner.common.time.TimeService;
 import com.togetherplanner.common.web.PageResponse;
 import com.togetherplanner.event.dto.EventRequest;
 import com.togetherplanner.event.dto.EventResponse;
+import com.togetherplanner.event.dto.NewTemplateEvent;
 import com.togetherplanner.event.dto.TemplateOccurrenceDeletedEvent;
 import com.togetherplanner.event.entity.Event;
 import com.togetherplanner.event.entity.EventSource;
@@ -21,10 +22,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -144,6 +148,68 @@ public class EventService {
         LocalDateTime now = timeService.now(zone);
         Page<Event> page = eventRepository.findUpcoming(wsId, now, pageable);
         return PageResponse.of(page, eventMapper::toResponse);
+    }
+
+    /** Публичный метод — spec §6.4. Вызывается {@code template}, {@code schedule}. */
+    @Transactional(readOnly = true)
+    public List<EventResponse> findOverlapping(UUID wsId, LocalDateTime from, LocalDateTime to) {
+        return eventRepository.findOverlapping(wsId, from, to).stream()
+                .map(eventMapper::toResponse)
+                .toList();
+    }
+
+    /** Публичный метод — spec §6.4. Отдельный запрос по метке происхождения, а не по времени (A-01). */
+    @Transactional(readOnly = true)
+    public List<EventResponse> findBySourceWeek(UUID wsId, LocalDate weekStart, Collection<UUID> templateEventIds) {
+        if (templateEventIds.isEmpty()) {
+            return List.of();
+        }
+        return eventRepository.findBySourceWeek(wsId, weekStart, templateEventIds).stream()
+                .map(eventMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * Публичный метод — spec §6.4, §9.5 шаг 9. Тот же {@code EventValidator},
+     * что и у E3 (длительность, участники) — защита от испорченного шаблона,
+     * хотя при обычной работе эти данные уже прошли валидацию на входе.
+     */
+    @Transactional
+    public List<EventResponse> createFromTemplate(UUID wsId, UUID userId, List<NewTemplateEvent> newEvents) {
+        if (newEvents.isEmpty()) {
+            return List.of();
+        }
+        ZoneId zone = workspaceAccessService.zoneOf(wsId);
+        Set<UUID> memberIds = workspaceAccessService.memberIds(wsId);
+        Instant now = clock.instant();
+
+        List<Event> events = new ArrayList<>();
+        for (NewTemplateEvent request : newEvents) {
+            String title = eventValidator.requireNonBlankTitle(request.title());
+            ValidatedEventTimes times = eventValidator.normalizeAndValidateTimes(request.start(), request.end(), zone);
+            eventValidator.requireParticipantsAreMembers(request.participantIds(), memberIds);
+
+            EventSource source = new EventSource(request.templateEventId(), request.weekStart(), request.templateName());
+            events.add(new Event(wsId, title, request.description(), times.start(), times.end(),
+                    request.category(), request.color(), source, request.participantIds(), userId, now));
+        }
+        return eventRepository.saveAll(events).stream().map(eventMapper::toResponse).toList();
+    }
+
+    /**
+     * Публичный метод — spec §6.4, §9.5 шаг 7. Удаляет и {@code flush()}
+     * сразу: без него Hibernate выполнит все INSERT раньше DELETE и
+     * нарушит {@code uq_event_template_source} (A-02), если какое-то
+     * вхождение удаляется и создаётся заново в одной транзакции (REPLACE).
+     */
+    @Transactional
+    public void deleteForTemplateReplace(UUID wsId, Collection<UUID> eventIds) {
+        if (eventIds.isEmpty()) {
+            return;
+        }
+        List<Event> events = eventRepository.findAllById(eventIds);
+        eventRepository.deleteAll(events);
+        eventRepository.flush();
     }
 
     private Event findOwned(UUID wsId, UUID eventId) {
