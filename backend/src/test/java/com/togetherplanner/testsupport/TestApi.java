@@ -3,6 +3,8 @@ package com.togetherplanner.testsupport;
 import com.jayway.jsonpath.JsonPath;
 import com.togetherplanner.event.dto.EventRequest;
 import com.togetherplanner.event.dto.EventResponse;
+import com.togetherplanner.template.dto.TemplateRequest;
+import com.togetherplanner.template.dto.TemplateResponse;
 import com.togetherplanner.workspace.dto.InviteResponse;
 import com.togetherplanner.workspace.dto.WorkspaceResponse;
 import org.springframework.http.MediaType;
@@ -117,6 +119,38 @@ public class TestApi {
                 .andExpect(status().isOk())
                 .andReturn();
         return jsonMapper.readValue(result.getResponse().getContentAsString(), EventResponse.class);
+    }
+
+    public ResultActions postTemplate(String accessToken, UUID wsId, TemplateRequest request) throws Exception {
+        return mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/templates")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)));
+    }
+
+    public TemplateResponse createTemplate(String accessToken, UUID wsId, TemplateRequest request) throws Exception {
+        MvcResult result = postTemplate(accessToken, wsId, request).andExpect(status().isCreated()).andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), TemplateResponse.class);
+    }
+
+    public ResultActions putTemplate(String accessToken, UUID wsId, UUID templateId, TemplateRequest request) throws Exception {
+        return mockMvc.perform(put("/api/v1/workspaces/" + wsId + "/templates/" + templateId)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)));
+    }
+
+    public ResultActions deleteTemplate(String accessToken, UUID wsId, UUID templateId, Long version) throws Exception {
+        String url = "/api/v1/workspaces/" + wsId + "/templates/" + templateId + (version != null ? "?version=" + version : "");
+        return mockMvc.perform(delete(url).header("Authorization", "Bearer " + accessToken));
+    }
+
+    public TemplateResponse getTemplate(String accessToken, UUID wsId, UUID templateId) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/" + wsId + "/templates/" + templateId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), TemplateResponse.class);
     }
 
     private RegisteredUser toRegisteredUser(MvcResult result) throws java.io.UnsupportedEncodingException {
