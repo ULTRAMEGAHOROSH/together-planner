@@ -76,14 +76,14 @@ E2E с backend (QA-01 и дальше) требуют запущенных backe
 | Кто | Может импортировать | Не может |
 |---|---|---|
 | `core` | `@angular/*`, `rxjs`, `shared/time`, `shared/domain` | `features`, `layout`, `shared/ui`, `shared/timeline` |
-| `shared` | `core/api/models`, другие части `shared` | `features`, `layout`, сервисы `core` с состоянием |
+| `shared` | `core` (модели, ошибки, уведомления, часы), другие части `shared` | `features`, `layout`, `core/auth` (сессия) |
 | `shared/timeline/engine` | `shared/time`, `shared/domain`, модели | **ничего из `@angular/*`** |
 | `layout` | `core`, `shared`, `features/*/index.ts` | внутренние файлы фич |
 | `features/x` | `core`, `shared`, `features/y/index.ts` (только разрешённые связи) | внутренние файлы другой фичи |
 
 Разрешённые связи между фичами: `schedule → events`, `schedule → templates`, `calendar → events`, `layout → events`, `layout → onboarding` и `settings → onboarding` (карточка приглашения). Новую связь — сначала в decisions.
 
-Границы проверяет ESLint (FND-08). Если правило мешает — это сигнал пересмотреть место файла, а не отключать правило.
+Границы проверяет ESLint (FND-08): запрещённые импорты из таблицы, глубокие импорты чужой фичи (`@features/x/...`), Angular и RxJS в `shared/timeline/engine`. **ESLint не проверяет** список разрешённых связей между фичами и относительные пути в соседнюю фичу (`../../events/...`) — это на ревью: между фичами импортируем только через `@features/<имя>`. Если правило мешает — это сигнал пересмотреть место файла, а не отключать правило.
 
 ### 4.2. Состояние (FD-25…28)
 
@@ -115,7 +115,7 @@ E2E с backend (QA-01 и дальше) требуют запущенных backe
 
 ## 6. Правила для компонентов
 
-- Standalone, `ChangeDetectionStrategy.OnPush`, `input()` / `output()` / `model()`, `inject()`; новый control flow (`@if`, `@for` с `track`).
+- Standalone, `input()` / `output()` / `model()`, `inject()`; новый control flow (`@if`, `@for` с `track`). **OnPush — стратегия по умолчанию в Angular 22**: `changeDetection` в `@Component` не пишем; `Eager`/`Default` и избыточный явный `OnPush` запрещены ESLint.
 - **Страница** (`*-page`) — получает параметры маршрута через `input()`, создаёт стор, передаёт данные вниз. **Презентационный** компонент — только `input` / `output`, без сервисов с состоянием и без HTTP.
 - Компоненты доски таймлайна ничего не вычисляют: всё приходит готовым в `PanelLayout` / `EventBox`. Новое вычисление → функция в `engine` с тестом.
 - Логика форм и сценариев — в `*-form.ts` и сервисах, а не в классе компонента.

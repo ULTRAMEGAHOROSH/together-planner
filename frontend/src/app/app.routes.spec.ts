@@ -14,7 +14,8 @@ describe('app routes (FND-05 skeleton)', () => {
     harness = await RouterTestingHarness.create();
   });
 
-  const heading = () => (harness.routeNativeElement as HTMLElement).querySelector('h1')?.textContent;
+  const heading = () =>
+    (harness.routeNativeElement as HTMLElement).querySelector('h1')?.textContent;
   const text = () => (harness.routeNativeElement as HTMLElement).textContent ?? '';
   const url = () => TestBed.inject(Router).url;
 

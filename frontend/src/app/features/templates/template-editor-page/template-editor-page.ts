@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 // Placeholder (FND-05). Real page: TPL-04.
 @Component({
   selector: 'tp-template-editor-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Шаблон</h1>
     <p>{{ templateId() ?? 'Новый шаблон' }}</p>

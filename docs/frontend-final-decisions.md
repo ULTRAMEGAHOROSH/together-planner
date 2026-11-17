@@ -474,3 +474,13 @@ flowchart LR
 - Виртуализацию сетки: в неделе ~100–200 событий, `OnPush` + `computed` достаточно.
 - Генерацию клиента из OpenAPI: модели пишутся руками один раз и сверяются со spec (CORE-01…03). Генератор добавил бы зависимость и код, который сложнее читать.
 - Собственную логику применения шаблонов, занятости дней и дублей (FD-84).
+
+---
+
+## 16. Журнал изменений решений
+
+| Дата | Решение | Было | Стало | Почему |
+|---|---|---|---|---|
+| 2026-11-17 | FD-01, FD-41, гайд §6 | Каждый компонент явно объявляет `changeDetection: ChangeDetectionStrategy.OnPush` | `changeDetection` не указывается | В Angular 22 `OnPush` — стратегия по умолчанию (`onPush = changeDetection !== Eager`), прежний `Default` стал псевдонимом `Eager`. ESLint (`prefer-on-push-component-change-detection`, `allowExplicitOnPush: false`) запрещает и отказ от OnPush, и избыточное явное объявление (FND-08) |
+| 2026-11-17 | FD-01 | `provideZonelessChangeDetection()` в `app.config.ts` | Не нужен | В Angular 22 zoneless — режим по умолчанию: без zone.js приложение работает без этого провайдера (FND-02) |
+| 2026-11-17 | FD-10/11, гайд §4.1 | `shared` импортирует из `core` только модели API | `shared` может импортировать `core`, кроме `core/auth` | `tp-toast-host` (CORE-09) использует `ToastService`, линия «сейчас» (WEEK-07) — `ZoneClock`, помощники форм (CORE-12) — `ApiError`. Запрещена только зависимость от сессии. `shared/timeline/engine` по-прежнему берёт из `core` только модели API (FND-08) |
