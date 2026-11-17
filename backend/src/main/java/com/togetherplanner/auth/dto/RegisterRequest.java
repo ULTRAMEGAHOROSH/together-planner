@@ -6,6 +6,6 @@ import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
         @NotBlank @Email @Size(max = 254) String email,
-        @NotBlank @Size(min = 8, max = 72) String password,   // + проверка ≤ 72 байт в сервисе
+        @NotBlank @Size(min = 8, max = 72) String password,   // service also enforces <= 72 bytes once UTF-8 encoded
         @NotBlank @Size(max = 50) String displayName) {
 }

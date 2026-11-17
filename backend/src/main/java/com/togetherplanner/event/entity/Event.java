@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code event} (spec §5.3). Участники — {@code @ElementCollection}, без загрузки {@code User}. */
+/** Maps to the {@code event} table. Participants are an {@code @ElementCollection} - no need to load {@code User} rows. */
 @Entity
 @Table(name = "event")
 @Getter
@@ -58,7 +58,7 @@ public class Event {
     @Column(length = 16)
     private EventColor color;
 
-    /** {@code null} — создано вручную. Не меняется после создания (spec §8.6, E5). */
+    /** {@code null} means the event was created manually. Doesn't change after creation. */
     @Embedded
     private EventSource source;
 

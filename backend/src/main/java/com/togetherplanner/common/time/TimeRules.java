@@ -8,42 +8,38 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 
 /**
- * Статические чистые функции над временем (spec §3, §9.3). Без Spring,
- * без побочных эффектов — проверяются unit-тестами без контекста.
+ * Pure, stateless time helpers. No Spring, no side effects - unit-testable
+ * with no context at all.
  */
 public final class TimeRules {
 
     private TimeRules() {
     }
 
-    /** Понедельник недели, которой принадлежит {@code date}. */
+    /** Monday of the week {@code date} falls in. */
     public static LocalDate weekStart(LocalDate date) {
         return date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     }
 
-    /**
-     * Пересечение двух полуоткрытых интервалов {@code [aStart; aEnd)} и
-     * {@code [bStart; bEnd)} (spec §3, правило 4).
-     */
+    /** Overlap of two half-open intervals, {@code [aStart, aEnd)} and {@code [bStart, bEnd)}. */
     public static boolean overlaps(LocalDateTime aStart, LocalDateTime aEnd,
                                     LocalDateTime bStart, LocalDateTime bEnd) {
         return aStart.isBefore(bEnd) && bStart.isBefore(aEnd);
     }
 
     /**
-     * Нормализация местного времени относительно перехода на летнее/зимнее
-     * время (spec §3, правило 2). Несуществующее время сдвигается вперёд на
-     * длину разрыва; неоднозначное время берёт более раннее смещение, но
-     * сохраняет исходное локальное значение.
+     * Normalizes a local time across a DST transition. A time that doesn't
+     * exist is pushed forward by the length of the gap; an ambiguous time
+     * keeps the earlier offset but its local value is left unchanged.
      */
     public static LocalDateTime normalize(LocalDateTime time, ZoneId zone) {
         return ZonedDateTime.of(time, zone).toLocalDateTime();
     }
 
     /**
-     * {@code true}, только если {@code zoneId} — region-id из
-     * {@link ZoneId#getAvailableZoneIds()}. Отклоняет фиксированные смещения
-     * вида {@code "+05:00"} (A-18): у них нет правил DST и истории изменений.
+     * True only if {@code zoneId} is a region id from
+     * {@link ZoneId#getAvailableZoneIds()}. Rejects fixed offsets like
+     * {@code "+05:00"} - they have no DST rules and no history.
      */
     public static boolean isValidRegionZone(String zoneId) {
         return ZoneId.getAvailableZoneIds().contains(zoneId);

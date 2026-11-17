@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 
-/** spec §10.4: раз в сутки удаляет истёкшие refresh-токены (отозванные и обычные — всё, что просрочено). */
+/** Runs once a day, deleting every expired refresh token - revoked or not, anything past its expiry. */
 @Component
 @RequiredArgsConstructor
 public class RefreshTokenCleanupJob {

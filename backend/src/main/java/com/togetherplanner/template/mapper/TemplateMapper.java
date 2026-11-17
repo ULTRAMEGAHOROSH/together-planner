@@ -15,7 +15,7 @@ import java.util.Set;
 @Component
 public class TemplateMapper {
 
-    /** {@code events} — по {@code (dayOfWeek, startTime)} (spec §8.7), а не по порядку в коллекции. */
+    /** Events are returned sorted by {@code (dayOfWeek, startTime)}, not by collection order. */
     public TemplateResponse toResponse(WeekTemplate template, TemplateApplication lastApplication) {
         List<TemplateEventResponse> events = template.getEvents().stream()
                 .sorted(Comparator.comparing(TemplateEvent::getDayOfWeek).thenComparing(TemplateEvent::getStartTime))

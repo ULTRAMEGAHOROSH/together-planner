@@ -17,7 +17,7 @@ import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code refresh_token} (spec §5.1). Сам токен не хранится — только {@code tokenHash}. */
+/** Maps to the {@code refresh_token} table. The raw token is never stored, only its {@code tokenHash}. */
 @Entity
 @Table(name = "refresh_token")
 @Getter
@@ -32,9 +32,10 @@ public class RefreshToken {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    // char(64), не varchar: SHA-256 в hex — всегда ровно 64 символа (spec §5.1).
-    // columnDefinition здесь не помогает: ddl-auto=validate сравнивает JDBC-тип
-    // поля, а не эту строку — нужен явный @JdbcTypeCode(SqlTypes.CHAR).
+    // char(64), not varchar: a SHA-256 hex digest is always exactly 64 chars.
+    // columnDefinition alone doesn't help here - ddl-auto=validate compares
+    // the field's JDBC type, not this string, so we need an explicit
+    // @JdbcTypeCode.
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;

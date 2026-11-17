@@ -2,6 +2,6 @@ package com.togetherplanner.user.dto;
 
 import java.util.UUID;
 
-/** Единственное место, где {@code passwordHash} покидает модуль {@code user} — для сравнения в {@code auth}. */
+/** The only place {@code passwordHash} leaves the user module - needed for comparison in auth. */
 public record UserCredentials(UUID id, String passwordHash) {
 }

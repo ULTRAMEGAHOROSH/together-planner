@@ -8,9 +8,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * spec §8.8. {@code confirmedDeleteIds}/{@code confirmedRestoredIds} —
- * обязательны (могут быть пустыми множествами) только для T7 + REPLACE;
- * в T6 и в MERGE/FILL оба поля игнорируются.
+ * {@code confirmedDeleteIds}/{@code confirmedRestoredIds} are required
+ * (may be empty sets) only when applying - not previewing - in REPLACE
+ * mode. Ignored for preview and for MERGE/FILL.
  */
 public record ApplyTemplateRequest(
         @NotNull LocalDate weekStart,

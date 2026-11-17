@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** spec §14.2: {@code PASSWORD_TOO_LONG}, нормализация email. Без Spring — чистые моки. */
+/** Pure unit tests with mocks - no Spring context. */
 class AuthServiceTest {
 
     private final UserService userService = mock(UserService.class);
@@ -33,12 +33,12 @@ class AuthServiceTest {
     @BeforeEach
     void initDummyHash() {
         when(passwordEncoder.encode(any())).thenReturn("dummy-hash");
-        authService.initDummyHash();   // @PostConstruct — вручную, Spring-контекста здесь нет
+        authService.initDummyHash();   // @PostConstruct runs manually here - there's no Spring context
     }
 
     @Test
     void passwordLongerThan72Utf8BytesIsRejected() {
-        // 40 кириллических символов × 2 байта UTF-8 = 80 байт > 72.
+        // 40 Cyrillic characters x 2 UTF-8 bytes each = 80 bytes, over the 72-byte limit.
         String password = "а".repeat(40);
         RegisterRequest request = new RegisterRequest("test@example.com", password, "Alice");
 

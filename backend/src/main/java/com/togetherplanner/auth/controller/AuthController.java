@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
-/** A1–A6 (spec §8.3). */
+/** Registration, login, token refresh and logout. */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor

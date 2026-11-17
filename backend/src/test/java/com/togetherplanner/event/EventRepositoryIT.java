@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** spec §14.3 (I-05 на уровне репозитория), roadmap 4.1. */
+/** Overlap boundary cases at the repository level. */
 class EventRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -44,12 +44,12 @@ class EventRepositoryIT extends AbstractIntegrationTest {
 
     @Test
     void overlappingRespectsHalfOpenRangeBoundaries() {
-        save(LocalDateTime.of(2026, 11, 1, 8, 0), LocalDateTime.of(2026, 11, 1, 9, 0));                 // полностью до диапазона
-        save(LocalDateTime.of(2026, 11, 8, 22, 0), LocalDateTime.of(2026, 11, 9, 0, 0));                // заканчивается ровно в from — нет
-        Event overlapsStart = save(LocalDateTime.of(2026, 11, 8, 23, 0), LocalDateTime.of(2026, 11, 9, 7, 0));  // через from — да
-        Event inside = save(LocalDateTime.of(2026, 11, 10, 10, 0), LocalDateTime.of(2026, 11, 10, 11, 0));      // целиком внутри — да
-        save(LocalDateTime.of(2026, 11, 16, 0, 0), LocalDateTime.of(2026, 11, 16, 1, 0));                // начинается ровно в to — нет
-        Event overlapsEnd = save(LocalDateTime.of(2026, 11, 15, 23, 0), LocalDateTime.of(2026, 11, 16, 7, 0));  // через to — да
+        save(LocalDateTime.of(2026, 11, 1, 8, 0), LocalDateTime.of(2026, 11, 1, 9, 0));                 // entirely before the range
+        save(LocalDateTime.of(2026, 11, 8, 22, 0), LocalDateTime.of(2026, 11, 9, 0, 0));                // ends exactly at from - no
+        Event overlapsStart = save(LocalDateTime.of(2026, 11, 8, 23, 0), LocalDateTime.of(2026, 11, 9, 7, 0));  // straddles from - yes
+        Event inside = save(LocalDateTime.of(2026, 11, 10, 10, 0), LocalDateTime.of(2026, 11, 10, 11, 0));      // entirely inside - yes
+        save(LocalDateTime.of(2026, 11, 16, 0, 0), LocalDateTime.of(2026, 11, 16, 1, 0));                // starts exactly at to - no
+        Event overlapsEnd = save(LocalDateTime.of(2026, 11, 15, 23, 0), LocalDateTime.of(2026, 11, 16, 7, 0));  // straddles to - yes
 
         List<Event> result = eventRepository.findOverlapping(wsId,
                 LocalDateTime.of(2026, 11, 9, 0, 0), LocalDateTime.of(2026, 11, 16, 0, 0));

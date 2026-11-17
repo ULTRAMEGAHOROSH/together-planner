@@ -13,7 +13,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code workspace_invite} (spec §5.2). */
+/** Maps to the {@code workspace_invite} table. */
 @Entity
 @Table(name = "workspace_invite")
 @Getter

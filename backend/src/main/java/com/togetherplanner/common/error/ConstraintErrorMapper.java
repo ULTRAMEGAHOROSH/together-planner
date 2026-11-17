@@ -8,13 +8,13 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Последний рубеж против гонок, которые не поймала проверка в сервисе
- * (spec §7.3, A-10). Проверки в сервисах остаются быстрым путём с понятным
- * сообщением; этот класс превращает нарушение ограничения БД в тот же код
- * ошибки, который дал бы сервис, если бы увидел конфликт раньше.
+ * Last line of defense for races the service-level checks miss. The service
+ * checks stay the fast path with a readable message; this maps a DB
+ * constraint violation to the same error code the service would have used
+ * had it caught the conflict first.
  *
- * <p>После нарушения ограничения транзакция PostgreSQL прервана: «поймать
- * и повторить» внутри неё нельзя, только ответить ошибкой.
+ * <p>Once a constraint fails, the whole transaction is aborted - there's no
+ * catching and retrying inside it, only failing the request.
  */
 @Slf4j
 @Component

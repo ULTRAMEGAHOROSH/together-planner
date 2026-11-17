@@ -39,8 +39,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * T6/T7/T8 (spec §8.8, §9.5). {@code preview} и {@code apply} делят один
- * {@code buildPlan} — поэтому их бизнес-правила не могут разойтись.
+ * {@code preview} and {@code apply} share the same {@code buildPlan} - so
+ * their business rules can never drift apart.
  */
 @Slf4j
 @Service
@@ -57,7 +57,7 @@ public class TemplateApplyService {
 
     private final ApplyPlanner applyPlanner = new ApplyPlanner();
 
-    /** T6: без блокировки, ничего не меняет (spec §9.5). */
+    /** Builds the plan without a lock and changes nothing. */
     @Transactional(readOnly = true)
     public ApplyPreviewResponse preview(UUID wsId, UUID userId, UUID templateId, ApplyTemplateRequest request) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -70,7 +70,7 @@ public class TemplateApplyService {
                 plan.manualEventsInWeek());
     }
 
-    /** T7 (spec §9.5, шаги 1–11). */
+    /** Applies the template: validates, locks the workspace, re-plans, then deletes/creates events. */
     @Transactional
     public ApplyResultResponse apply(UUID wsId, UUID userId, UUID templateId, ApplyTemplateRequest request) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -82,7 +82,7 @@ public class TemplateApplyService {
                     "confirmedDeleteIds and confirmedRestoredIds are required for REPLACE");
         }
 
-        // Блокировка ДО чтения событий — иначе план строится по устаревшим данным (spec §9.5, шаг 3).
+        // Lock before reading events - otherwise the plan gets built on stale data.
         workspaceAccessService.lockForUpdate(wsId);
 
         ApplyPlan plan = buildPlan(wsId, template, request.weekStart(), request.mode(), request.includeManual());
@@ -96,7 +96,7 @@ public class TemplateApplyService {
             }
         }
 
-        // flush() внутри — ОБЯЗАТЕЛЬНО до createFromTemplate (spec §9.5, шаг 7; A-02).
+        // The flush() inside here must happen before createFromTemplate - see its javadoc.
         eventService.deleteForTemplateReplace(wsId, plan.toDelete().stream().map(EventResponse::id).toList());
 
         if (request.mode() == ApplyMode.REPLACE) {
@@ -120,7 +120,7 @@ public class TemplateApplyService {
         return new ApplyResultResponse(templateMapper.toApplicationResponse(saved), created);
     }
 
-    /** T8: история применений по пространству. */
+    /** Application history for a workspace. */
     @Transactional(readOnly = true)
     public PageResponse<TemplateApplicationResponse> history(UUID wsId, UUID userId, Pageable pageable) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -128,7 +128,7 @@ public class TemplateApplyService {
                 templateMapper::toApplicationResponse);
     }
 
-    /** Публичный метод — spec §6.4. Вызывается {@code schedule} (этап 8); членство уже проверено вызывающим. */
+    /** Called by the schedule module; membership is already checked by the caller. */
     @Transactional(readOnly = true)
     public List<TemplateApplicationResponse> findApplicationsForWeek(UUID wsId, LocalDate weekStart) {
         return templateApplicationRepository.findByWorkspaceIdAndWeekStartOrderByAppliedAt(wsId, weekStart).stream()
@@ -136,7 +136,7 @@ public class TemplateApplyService {
                 .toList();
     }
 
-    /** spec §9.3: окно 14 дней, отдельный запрос по метке происхождения, исключения для {@code weekStart}. */
+    /** Loads everything the planner needs: a 14-day window, same-week-sourced events by provenance, and exclusions for {@code weekStart}. */
     private ApplyPlan buildPlan(UUID wsId, WeekTemplate template, LocalDate weekStart, ApplyMode mode, boolean includeManual) {
         ZoneId zone = workspaceAccessService.zoneOf(wsId);
         List<TemplateEventResponse> templateEvents = template.getEvents().stream()

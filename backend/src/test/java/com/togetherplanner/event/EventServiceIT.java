@@ -21,13 +21,12 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * spec §9.5, шаг 7; roadmap 7.1. {@code @Transactional} на классе —
- * единственное отступление от общей конвенции (spec §14.1 требует её
- * отсутствия для {@code *IT}, чтобы запросы коммитили, как в реальности):
- * здесь намеренно нужна ОДНА транзакция на оба вызова, как внутри
- * {@code TemplateApplyService.apply} (этап 7.3) — через два отдельных
- * HTTP-вызова это были бы две отдельные транзакции, и гонка с удалением
- * раньше вставки (A-02) просто не воспроизвелась бы.
+ * {@code @Transactional} on the class is a deliberate exception to the
+ * usual rule of leaving it off {@code *IT} tests so requests commit the
+ * way they would in production: this test needs ONE transaction across
+ * both calls, the same way {@code TemplateApplyService.apply} does. Two
+ * separate HTTP calls would mean two separate transactions, and the
+ * insert-before-delete race this test checks for would never reproduce.
  */
 @Transactional
 class EventServiceIT extends AbstractIntegrationTest {
@@ -55,10 +54,11 @@ class EventServiceIT extends AbstractIntegrationTest {
                 newTemplateEvent(templateEventId, weekStart, LocalDateTime.of(2026, 11, 9, 9, 0),
                         LocalDateTime.of(2026, 11, 9, 13, 0))));
 
-        // Без явного flush() здесь обе проверки ниже проходили бы и на сломанном коде:
-        // createFromTemplate возвращает DTO из уже сматченных в памяти сущностей,
-        // а Hibernate мог бы никогда не отправить INSERT/DELETE в Postgres до ROLLBACK
-        // в конце теста. flush() заставляет реально выполнить SQL и проверить порядок.
+        // Without an explicit flush() here, both assertions below would still
+        // pass on broken code: createFromTemplate returns a DTO built from
+        // entities already matched in memory, and Hibernate might never send
+        // the actual INSERT/DELETE to Postgres before the test rolls back.
+        // flush() forces the SQL to run so the ordering actually gets checked.
         eventRepository.flush();
 
         assertThat(recreated).hasSize(1);

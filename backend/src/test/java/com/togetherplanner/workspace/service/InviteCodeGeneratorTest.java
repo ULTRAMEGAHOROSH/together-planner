@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** spec §14.2. */
 class InviteCodeGeneratorTest {
 
     private final InviteCodeGenerator generator = new InviteCodeGenerator();

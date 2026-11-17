@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
- * Единый формат {@code ProblemDetail} для ответов, которые пишутся вне
- * {@code GlobalExceptionHandler} — до того, как запрос дошёл до контроллера
- * (фильтры безопасности, spec §7.2, §10). Используется
+ * Shared {@code ProblemDetail} format for responses written outside
+ * {@code GlobalExceptionHandler} - before the request reaches a
+ * controller (security filters). Used by
  * {@code ProblemAuthenticationEntryPoint}, {@code ProblemAccessDeniedHandler}
- * и {@code AuthCsrfHeaderFilter}.
+ * and {@code AuthCsrfHeaderFilter}.
  */
 @Component
 @RequiredArgsConstructor

@@ -23,9 +23,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * spec §14.2: вся общая фикстура {@code ApplyPlanner} — M1–M8, F1–F10, R1–R8
- * (26 кейсов), на одной неделе W = 2026-11-09 (пн) – 2026-11-15 (вс),
- * участники A и B, пояс Asia/Almaty, шаблон T «Обычная неделя».
+ * Shared fixture for {@code ApplyPlanner}: cases M1-M8, F1-F10, R1-R8 (26
+ * total), all on week W = 2026-11-09 (Mon) to 2026-11-15 (Sun), with
+ * participants A and B in Asia/Almaty, applying template T "Usual week".
  */
 class ApplyPlannerTest {
 
@@ -330,7 +330,7 @@ class ApplyPlannerTest {
         assertThat(templateEventIds(plan.restoredDeleted())).containsExactlyInAnyOrder(t1Id, t3Id);
     }
 
-    // ------------------------------------------------------------- фикстура
+    // -------------------------------------------------------------- fixture
 
     private List<TemplateEventResponse> templateEvents() {
         return List.of(
@@ -365,7 +365,7 @@ class ApplyPlannerTest {
     }
 
     private EventResponse sourced(UUID id, UUID templateEventId, LocalDateTime start, LocalDateTime end, Set<UUID> participants) {
-        return event(id, start, end, participants, new EventSourceResponse(templateEventId, WEEK_START, "Обычная неделя"));
+        return event(id, start, end, participants, new EventSourceResponse(templateEventId, WEEK_START, "Usual week"));
     }
 
     private EventResponse manual(LocalDateTime start, LocalDateTime end, Set<UUID> participants) {

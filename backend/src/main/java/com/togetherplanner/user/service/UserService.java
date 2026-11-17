@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/** Публичные методы — spec §6.4. Вызывается модулями {@code auth} и {@code workspace}. */
+/** Called by the auth and workspace modules. */
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -36,9 +36,10 @@ public class UserService {
 
     public UserResponse getById(UUID id) {
         User user = userRepository.findById(id)
-                // Удаления пользователей в MVP нет (Д D-3): валидный JWT должен всегда
-                // ссылаться на существующего пользователя. Если это не так — это баг,
-                // а не ожидаемая клиентская ошибка, поэтому не ApiException.
+                // There's no user deletion in this app, so a valid JWT should
+                // always point to an existing user. If it doesn't, that's a
+                // bug, not an expected client error - hence IllegalStateException
+                // rather than ApiException.
                 .orElseThrow(() -> new IllegalStateException(
                         "User " + id + " referenced by a valid token no longer exists"));
         return userMapper.toResponse(user);

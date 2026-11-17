@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-/** spec §6.4. Команда создания события из шаблона — вход {@code EventService.createFromTemplate} (этап 7). */
+/** Command for creating an event from a template occurrence - input to {@code EventService.createFromTemplate}. */
 public record NewTemplateEvent(String title, String description, LocalDateTime start, LocalDateTime end,
                                 Set<UUID> participantIds, EventCategory category, EventColor color,
                                 UUID templateEventId, LocalDate weekStart, String templateName) {

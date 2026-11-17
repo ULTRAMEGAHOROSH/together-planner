@@ -12,7 +12,7 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code template_occurrence_exclusion} (spec §5.4). Заполняется в этапе 7.2. */
+/** Maps to the {@code template_occurrence_exclusion} table. */
 @Entity
 @Table(name = "template_occurrence_exclusion")
 @Getter

@@ -10,12 +10,13 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * spec §5.5. Метка происхождения, без FK на шаблон (R-7: правка шаблона не
- * меняет уже созданных недель). Неизменяема — {@code source} у события не
- * меняется после создания (spec §8.6, E5).
+ * Provenance marker, intentionally without an FK to the template event -
+ * editing a template shouldn't change weeks already generated from it.
+ * Immutable: an event's {@code source} never changes after creation.
  *
- * <p>Если все три колонки {@code NULL}, Hibernate загружает {@code source}
- * как {@code null} — стандартное поведение для embeddable без примитивов.
+ * <p>When all three columns are {@code NULL}, Hibernate loads
+ * {@code source} as {@code null} - standard behavior for an embeddable
+ * with no primitive fields.
  */
 @Embeddable
 @Getter

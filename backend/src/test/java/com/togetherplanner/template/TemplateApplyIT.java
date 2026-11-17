@@ -29,15 +29,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * spec §8.8, §9.5; roadmap 7.3. Фикстура — шаблон T «Обычная неделя»
- * (spec §14.2, t1–t4) для недели W = 2026-11-09 (пн) – 11-15 (вс).
- */
+/** Fixture: template T "Usual week" (t1-t4) applied to week W = 2026-11-09 (Mon) - 11-15 (Sun). */
 class TemplateApplyIT extends AbstractIntegrationTest {
 
     private static final LocalDate WEEK_START = LocalDate.of(2026, 11, 9);
 
-    // I-07
     @Test
     void mergeToEmptyWeekCreatesAllFourOccurrences() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("1");
@@ -53,7 +49,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         assertThat(result.application().deletedCount()).isEqualTo(0);
     }
 
-    // I-08
     @Test
     void reapplyingMergeSkipsAllFourAndLogsASecondEntry() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("2");
@@ -75,7 +70,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.totalElements").value(2));
     }
 
-    // I-09 (M3 на настоящей БД)
     @Test
     void movingACreatedOccurrenceThenReapplyingMergeCausesNoConflictAndNoDuplicate() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("3");
@@ -98,7 +92,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         assertThat(second.application().skippedCount()).isEqualTo(4);
     }
 
-    // I-10
     @Test
     void changingTheTemplateAfterApplyingDoesNotChangeExistingEvents() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("4");
@@ -127,7 +120,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         assertThat(e1After.start()).isEqualTo(e1Before.start());
     }
 
-    // I-11
     @Test
     void deletedOccurrenceIsNotRecreatedByMerge() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("5");
@@ -151,7 +143,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         assertThat(events).noneMatch(e -> e.source() != null && e.source().templateEventId().equals(t3));
     }
 
-    // I-12
     @Test
     void replaceAfterMergeDeletesAndRecreatesAllFourWithoutUniquenessError() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("6");
@@ -175,7 +166,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         assertThat(replaced.createdEvents()).hasSize(4);
     }
 
-    // I-13
     @Test
     void outdatedDeletePlanIsRejectedAndChangesNothing() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("7");
@@ -188,7 +178,7 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         Set<UUID> staleDeleteIds = stalePreview.toDelete().stream().map(EventResponse::id).collect(Collectors.toSet());
         assertThat(staleDeleteIds).hasSize(4);
 
-        // Партнёр создаёт ручное событие, начинающееся в неделе W — новый REPLACE(includeManual) удалил бы и его.
+        // The partner creates a manual event starting within week W - a fresh REPLACE(includeManual) would delete it too.
         testApi.createEvent(ws.bob.accessToken(), ws.workspace.id(), new EventRequest(
                 "Dentist", null, LocalDateTime.of(2026, 11, 10, 14, 0), LocalDateTime.of(2026, 11, 10, 15, 0),
                 Set.of(ws.bob.userId()), EventCategory.WORK, null, null));
@@ -199,10 +189,9 @@ class TemplateApplyIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("APPLY_PLAN_OUTDATED"));
 
         List<EventResponse> events = testApi.listEvents(ws.alice.accessToken(), ws.workspace.id(), WEEK_START, WEEK_START.plusDays(13));
-        assertThat(events).hasSize(5); // 4 вхождения из MERGE + «Dentist», ничего не удалено и не создано
+        assertThat(events).hasSize(5); // 4 occurrences from MERGE plus "Dentist" - nothing deleted, nothing created
     }
 
-    // I-15
     @Test
     void deletingTheTemplateKeepsEventsAndNullsTemplateIdInHistory() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("8");
@@ -224,7 +213,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.items[0].templateName").value("Usual week"));
     }
 
-    // I-21 (Q-2)
     @Test
     void restoringADeletedOccurrenceRequiresAConfirmedReplace() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("9");
@@ -244,7 +232,7 @@ class TemplateApplyIT extends AbstractIntegrationTest {
                 new ApplyTemplateRequest(WEEK_START, ApplyMode.REPLACE, false, null, null));
         assertThat(replacePreview.restoredDeleted()).extracting("templateEventId").containsExactly(t3);
         Set<UUID> deleteIds = replacePreview.toDelete().stream().map(EventResponse::id).collect(Collectors.toSet());
-        assertThat(deleteIds).hasSize(3); // e1, e2, e4 — e3 уже удалено
+        assertThat(deleteIds).hasSize(3); // e1, e2, e4 - e3 is already gone
 
         testApi.applyTemplate(ws.alice.accessToken(), ws.workspace.id(), template.id(),
                 new ApplyTemplateRequest(WEEK_START, ApplyMode.REPLACE, false, deleteIds, Set.of(t3)));
@@ -259,7 +247,6 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         assertThat(finalMerge.skippedAlreadyApplied()).hasSize(4);
     }
 
-    // I-22 (Q-3)
     @Test
     void restoringWithoutShowingItInThePreviewFirstIsRejected() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("10");
@@ -278,7 +265,7 @@ class TemplateApplyIT extends AbstractIntegrationTest {
                 new ApplyTemplateRequest(WEEK_START, ApplyMode.REPLACE, false, null, null));
         assertThat(preview.restoredDeleted()).isEmpty();
         Set<UUID> staleDeleteIds = preview.toDelete().stream().map(EventResponse::id).collect(Collectors.toSet());
-        assertThat(staleDeleteIds).hasSize(3); // e2, e3, e4 — e1 перенесено за пределы недели
+        assertThat(staleDeleteIds).hasSize(3); // e2, e3, e4 - e1 was moved out of the week
 
         EventResponse movedE1 = eventFor(
                 testApi.listEvents(ws.alice.accessToken(), ws.workspace.id(), LocalDate.of(2026, 11, 17), LocalDate.of(2026, 11, 17)),
@@ -292,10 +279,9 @@ class TemplateApplyIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("APPLY_PLAN_OUTDATED"));
 
         List<EventResponse> eventsInW = testApi.listEvents(ws.alice.accessToken(), ws.workspace.id(), WEEK_START, WEEK_START.plusDays(6));
-        assertThat(eventsInW).extracting(EventResponse::id).doesNotContain(movedE1.id()); // не восстановлено
+        assertThat(eventsInW).extracting(EventResponse::id).doesNotContain(movedE1.id()); // not restored
     }
 
-    // S-04 (часть) — T6, T7, T8 для чужого пространства
     @Test
     void applyEndpointsOnSomeoneElsesWorkspaceReturn404() throws Exception {
         TwoMemberWorkspace ws = twoMemberWorkspace("11");
@@ -335,7 +321,7 @@ class TemplateApplyIT extends AbstractIntegrationTest {
         return new TwoMemberWorkspace(alice, bob, workspace);
     }
 
-    /** spec §14.2 — шаблон «Обычная неделя»: t1 MON 09:00+240 [A], t2 MON 23:00+480 [A,B], t3 FRI 19:00+120 [A,B], t4 SUN 23:00+480 [A]. */
+    /** The "Usual week" template: t1 MON 09:00+240 [A], t2 MON 23:00+480 [A,B], t3 FRI 19:00+120 [A,B], t4 SUN 23:00+480 [A]. */
     private TemplateResponse createUsualWeekTemplate(TwoMemberWorkspace ws, String name) throws Exception {
         UUID a = ws.alice.userId();
         UUID b = ws.bob.userId();

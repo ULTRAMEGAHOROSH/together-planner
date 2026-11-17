@@ -13,8 +13,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * spec §9.7. Применяется к E3, E5 и {@code createFromTemplate} (этап 7), в
- * этом порядке: название → время → участники.
+ * Validation rules shared by manual create, update, and template-driven
+ * create, applied in this order: title, then time, then participants.
  */
 @Component
 public class EventValidator {
@@ -23,7 +23,7 @@ public class EventValidator {
     private static final int MAX_YEAR = 2100;
     private static final Duration MAX_DURATION = Duration.ofDays(31);
 
-    /** Шаг 1. */
+    /** Trims the title and rejects a blank one. */
     public String requireNonBlankTitle(String title) {
         String trimmed = title.trim();
         if (trimmed.isEmpty()) {
@@ -32,7 +32,7 @@ public class EventValidator {
         return trimmed;
     }
 
-    /** Шаги 2–5: обрезка до минут, нормализация по DST, {@code end > start}, ≤ 31 день, год ∈ [2000; 2100]. */
+    /** Truncates to the minute, normalizes for DST, then checks {@code end > start}, a 31-day cap, and a sane year range. */
     public ValidatedEventTimes normalizeAndValidateTimes(LocalDateTime start, LocalDateTime end, ZoneId zone) {
         LocalDateTime normalizedStart = TimeRules.normalize(start.truncatedTo(ChronoUnit.MINUTES), zone);
         LocalDateTime normalizedEnd = TimeRules.normalize(end.truncatedTo(ChronoUnit.MINUTES), zone);
@@ -50,7 +50,7 @@ public class EventValidator {
         return new ValidatedEventTimes(normalizedStart, normalizedEnd);
     }
 
-    /** Шаг 6. События в прошлом и пересечения с другими событиями разрешены (шаг 7, Д D-8) — здесь не проверяются. */
+    /** Past events and overlaps with other events are both allowed - neither is checked here. */
     public void requireParticipantsAreMembers(Set<UUID> participantIds, Set<UUID> memberIds) {
         if (!memberIds.containsAll(participantIds)) {
             throw new ApiException(ErrorCode.EVENT_PARTICIPANT_NOT_MEMBER, "All participants must be workspace members");

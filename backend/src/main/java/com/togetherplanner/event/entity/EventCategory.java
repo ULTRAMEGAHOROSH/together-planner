@@ -1,6 +1,6 @@
 package com.togetherplanner.event.entity;
 
-/** spec §5.6. Новая категория = значение здесь + в {@link EventColor} + миграция, пересоздающая четыре CHECK. */
+/** Adding a category means a value here, one in {@link EventColor}, and a migration that rebuilds the four CHECK constraints. */
 public enum EventCategory {
     WORK, SLEEP, FOOD, COMMUTE, SPORT, REST, TOGETHER, TRIP, OTHER
 }

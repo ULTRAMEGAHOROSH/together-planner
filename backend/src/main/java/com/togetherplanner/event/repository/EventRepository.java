@@ -19,12 +19,12 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
     Optional<Event> findByIdAndWorkspaceId(UUID id, UUID workspaceId);
 
     /**
-     * Пересечение с полуоткрытым интервалом {@code [from; to)} (spec §3,
-     * правило 4). {@code searchFrom} — нижняя граница индекса по
-     * {@code start_local}: событие не длиннее 31 дня (A-07), поэтому событие,
-     * начавшееся раньше {@code from - 31 день}, уже не может закончиться
-     * после {@code from}, и такие строки можно отсечь диапазоном индекса,
-     * а не только фильтром {@code end_local > from}.
+     * Overlap with the half-open interval {@code [from, to)}.
+     * {@code searchFrom} is a lower bound on the {@code start_local}
+     * index: no event is longer than 31 days, so anything starting before
+     * {@code from - 31 days} can't possibly end after {@code from} - that
+     * range gets cut by the index instead of relying only on the
+     * {@code end_local > from} filter.
      */
     default List<Event> findOverlapping(UUID workspaceId, LocalDateTime from, LocalDateTime to) {
         return findOverlapping(workspaceId, from, to, from.minusDays(31));

@@ -11,12 +11,12 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
 
     boolean existsByWorkspaceIdAndUserId(UUID workspaceId, UUID userId);
 
-    /** MVP: одно пространство на человека (D-2, uq_member_user). */
+    /** One workspace per user, for now. */
     boolean existsByUserId(UUID userId);
 
     Optional<WorkspaceMember> findByUserId(UUID userId);
 
-    /** Порядок по {@code seat} — не по {@code joinedAt} (A-29). */
+    /** Ordered by {@code seat}, not {@code joinedAt}. */
     List<WorkspaceMember> findByWorkspaceIdOrderBySeat(UUID workspaceId);
 
     long countByWorkspaceId(UUID workspaceId);

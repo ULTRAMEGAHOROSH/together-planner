@@ -21,10 +21,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * spec §9.1–§9.4. Чистый класс: без Spring, без репозиториев, без
- * {@code Clock} — всё нужное приходит через {@link PlanInput}. Используется
- * одинаково предпросмотром (T6) и применением (T7, этап 7), поэтому их
- * бизнес-правила не могут разойтись.
+ * Pure class: no Spring, no repositories, no {@code Clock} - everything
+ * it needs arrives through {@link PlanInput}. Used identically by
+ * preview and apply, so their business rules can never drift apart.
  */
 public final class ApplyPlanner {
 
@@ -34,7 +33,7 @@ public final class ApplyPlanner {
 
         List<PlannedEvent> planned = materializeAll(input.templateEvents(), input.weekStart(), input.zone());
 
-        // 1. удаления (только REPLACE)
+        // 1. deletions (REPLACE only)
         List<EventResponse> toDelete = input.mode() == ApplyMode.REPLACE
                 ? input.windowEvents().stream()
                         .filter(e -> startsInWeek(e.start(), weekFrom, weekTo)
@@ -42,19 +41,19 @@ public final class ApplyPlanner {
                         .toList()
                 : List.of();
         Set<UUID> deletedIds = toDelete.stream().map(EventResponse::id).collect(Collectors.toSet());
-        // «До применения»: для FILL deletedIds всегда пуст (REPLACE не использует skippedBusy),
-        // так что remaining в этом случае буквально равен windowEvents.
+        // "Before applying" state: for FILL, deletedIds is always empty (REPLACE
+        // doesn't use skippedBusy), so remaining is literally windowEvents here.
         List<EventResponse> remaining = input.windowEvents().stream()
                 .filter(e -> !deletedIds.contains(e.id()))
                 .toList();
 
-        // 2. какие вхождения уже существуют (за вычетом того, что будет удалено)
+        // 2. which occurrences already exist (excluding what's about to be deleted)
         Set<UUID> existingKeys = input.sameWeekSourced().stream()
                 .filter(e -> !deletedIds.contains(e.id()))
                 .map(e -> e.source().templateEventId())
                 .collect(Collectors.toSet());
 
-        // 3. решение по каждому вхождению — порядок проверок задан намеренно
+        // 3. decide each occurrence - the check order below is deliberate
         List<PlannedEvent> toCreate = new ArrayList<>();
         List<PlannedEvent> skippedAlreadyApplied = new ArrayList<>();
         List<PlannedEvent> skippedDeleted = new ArrayList<>();
@@ -103,7 +102,7 @@ public final class ApplyPlanner {
                 .toList();
     }
 
-    /** Вхождение — событие шаблона, переведённое на конкретную неделю (spec §9.1). */
+    /** Materializes a template event onto a specific week. */
     private PlannedEvent materialize(TemplateEventResponse te, LocalDate weekStart, ZoneId zone) {
         LocalDateTime naiveStart = weekStart.plusDays(te.dayOfWeek().getValue() - 1).atTime(te.startTime());
         LocalDateTime start = TimeRules.normalize(naiveStart, zone);

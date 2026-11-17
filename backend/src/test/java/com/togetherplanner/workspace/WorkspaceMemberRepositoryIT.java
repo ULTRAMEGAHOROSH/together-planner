@@ -14,7 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** spec §14 roadmap 3.1: ограничения `workspace_member` на уровне БД. */
+/** DB-level constraints on {@code workspace_member}. */
 class WorkspaceMemberRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired

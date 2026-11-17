@@ -29,9 +29,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * spec §5.5. Таблица {@code template_event} (spec §5.4). {@code category}/
- * {@code color} — те же два enum, что и у {@code event} (spec §5.6: «новая
- * категория = значение в двух enum»), не дублируются под отдельными именами.
+ * Maps to the {@code template_event} table. {@code category}/{@code color}
+ * reuse the same two enums as {@code event} - no point duplicating them
+ * under separate names.
  */
 @Entity
 @Table(name = "template_event")
@@ -54,8 +54,8 @@ public class TemplateEvent {
     @Column(length = 2000)
     private String description;
 
-    // columnDefinition здесь не помогает валидации типа — нужен явный
-    // @JdbcTypeCode (как с char(64) у RefreshToken.tokenHash, A-?? в roadmap).
+    // columnDefinition alone doesn't validate the type here - needs an
+    // explicit @JdbcTypeCode, same as char(64) on RefreshToken.tokenHash.
     @Convert(converter = DayOfWeekConverter.class)
     @JdbcTypeCode(SqlTypes.SMALLINT)
     @Column(name = "day_of_week", nullable = false)

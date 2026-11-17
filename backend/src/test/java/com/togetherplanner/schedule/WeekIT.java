@@ -26,12 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.5 (S1); roadmap 8.1. */
 class WeekIT extends AbstractIntegrationTest {
 
     private static final LocalDate WEEK_START = LocalDate.of(2026, 11, 9);
 
-    // I-04
     @Test
     void futureEventAppearsOnlyInItsOwnWeek() throws Exception {
         RegisteredUser alice = testApi.register("alice@example.com", "Alice");
@@ -51,7 +49,6 @@ class WeekIT extends AbstractIntegrationTest {
         assertThat(weekOf09.events()).extracting(EventResponse::id).doesNotContain(trip.id());
     }
 
-    // I-05
     @Test
     void eventsCrossingMidnightLandInTheCorrectWeeksAndTheBoundaryIsHalfOpen() throws Exception {
         RegisteredUser alice = testApi.register("alice2@example.com", "Alice");
@@ -79,7 +76,7 @@ class WeekIT extends AbstractIntegrationTest {
 
     @Test
     void dateDefaultsToTodayInTheWorkspaceTimeZoneRoundedToMonday() throws Exception {
-        clock.setInstant(Instant.parse("2026-11-12T05:00:00Z")); // Asia/Almaty = UTC+5 -> local 11-12 10:00 (чт)
+        clock.setInstant(Instant.parse("2026-11-12T05:00:00Z")); // Asia/Almaty is UTC+5 -> local Nov 12 10:00 (Thursday)
         RegisteredUser alice = testApi.register("alice3@example.com", "Alice");
         WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
 
@@ -90,7 +87,6 @@ class WeekIT extends AbstractIntegrationTest {
         assertThat(week.timeZone()).isEqualTo("Asia/Almaty");
     }
 
-    // появляется после T7 (этап 7.3)
     @Test
     void appliedTemplatesListsApplicationsForThatWeek() throws Exception {
         RegisteredUser alice = testApi.register("alice4@example.com", "Alice");
@@ -112,7 +108,6 @@ class WeekIT extends AbstractIntegrationTest {
         assertThat(otherWeek.appliedTemplates()).isEmpty();
     }
 
-    // S-04 (часть)
     @Test
     void weekOfSomeoneElsesWorkspaceReturns404() throws Exception {
         RegisteredUser alice = testApi.register("alice5@example.com", "Alice");

@@ -21,10 +21,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * spec §8.3, §10.2. Выдачу токенов этот класс не делает — её после успешной
- * проверки делает {@code AuthController} через {@code RefreshTokenService}
- * (один вызов даёт и access-, и refresh-токен, spec §10.4), чтобы не
- * выпускать access-токен дважды с разными {@code iat}.
+ * This class doesn't issue tokens - after a successful check,
+ * {@code AuthController} does that through {@code RefreshTokenService}
+ * (one call returns both the access and refresh token) so we never mint
+ * two access tokens with different {@code iat} values.
  */
 @Slf4j
 @Service
@@ -37,9 +37,9 @@ public class AuthService {
     private final WorkspaceService workspaceService;
     private final PasswordEncoder passwordEncoder;
 
-    // Вычисляется один раз при старте (A-25): сравнение с ним при отсутствующем
-    // email занимает то же время, что при неверном пароле, и не выдаёт,
-    // существует ли аккаунт.
+    // Computed once at startup: comparing against this when the email isn't
+    // found takes the same time as a wrong-password check, so response
+    // timing can't be used to probe whether an account exists.
     private String dummyHash;
 
     @PostConstruct
@@ -52,9 +52,8 @@ public class AuthService {
         requirePasswordFitsBcryptLimit(request.password());
 
         if (userService.findCredentialsByEmail(email).isPresent()) {
-            // Быстрый путь с понятным сообщением; уникальный индекс
-            // uq_app_user_email — последний рубеж в гонке (C-05, через
-            // ConstraintErrorMapper).
+            // Fast path with a clear message; the uq_app_user_email unique
+            // index is the last line of defense if two registrations race.
             throw new ApiException(ErrorCode.EMAIL_ALREADY_REGISTERED, "Email is already registered");
         }
 
@@ -69,8 +68,8 @@ public class AuthService {
         Optional<UserCredentials> credentials = userService.findCredentialsByEmail(email);
         String hashToCompare = credentials.map(UserCredentials::passwordHash).orElse(dummyHash);
 
-        // matches() вызывается даже если email не найден — иначе время ответа
-        // раскрывает существование email (A-25, §10.2).
+        // matches() runs even when the email wasn't found - otherwise
+        // response timing would leak whether the account exists.
         boolean passwordMatches = passwordEncoder.matches(request.password(), hashToCompare);
         if (credentials.isEmpty() || !passwordMatches) {
             throw new ApiException(ErrorCode.INVALID_CREDENTIALS, "Invalid email or password");

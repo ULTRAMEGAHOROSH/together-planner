@@ -5,7 +5,7 @@ import jakarta.persistence.Converter;
 
 import java.time.DayOfWeek;
 
-/** {@code day_of_week smallint}, ISO: 1 = пн … 7 = вс (spec §5.4, §5.5). */
+/** Stored as {@code day_of_week smallint}, ISO numbering: 1 = Monday ... 7 = Sunday. */
 @Converter(autoApply = false)
 public class DayOfWeekConverter implements AttributeConverter<DayOfWeek, Integer> {
 

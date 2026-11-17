@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-/** Вхождение шаблона, переведённое на конкретную неделю (materialize, spec §9.1). */
+/** A template occurrence materialized onto a specific week. */
 public record PlannedEvent(UUID templateEventId, String title, String description,
                             LocalDateTime start, LocalDateTime end, Set<UUID> participantIds,
                             EventCategory category, EventColor color) {

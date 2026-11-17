@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** spec §1.6 DoD: контекст поднимается на настоящем PostgreSQL в контейнере. */
+/** Sanity check that the context starts against a real PostgreSQL container. */
 class ApplicationContextIT extends AbstractIntegrationTest {
 
     @Test

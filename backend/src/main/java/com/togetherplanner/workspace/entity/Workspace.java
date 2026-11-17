@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code workspace} (spec §5.2). */
+/** Maps to the {@code workspace} table. */
 @Entity
 @Table(name = "workspace")
 @Getter

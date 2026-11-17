@@ -3,6 +3,6 @@ package com.togetherplanner.auth.dto;
 import com.togetherplanner.user.dto.UserResponse;
 import com.togetherplanner.workspace.dto.WorkspaceResponse;
 
-/** {@code workspace == null} — у пользователя пока нет пространства; заполняется в этапе 3.2. */
+/** {@code workspace == null} means the user hasn't created or joined one yet. */
 public record MeResponse(UserResponse user, WorkspaceResponse workspace) {
 }

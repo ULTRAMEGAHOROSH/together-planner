@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * «Сейчас» через внедряемый {@link Clock}, а не {@code LocalDateTime.now()}
- * напрямую — тесты подменяют бин на {@code MutableClock} (spec §14.1).
+ * "Now" through an injected {@link Clock} rather than calling
+ * {@code LocalDateTime.now()} directly, so tests can swap in a fixed clock.
  */
 @Service
 @RequiredArgsConstructor

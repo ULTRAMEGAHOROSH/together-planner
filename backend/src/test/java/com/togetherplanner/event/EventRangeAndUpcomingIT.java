@@ -18,16 +18,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.6 (E1, E2), §14.3 (I-19, I-20); roadmap 4.4. */
 class EventRangeAndUpcomingIT extends AbstractIntegrationTest {
 
-    // I-19
     @Test
     void rangeOf94DaysIsRejected() throws Exception {
         RegisteredUser alice = testApi.register("alice@example.com", "Alice");
         WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
         LocalDate from = LocalDate.of(2026, 11, 9);
-        LocalDate to94 = from.plusDays(93);   // 94 дня включительно
+        LocalDate to94 = from.plusDays(93);   // 94 days inclusive
 
         mockMvc.perform(get("/api/v1/workspaces/" + workspace.id() + "/events")
                         .param("from", from.toString())
@@ -42,7 +40,7 @@ class EventRangeAndUpcomingIT extends AbstractIntegrationTest {
         RegisteredUser alice = testApi.register("alice2@example.com", "Alice");
         WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
         LocalDate from = LocalDate.of(2026, 11, 9);
-        LocalDate to93 = from.plusDays(92);   // 93 дня включительно
+        LocalDate to93 = from.plusDays(92);   // 93 days inclusive
 
         mockMvc.perform(get("/api/v1/workspaces/" + workspace.id() + "/events")
                         .param("from", from.toString())
@@ -52,13 +50,12 @@ class EventRangeAndUpcomingIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$").isArray());
     }
 
-    // I-20
     @Test
     void upcomingIncludesOngoingAndFutureButNotPastWithCorrectPaging() throws Exception {
         RegisteredUser alice = testApi.register("alice3@example.com", "Alice");
         WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
 
-        // Asia/Almaty = UTC+5, значит local "сейчас" = 10:00.
+        // Asia/Almaty is UTC+5, so local "now" is 10:00.
         clock.setInstant(Instant.parse("2026-11-06T05:00:00Z"));
 
         EventResponse past = testApi.createEvent(alice.accessToken(), workspace.id(), new EventRequest(

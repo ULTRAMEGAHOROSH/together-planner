@@ -42,11 +42,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * spec §14.4 (C-01 – C-06); roadmap 9.1. Один класс для всех тестов гонок —
- * часть была написана отдельными классами на этапах 3, 4 и 7, собрана сюда,
- * как и требует roadmap. Без {@code @Transactional} ни на одном методе:
- * оба потока должны реально увидеть и закоммитить состояние друг друга,
- * иначе гонка (и защита от неё) не воспроизводится.
+ * One class for every concurrency test. No {@code @Transactional} on any
+ * method: both threads need to actually see and commit each other's
+ * state, or the race (and the defense against it) never reproduces.
  */
 class ConcurrencyIT extends AbstractIntegrationTest {
 
@@ -64,7 +62,6 @@ class ConcurrencyIT extends AbstractIntegrationTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
-    // C-01
     @Test
     void twoUsersJoiningTheSameCodeSimultaneouslyResultInExactlyOneWinner() throws Exception {
         RegisteredUser alice = testApi.register("alice-c1@example.com", "Alice");
@@ -82,7 +79,6 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         assertThat(workspaceInviteRepository.findByCode(invite.code()).orElseThrow().getUsedAt()).isNotNull();
     }
 
-    // C-02
     @Test
     void twoSimultaneousMergeApplicationsOfTheSameTemplateCreateExactlyFourEvents() throws Exception {
         RegisteredUser alice = testApi.register("alice-c2@example.com", "Alice");
@@ -111,7 +107,6 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         assertThat(testApi.listEvents(alice.accessToken(), workspace.id(), WEEK_START, WEEK_START.plusDays(6))).hasSize(4);
     }
 
-    // C-03
     @Test
     void twoSimultaneousRefreshesWithTheSameCookieHaveExactlyOneWinnerAndNoMassRevoke() throws Exception {
         MvcResult registerResult = mockMvc.perform(authPost("/api/v1/auth/register")
@@ -127,7 +122,7 @@ class ConcurrencyIT extends AbstractIntegrationTest {
 
         assertThat(statuses).containsExactlyInAnyOrder(200, 401);
 
-        // Ровно один активный (неотозванный) токен — у выигравшего потомка; массового отзыва (REUSE_DETECTED) нет.
+        // Exactly one active (non-revoked) token - the winner's; no mass revoke (REUSE_DETECTED).
         long activeCount = refreshTokenRepository.findAll().stream()
                 .filter(t -> t.getRevokedAt() == null)
                 .count();
@@ -137,7 +132,6 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         assertThat(massRevoked).isFalse();
     }
 
-    // C-04
     @Test
     void concurrentPutsWithTheSameVersionResultInExactlyOneWinner() throws Exception {
         RegisteredUser alice = testApi.register("alice-c4@example.com", "Alice");
@@ -155,7 +149,6 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         assertThat(statuses).containsExactlyInAnyOrder(200, 409);
     }
 
-    // C-05
     @Test
     void twoSimultaneousRegistrationsWithTheSameEmailHaveExactlyOneWinner() throws Exception {
         String body = "{\"email\":\"carol-c5@example.com\",\"password\":\"password1\",\"displayName\":\"Carol\"}";
@@ -173,10 +166,9 @@ class ConcurrencyIT extends AbstractIntegrationTest {
                 .andExpect(status().isConflict())
                 .andReturn();
         String code = JsonPath.read(failing.getResponse().getContentAsString(), "$.code");
-        assertThat(code).isEqualTo("EMAIL_ALREADY_REGISTERED"); // не DATA_CONFLICT
+        assertThat(code).isEqualTo("EMAIL_ALREADY_REGISTERED"); // not DATA_CONFLICT
     }
 
-    // C-06
     @Test
     void concurrentPutAndDeleteWithTheSameVersionResultInExactlyOneWinner() throws Exception {
         RegisteredUser alice = testApi.register("alice-c6@example.com", "Alice");
@@ -190,7 +182,7 @@ class ConcurrencyIT extends AbstractIntegrationTest {
                 () -> testApi.putEvent(alice.accessToken(), workspace.id(), created.id(), update).andReturn().getResponse().getStatus(),
                 () -> testApi.deleteEvent(alice.accessToken(), workspace.id(), created.id(), 0L).andReturn().getResponse().getStatus());
 
-        // Либо PUT выиграл (200) и DELETE получил 409/404, либо DELETE выиграл (204) и PUT получил 404/409.
+        // Either PUT won (200) and DELETE got 409/404, or DELETE won (204) and PUT got 404/409.
         assertThat(statuses).allMatch(s -> List.of(200, 204, 404, 409).contains(s));
         long successCount = statuses.stream().filter(s -> s == 200 || s == 204).count();
         assertThat(successCount).isEqualTo(1);

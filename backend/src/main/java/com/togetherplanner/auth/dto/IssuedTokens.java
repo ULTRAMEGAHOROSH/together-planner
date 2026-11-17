@@ -4,6 +4,6 @@ import com.togetherplanner.security.IssuedAccessToken;
 
 import java.util.UUID;
 
-/** Пара токенов, выданная при register/login/refresh — ровно то, что нужно собрать в {@link AuthResponse} + cookie. */
+/** Token pair issued on register/login/refresh - exactly what's needed to build an {@link AuthResponse} plus the cookie. */
 public record IssuedTokens(UUID userId, IssuedAccessToken access, String refreshTokenRaw) {
 }

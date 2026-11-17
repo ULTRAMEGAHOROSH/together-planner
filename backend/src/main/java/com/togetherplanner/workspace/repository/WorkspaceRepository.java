@@ -13,10 +13,10 @@ import java.util.UUID;
 public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
 
     /**
-     * spec §11. Единственная пессимистическая блокировка в системе — только
-     * для применения шаблона (этап 7). Вызывающий метод должен уже быть
-     * {@code @Transactional}: блокировка держится до конца ЕГО транзакции,
-     * сама по себе эта строка никакой транзакции не открывает.
+     * The only pessimistic lock in the system - used solely for applying a
+     * template. The caller must already be {@code @Transactional}: the
+     * lock is held until that transaction ends; this call doesn't open
+     * one on its own.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select w from Workspace w where w.id = :id")

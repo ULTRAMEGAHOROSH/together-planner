@@ -5,13 +5,9 @@ import com.togetherplanner.event.dto.EventResponse;
 import java.util.List;
 
 /**
- * Результат {@code ApplyPlanner.plan(PlanInput)} (spec §9.4 называет тип
- * в заголовке алгоритма, но не даёт его полям явного определения —
- * реконструирован по {@link ApplyPreviewResponse}, с которым совпадает
- * набором вычисляемых списков). Без {@code weekStart}/{@code mode}: это
- * входные параметры, а не результат планирования — их эхо в HTTP-ответе
- * (T6/T7) добавляет вызывающий слой ({@code TemplateApplyService},
- * этап 7), а не сам чистый планировщик.
+ * Result of {@code ApplyPlanner.plan(PlanInput)}. Deliberately leaves out
+ * {@code weekStart}/{@code mode} - those are inputs, not planning output.
+ * {@code TemplateApplyService} echoes them back into the HTTP response.
  */
 public record ApplyPlan(
         List<PlannedEvent> toCreate,

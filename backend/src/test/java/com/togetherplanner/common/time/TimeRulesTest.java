@@ -10,7 +10,6 @@ import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** spec §14.2, таблица {@code TimeRules}: TR1–TR6. */
 class TimeRulesTest {
 
     // TR1

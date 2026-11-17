@@ -13,7 +13,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code app_user} (spec §5.1). */
+/** Maps to the {@code app_user} table. */
 @Entity
 @Table(name = "app_user")
 @Getter

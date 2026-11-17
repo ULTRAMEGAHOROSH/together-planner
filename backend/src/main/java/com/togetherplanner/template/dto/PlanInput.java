@@ -10,8 +10,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * spec §9.3. Вход {@code ApplyPlanner} — чистого класса без Spring,
- * репозиториев и {@code Clock}. Все данные загружает {@code TemplateApplyService}.
+ * Input to {@code ApplyPlanner} - a pure class with no Spring, no
+ * repositories, no {@code Clock}. All the data is loaded upfront by
+ * {@code TemplateApplyService}.
  */
 public record PlanInput(
         LocalDate weekStart,

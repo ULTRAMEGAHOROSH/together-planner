@@ -24,7 +24,7 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.UUID;
 
-/** spec §10.4. */
+/** Issues, rotates and revokes refresh tokens. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -38,7 +38,7 @@ public class RefreshTokenService {
     private final Clock clock;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /** Новая сессия (A1, A2) или продолжение после успешной ротации (A3). */
+    /** New session (register/login), or a continuation after a successful rotation. */
     public IssuedTokens issue(UUID userId) {
         String raw = generateRawToken();
         Instant now = clock.instant();
@@ -50,9 +50,9 @@ public class RefreshTokenService {
     }
 
     /**
-     * Ротация (A3, spec §10.4). Массовый отзыв при обнаружении повторного
-     * использования должен сохраниться, несмотря на то что сам запрос
-     * отвечает {@code 401}.
+     * Rotates the refresh token. A bulk revoke triggered by detected reuse
+     * has to survive even though this request itself responds with
+     * {@code 401} - hence {@code noRollbackFor}.
      */
     @Transactional(noRollbackFor = ApiException.class)
     public IssuedTokens rotate(String rawCookieValue) {
@@ -68,8 +68,8 @@ public class RefreshTokenService {
             if (token.getRevokeReason() == RevokeReason.ROTATED) {
                 boolean withinGraceWindow = token.getRevokedAt().isAfter(now.minus(properties.refreshRotationGrace()));
                 if (withinGraceWindow) {
-                    // Параллельный запрос (другая вкладка) успел ротировать первым;
-                    // без побочных эффектов — frontend повторит запрос с новой cookie.
+                    // A concurrent request (another tab) rotated first; no side
+                    // effects here - the frontend will retry with the new cookie.
                     throw new ApiException(ErrorCode.REFRESH_TOKEN_ROTATED, "Token was just rotated elsewhere");
                 }
                 refreshTokenRepository.revokeAllActive(token.getUserId(), RevokeReason.REUSE_DETECTED, now);
@@ -85,7 +85,7 @@ public class RefreshTokenService {
 
         int updated = refreshTokenRepository.revokeIfActive(token.getId(), RevokeReason.ROTATED, now);
         if (updated == 0) {
-            // Гонку выиграл параллельный запрос между нашим SELECT и UPDATE.
+            // A concurrent request won the race between our SELECT and UPDATE.
             throw new ApiException(ErrorCode.REFRESH_TOKEN_ROTATED, "Concurrent rotation");
         }
 
@@ -93,10 +93,11 @@ public class RefreshTokenService {
     }
 
     /**
-     * Logout (A4): отзывает токен из cookie, если он активен. Работает без
-     * access-токена; повторный вызов безопасен. {@code @Transactional} —
-     * custom {@code @Modifying}-запросы репозитория, в отличие от базовых
-     * методов {@code JpaRepository}, не оборачиваются в транзакцию сами.
+     * Revokes the token from the cookie if it's still active. Works
+     * without an access token; safe to call more than once. Needs
+     * {@code @Transactional} explicitly - custom {@code @Modifying}
+     * queries aren't auto-wrapped in a transaction the way the base
+     * {@code JpaRepository} methods are.
      */
     @Transactional
     public void revoke(String rawCookieValue) {
@@ -107,7 +108,7 @@ public class RefreshTokenService {
                 .ifPresent(token -> refreshTokenRepository.revokeIfActive(token.getId(), RevokeReason.LOGOUT, clock.instant()));
     }
 
-    /** Logout-all (A5): отзывает все активные токены пользователя. */
+    /** Revokes every active refresh token for the user. */
     @Transactional
     public void revokeAll(UUID userId) {
         refreshTokenRepository.revokeAllActive(userId, RevokeReason.LOGOUT_ALL, clock.instant());
@@ -124,7 +125,7 @@ public class RefreshTokenService {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(raw.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            // SHA-256 — стандартный алгоритм JDK, этого не может произойти.
+            // SHA-256 is a standard JDK algorithm, this can't actually happen.
             throw new IllegalStateException(e);
         }
     }

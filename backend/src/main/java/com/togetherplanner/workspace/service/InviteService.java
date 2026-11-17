@@ -24,7 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/** spec §9.6. W5 создаёт приглашение, W6 присоединяет — без пессимистической блокировки (A-11). */
+/** Creates invite codes and handles joining a workspace by code - no pessimistic locking needed here. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -41,7 +41,7 @@ public class InviteService {
     private final InviteCodeGenerator codeGenerator;
     private final Clock clock;
 
-    /** W5: прежние неиспользованные коды пространства удаляются перед выдачей нового. */
+    /** Clears any unused invite codes for the workspace before issuing a new one. */
     @Transactional
     public InviteResponse createInvite(UUID wsId, UUID createdBy) {
         inviteRepository.deleteUnusedByWorkspaceId(wsId);
@@ -49,7 +49,7 @@ public class InviteService {
         String code;
         do {
             code = codeGenerator.generate();
-        } while (inviteRepository.existsByCode(code));   // A-14: проверка до вставки, не «поймать и повторить»
+        } while (inviteRepository.existsByCode(code));   // check before inserting, not catch-and-retry on a constraint
 
         Instant now = clock.instant();
         Instant expiresAt = now.plus(INVITE_TTL);
@@ -57,7 +57,7 @@ public class InviteService {
         return new InviteResponse(code, InviteCodeGenerator.toDisplayCode(code), expiresAt);
     }
 
-    /** W6 (spec §9.6, пошагово). Шаги 3–5 — быстрый путь; шаги 6–7 — гарантия в гонке (условный UPDATE + уникальные индексы). */
+    /** Joins a workspace by invite code. The checks above are the fast path; the conditional update plus unique indexes are what actually close the race. */
     @Transactional
     public WorkspaceResponse join(UUID userId, JoinWorkspaceRequest request) {
         String code = InviteCodeGenerator.normalize(request.code());
@@ -81,12 +81,13 @@ public class InviteService {
 
         int updated = inviteRepository.markUsed(invite.getId(), userId, now);
         if (updated == 0) {
-            // Гонку выиграл параллельный join с тем же кодом.
+            // A concurrent join with the same code won the race.
             throw new ApiException(ErrorCode.INVITE_ALREADY_USED, "Invite has already been used");
         }
 
-        // saveAndFlush: нарушение uq_member_workspace_seat/uq_member_user всплывает здесь,
-        // внутри этой транзакции, откатывая и шаг 6 (markUsed) вместе с этой вставкой.
+        // saveAndFlush so a uq_member_workspace_seat/uq_member_user violation
+        // surfaces right here, inside this transaction, rolling back markUsed
+        // along with this insert.
         memberRepository.saveAndFlush(
                 new WorkspaceMember(invite.getWorkspaceId(), userId, WorkspaceRole.MEMBER, JOINING_MEMBER_SEAT, now));
 

@@ -5,6 +5,6 @@ import com.togetherplanner.workspace.entity.WorkspaceRole;
 import java.time.Instant;
 import java.util.UUID;
 
-/** spec §8.2. Список участников — всегда по {@code seat} (spec §6.4, A-29). */
+/** The member list is always ordered by {@code seat}. */
 public record MemberResponse(UUID userId, String displayName, WorkspaceRole role, int seat, Instant joinedAt) {
 }

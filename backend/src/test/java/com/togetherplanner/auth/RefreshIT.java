@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §14.3 (I-17, I-18), §14.5 (S-07 полностью, S-08, S-09); roadmap 2.4. */
 class RefreshIT extends AbstractIntegrationTest {
 
     private static final Pattern COOKIE_VALUE = Pattern.compile("tp_refresh=([^;]*)");
@@ -30,7 +29,6 @@ class RefreshIT extends AbstractIntegrationTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
-    // I-17
     @Test
     void twoRotationsInARowBothSucceedWithDifferentCookiesAndRevokeTheOldOnes() throws Exception {
         String cookie1 = registerAndGetRefreshCookie("alice@example.com");
@@ -51,7 +49,6 @@ class RefreshIT extends AbstractIntegrationTest {
         assertThat(isRevoked(cookie2, RevokeReason.ROTATED)).isTrue();
     }
 
-    // I-18
     @Test
     void logoutAllThenRefreshWithOldCookieIsInvalid() throws Exception {
         MvcResult registerResult = mockMvc.perform(authPost("/api/v1/auth/register")
@@ -70,7 +67,6 @@ class RefreshIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("REFRESH_TOKEN_INVALID"));
     }
 
-    // S-08
     @Test
     void loginCookieHasExpectedAttributes() throws Exception {
         mockMvc.perform(authPost("/api/v1/auth/register")
@@ -92,7 +88,6 @@ class RefreshIT extends AbstractIntegrationTest {
         assertThat(setCookie).contains("Max-Age=2592000");
     }
 
-    // S-09
     @Test
     void reusingARotatedTokenAfterTheGraceWindowRevokesEverySession() throws Exception {
         String cookie1 = registerAndGetRefreshCookie("dave@example.com");
@@ -106,12 +101,11 @@ class RefreshIT extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("REFRESH_TOKEN_INVALID"));
 
-        // Проверка в БД после ответа 401: запись об отзыве сохранилась, несмотря на 401
-        // (noRollbackFor = ApiException.class).
+        // Checked against the DB after the 401 response: the revoke was
+        // persisted despite the error response (noRollbackFor = ApiException.class).
         assertThat(isRevoked(cookie1, RevokeReason.ROTATED)).isTrue();
     }
 
-    // S-07, полностью: A1, A2, A3, A4 без X-Requested-With
     @Test
     void registerWithoutCsrfHeaderIsRejectedWithoutSideEffects() throws Exception {
         mockMvc.perform(post("/api/v1/auth/register")

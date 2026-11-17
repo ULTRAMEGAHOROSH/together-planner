@@ -30,7 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/** spec §14.2: diff по id (§9.8). Без Spring — чистые моки, реальный объектный граф {@code WeekTemplate}. */
+/** Diff-by-id update logic, with mocks and a real {@code WeekTemplate} object graph - no Spring context. */
 class TemplateServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-11-06T06:00:00Z");
@@ -61,8 +61,8 @@ class TemplateServiceTest {
         when(weekTemplateRepository.findByIdAndWorkspaceId(templateId, wsId)).thenReturn(Optional.of(template));
 
         TemplateRequest request = new TemplateRequest("Usual week", null, List.of(
-                eventRequest(keep.getId(), DayOfWeek.MONDAY, LocalTime.of(10, 0)),   // id есть -> обновить эту же строку
-                eventRequest(null, DayOfWeek.WEDNESDAY, LocalTime.of(8, 0))          // id == null -> создать
+                eventRequest(keep.getId(), DayOfWeek.MONDAY, LocalTime.of(10, 0)),   // has an id -> updates that row
+                eventRequest(null, DayOfWeek.WEDNESDAY, LocalTime.of(8, 0))          // id == null -> creates a new row
         ), 0L);
 
         service.update(wsId, userId, templateId, request);

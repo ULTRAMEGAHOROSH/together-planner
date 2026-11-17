@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 
-/** S1 (spec §8.5). {@code requireMember → zoneOf → members → findOverlapping → findApplicationsForWeek}. */
+/** Assembles the week view: membership check, then members, events and applied templates. */
 @Service
 @RequiredArgsConstructor
 public class WeekViewService {
@@ -26,7 +26,7 @@ public class WeekViewService {
     private final TemplateApplyService templateApplyService;
     private final TimeService timeService;
 
-    /** {@code date} по умолчанию — «сегодня» в поясе пространства, приведённое к понедельнику. */
+    /** {@code date} defaults to "today" in the workspace's time zone, rounded back to Monday. */
     @Transactional(readOnly = true)
     public WeekResponse get(UUID wsId, UUID userId, LocalDate date) {
         workspaceAccessService.requireMember(wsId, userId);

@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-/** Методы для планировщика (поиск/удаление исключений недели) — этап 7.2. */
+/** Lookup and cleanup of per-week exclusions, used by the apply flow. */
 public interface OccurrenceExclusionRepository extends JpaRepository<OccurrenceExclusion, OccurrenceExclusionId> {
 
     @Query("""

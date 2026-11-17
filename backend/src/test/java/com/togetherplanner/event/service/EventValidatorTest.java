@@ -12,7 +12,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** spec §14.2: все кейсы {@code EventValidator}. */
 class EventValidatorTest {
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Almaty");

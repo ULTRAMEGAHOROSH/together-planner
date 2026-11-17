@@ -12,12 +12,12 @@ import java.util.UUID;
 
 public interface TemplateApplicationRepository extends JpaRepository<TemplateApplication, UUID> {
 
-    /** {@code TemplateResponse.lastApplication} (T1, T3). */
+    /** Used for {@code TemplateResponse.lastApplication}. */
     Optional<TemplateApplication> findFirstByTemplateIdOrderByAppliedAtDesc(UUID templateId);
 
-    /** T8 — история применений по пространству. */
+    /** Application history for a workspace. */
     Page<TemplateApplication> findByWorkspaceIdOrderByAppliedAtDesc(UUID workspaceId, Pageable pageable);
 
-    /** {@code WeekResponse.appliedTemplates} (spec §8.5, этап 8) — межмодульный метод для {@code schedule}. */
+    /** Used for {@code WeekResponse.appliedTemplates} - called from the schedule module. */
     List<TemplateApplication> findByWorkspaceIdAndWeekStartOrderByAppliedAt(UUID workspaceId, LocalDate weekStart);
 }

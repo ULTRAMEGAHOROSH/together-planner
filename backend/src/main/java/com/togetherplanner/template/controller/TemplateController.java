@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-/** T1–T5 (spec §8.7); T6, T7 (spec §8.8, §9.5) — этап 7. */
+/** Template CRUD, plus preview and apply. */
 @RestController
 @RequestMapping("/api/v1/workspaces/{wsId}/templates")
 @RequiredArgsConstructor

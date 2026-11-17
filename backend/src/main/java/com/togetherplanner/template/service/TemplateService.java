@@ -26,7 +26,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/** T1–T5 (spec §8.7). T6–T8 (применение) — этапы 6–7. */
+/** Template CRUD. */
 @Service
 @RequiredArgsConstructor
 public class TemplateService {
@@ -37,7 +37,7 @@ public class TemplateService {
     private final WorkspaceAccessService workspaceAccessService;
     private final Clock clock;
 
-    /** T1: шаблоны отдаются целиком, по {@code name}. */
+    /** Templates are returned in full, ordered by {@code name}. */
     @Transactional(readOnly = true)
     public List<TemplateResponse> list(UUID wsId, UUID userId) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -46,7 +46,7 @@ public class TemplateService {
                 .toList();
     }
 
-    /** T2: {@code name} — trim; {@code id != null} в новых событиях отклоняется как ошибка валидации. */
+    /** {@code name} is trimmed; a non-null {@code id} on a new event is rejected as a validation error. */
     @Transactional
     public TemplateResponse create(UUID wsId, UUID userId, TemplateRequest request) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -72,14 +72,13 @@ public class TemplateService {
         return templateMapper.toResponse(saved, null);
     }
 
-    /** T3. */
     @Transactional(readOnly = true)
     public TemplateResponse get(UUID wsId, UUID userId, UUID templateId) {
         workspaceAccessService.requireMember(wsId, userId);
         return toResponseWithLastApplication(findOwned(wsId, templateId));
     }
 
-    /** T4: diff по id (spec §9.8). Созданные из шаблона события не меняются (R-7) — этот метод Event не трогает. */
+    /** Updates by diffing events by id. Doesn't touch any Event rows - events already created from this template are left as they are. */
     @Transactional
     public TemplateResponse update(UUID wsId, UUID userId, UUID templateId, TemplateRequest request) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -109,7 +108,7 @@ public class TemplateService {
             requireParticipantsAreMembers(eventRequest.participantIds(), memberIds);
         }
 
-        // Удалить то, чего нет в запросе — orphanRemoval доделает каскад (исключения уйдут с ним же).
+        // Remove whatever isn't in the request - orphanRemoval cascades the delete, taking exclusions with it.
         template.getEvents().removeIf(e -> !requestedIds.contains(e.getId()));
 
         for (TemplateEventRequest eventRequest : request.events()) {
@@ -124,13 +123,13 @@ public class TemplateService {
         template.setDescription(request.description());
         template.setUpdatedAt(clock.instant());
 
-        // flush() — иначе @Version обновится только при коммите, после того как
-        // метод уже вернул ответ (тот же случай, что EventService.update, этап 4.3).
+        // flush() here - otherwise @Version only updates at commit time, after
+        // this method has already returned (same situation as EventService.update).
         weekTemplateRepository.flush();
         return toResponseWithLastApplication(template);
     }
 
-    /** T5: события остаются, в истории {@code templateId = null}; исключения удаляются каскадом. */
+    /** Events are left alone; the application history keeps {@code templateId = null}; exclusions cascade-delete. */
     @Transactional
     public void delete(UUID wsId, UUID userId, UUID templateId, Long expectedVersion) {
         workspaceAccessService.requireMember(wsId, userId);

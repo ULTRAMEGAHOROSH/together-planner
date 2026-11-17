@@ -13,29 +13,29 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.http.HttpMethod;
 
-/** spec §10.7. Единственная {@code SecurityFilterChain} приложения. */
+/** The app's one and only {@code SecurityFilterChain}. */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     PasswordEncoder passwordEncoder() {
-        // spec §10.1 — делегирующий encoder, по умолчанию BCrypt.
+        // Delegating encoder, defaults to BCrypt.
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
     SecurityFilterChain api(HttpSecurity http, ProblemAuthenticationEntryPoint entryPoint,
                              ProblemAccessDeniedHandler deniedHandler, ProblemResponseWriter problemWriter) throws Exception {
-        // Фильтр создаётся через new, а НЕ как @Component: иначе Spring Boot зарегистрирует его
-        // ещё и в обычной цепочке сервлет-фильтров, и он сработает дважды.
+        // Created with new, NOT as a @Component - otherwise Spring Boot would
+        // register it in the regular servlet filter chain too, and it would run twice.
         AuthCsrfHeaderFilter csrfHeaderFilter = new AuthCsrfHeaderFilter(problemWriter);
         return http
-                .csrf(AbstractHttpConfigurer::disable)            // §10.5
-                .cors(AbstractHttpConfigurer::disable)             // §10.6
+                .csrf(AbstractHttpConfigurer::disable)            // custom header check in AuthCsrfHeaderFilter instead
+                .cors(AbstractHttpConfigurer::disable)            // single origin, no cross-site frontend
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .logout(AbstractHttpConfigurer::disable)           // свой /auth/logout
+                .logout(AbstractHttpConfigurer::disable)          // handled by our own /auth/logout
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",

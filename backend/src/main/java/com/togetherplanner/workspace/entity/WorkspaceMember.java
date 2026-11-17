@@ -15,7 +15,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code workspace_member} (spec §5.2). Межмодульные ссылки — по {@code UUID} (spec §6.2). */
+/** Maps to the {@code workspace_member} table. Cross-module references are plain UUIDs, no FK. */
 @Entity
 @Table(name = "workspace_member")
 @Getter

@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code week_template} (spec §5.4). */
+/** Maps to the {@code week_template} table. */
 @Entity
 @Table(name = "week_template")
 @Getter
@@ -51,7 +51,7 @@ public class WeekTemplate {
     @Version
     private long version;
 
-    /** Diff по id при обновлении (spec §9.8): {@code orphanRemoval} удаляет то, чего больше нет в запросе. */
+    /** Updated as a diff by id: {@code orphanRemoval} deletes whatever's no longer in the request. */
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TemplateEvent> events = new ArrayList<>();
 

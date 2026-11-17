@@ -34,9 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * spec §14.5 (S-04), параметризованный по всем member-эндпоинтам под
- * {@code /workspaces/{wsId}} (W3–W5, S1, E1–E6, T1–T8); roadmap 9.2. W1, W2,
- * W6 не берут чужой {@code wsId} в пути и сюда не входят.
+ * Parameterized over every member endpoint under {@code /workspaces/{wsId}}.
+ * W1, W2 and W6 don't take someone else's {@code wsId} in the path, so
+ * they're not included here.
  */
 class ForeignWorkspaceAccessIT extends AbstractIntegrationTest {
 

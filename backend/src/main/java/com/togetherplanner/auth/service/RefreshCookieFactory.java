@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
-/** spec §10.4: cookie {@code tp_refresh}. */
+/** Builds the {@code tp_refresh} cookie. */
 @Component
 @RequiredArgsConstructor
 public class RefreshCookieFactory {
@@ -25,7 +25,7 @@ public class RefreshCookieFactory {
                 .build();
     }
 
-    /** Очистка: то же имя, путь и атрибуты, пустое значение, {@code Max-Age=0}. */
+    /** Clears the cookie: same name, path and attributes, empty value, {@code Max-Age=0}. */
     public ResponseCookie clear() {
         return ResponseCookie.from(COOKIE_NAME, "")
                 .httpOnly(true)

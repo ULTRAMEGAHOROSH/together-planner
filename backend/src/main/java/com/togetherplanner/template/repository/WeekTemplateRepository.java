@@ -11,12 +11,12 @@ public interface WeekTemplateRepository extends JpaRepository<WeekTemplate, UUID
 
     Optional<WeekTemplate> findByIdAndWorkspaceId(UUID id, UUID workspaceId);
 
-    /** T1: «шаблоны отдаются целиком», сортировка по {@code name}. */
+    /** Templates are listed in full, ordered by {@code name}. */
     List<WeekTemplate> findByWorkspaceIdOrderByName(UUID workspaceId);
 
-    /** T2: {@code 409 TEMPLATE_NAME_TAKEN} без учёта регистра (совпадает с {@code uq_template_workspace_name}). */
+    /** Case-insensitive, matching {@code uq_template_workspace_name}. */
     boolean existsByWorkspaceIdAndNameIgnoreCase(UUID workspaceId, String name);
 
-    /** T4: та же проверка, но не считает совпадением сам редактируемый шаблон. */
+    /** Same check, but excludes the template currently being edited. */
     boolean existsByWorkspaceIdAndNameIgnoreCaseAndIdNot(UUID workspaceId, String name, UUID id);
 }

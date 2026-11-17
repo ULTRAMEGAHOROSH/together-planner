@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-/** W1–W6 (spec §8.4). */
+/** Workspace creation, lookup, updates, members and invites. */
 @RestController
 @RequestMapping("/api/v1/workspaces")
 @RequiredArgsConstructor

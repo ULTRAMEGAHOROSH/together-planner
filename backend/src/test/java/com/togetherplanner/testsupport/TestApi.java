@@ -31,8 +31,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Помощник для IT-тестов (spec §14.1): register/login/createWorkspace/createInvite/join,
- * возвращающие токены и id, вместо повторения HTTP-деталей в каждом тесте.
+ * Helper for integration tests: register/login/createWorkspace/createInvite/join,
+ * returning tokens and ids instead of repeating the HTTP details in every test.
  */
 @Component
 public class TestApi {
@@ -87,7 +87,7 @@ public class TestApi {
         return jsonMapper.readValue(result.getResponse().getContentAsString(), InviteResponse.class);
     }
 
-    /** Результат не проверяется здесь — тесты сами задают ожидания (200 или конкретная ошибка). */
+    /** Doesn't assert anything here - each test sets its own expectation (200, or a specific error). */
     public ResultActions join(String accessToken, String code) throws Exception {
         return mockMvc.perform(post("/api/v1/workspaces/join")
                 .header("Authorization", "Bearer " + accessToken)

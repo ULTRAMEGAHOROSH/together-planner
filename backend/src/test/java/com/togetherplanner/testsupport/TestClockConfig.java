@@ -8,20 +8,20 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 
 /**
- * Заменяет production {@code Clock} (из {@code ClockConfig}) управляемым
- * тестовым экземпляром. Старт — {@code 2026-11-06T06:00:00Z} (spec §14.1):
- * нужен фиксированный момент для срока действия приглашений и окна ротации
- * refresh-токенов.
+ * Replaces the production {@code Clock} (from {@code ClockConfig}) with a
+ * controllable test instance. Starts at {@code 2026-11-06T06:00:00Z} - a
+ * fixed point in time makes invite expiry and refresh-token rotation
+ * windows deterministic to test.
  */
 @TestConfiguration
 public class TestClockConfig {
 
     public static final Instant TEST_START_INSTANT = Instant.parse("2026-11-06T06:00:00Z");
 
-    // Имя метода намеренно отличается от ClockConfig.clock(): два @Bean-метода
-    // с одинаковым именем — это конфликт регистрации (разные имена бинов),
-    // а не переопределение. @Primary разрешает неоднозначность по типу между
-    // двумя разными бинами Clock, когда оба присутствуют в тестовом контексте.
+    // Deliberately named differently from ClockConfig.clock(): two @Bean
+    // methods with the same name register as two distinct beans, not an
+    // override. @Primary is what breaks the tie between the two Clock
+    // beans when both are present in the test context.
     @Bean
     @Primary
     public MutableClock testClock() {

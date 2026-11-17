@@ -6,8 +6,9 @@ import java.security.SecureRandom;
 import java.util.Locale;
 
 /**
- * spec §9.6. Алфавит без похожих символов (0/O, 1/I/L). 8 символов ≈ 39 бит
- * энтропии — код одноразовый и живёт 7 дней, перебором не подобрать.
+ * Alphabet skips look-alike characters (0/O, 1/I/L). 8 characters gives
+ * about 39 bits of entropy - more than enough given the code is
+ * single-use and expires in 7 days anyway.
  */
 @Component
 public class InviteCodeGenerator {
@@ -25,12 +26,12 @@ public class InviteCodeGenerator {
         return code.toString();
     }
 
-    /** Вход пользователя: без учёта регистра, дефисов и пробелов — {@code "k7qm-2xpa"} → {@code "K7QM2XPA"}. */
+    /** Normalizes user input: case-insensitive, strips dashes and spaces - {@code "k7qm-2xpa"} becomes {@code "K7QM2XPA"}. */
     public static String normalize(String input) {
         return input.toUpperCase(Locale.ROOT).replace("-", "").replace(" ", "");
     }
 
-    /** Только для показа — хранится и сравнивается код без дефиса. */
+    /** For display only - the code is stored and compared without the dash. */
     public static String toDisplayCode(String code) {
         return code.substring(0, 4) + "-" + code.substring(4);
     }

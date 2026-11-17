@@ -27,7 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** spec §14.2: RT1–RT6. С моками, без Spring. */
+/** Pure unit tests with mocks - no Spring context. */
 class RefreshTokenServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-11-06T06:00:00Z");
@@ -40,7 +40,6 @@ class RefreshTokenServiceTest {
             Duration.ofMinutes(15), Duration.ofDays(30), Duration.ofSeconds(10), false);
     private final RefreshTokenService service = new RefreshTokenService(repository, properties, jwtService, clock);
 
-    // RT1
     @Test
     void validTokenIsRotatedAndANewOneIsIssued() {
         RefreshToken token = activeToken();
@@ -56,7 +55,6 @@ class RefreshTokenServiceTest {
         verify(repository).save(any(RefreshToken.class));
     }
 
-    // RT2
     @Test
     void tokenRotatedFiveSecondsAgoIsRejectedWithoutMassRevoke() {
         RefreshToken token = revokedToken(RevokeReason.ROTATED, NOW.minusSeconds(5));
@@ -70,7 +68,6 @@ class RefreshTokenServiceTest {
         verify(repository, never()).revokeAllActive(any(), any(), any());
     }
 
-    // RT3
     @Test
     void tokenRotatedSixtySecondsAgoTriggersMassRevoke() {
         RefreshToken token = revokedToken(RevokeReason.ROTATED, NOW.minusSeconds(60));
@@ -84,7 +81,6 @@ class RefreshTokenServiceTest {
         verify(repository).revokeAllActive(token.getUserId(), RevokeReason.REUSE_DETECTED, NOW);
     }
 
-    // RT4
     @Test
     void expiredTokenIsInvalid() {
         RefreshToken token = activeToken();
@@ -97,7 +93,6 @@ class RefreshTokenServiceTest {
                 .isEqualTo(ErrorCode.REFRESH_TOKEN_INVALID);
     }
 
-    // RT5
     @Test
     void loggedOutTokenIsInvalidWithoutMassRevoke() {
         RefreshToken token = revokedToken(RevokeReason.LOGOUT, NOW.minusSeconds(5));
@@ -111,7 +106,6 @@ class RefreshTokenServiceTest {
         verify(repository, never()).revokeAllActive(any(), any(), any());
     }
 
-    // RT6
     @Test
     void revokeIfActiveReturningZeroMeansConcurrentRotationWon() {
         RefreshToken token = activeToken();

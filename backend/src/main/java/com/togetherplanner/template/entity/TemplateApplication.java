@@ -16,7 +16,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/** spec §5.5. Таблица {@code template_application} (spec §5.4) — журнал. Заполняется в этапе 7. */
+/** Maps to the {@code template_application} table - an audit log of applies. */
 @Entity
 @Table(name = "template_application")
 @Getter
@@ -31,7 +31,7 @@ public class TemplateApplication {
     @Column(name = "workspace_id", nullable = false)
     private UUID workspaceId;
 
-    /** {@code NULL} после удаления шаблона (spec T5, ON DELETE SET NULL). */
+    /** {@code NULL} once the template is deleted (ON DELETE SET NULL). */
     @Column(name = "template_id")
     private UUID templateId;
 

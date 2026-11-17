@@ -28,7 +28,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/** E1–E6 (spec §8.6). */
+/** Event CRUD, plus range and upcoming lookups. */
 @RestController
 @RequestMapping("/api/v1/workspaces/{wsId}/events")
 @RequiredArgsConstructor

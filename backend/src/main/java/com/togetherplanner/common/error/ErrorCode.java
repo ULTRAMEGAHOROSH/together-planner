@@ -5,9 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 /**
- * Каталог кодов ошибок (spec §7.4). Каждый код несёт собственный HTTP-статус,
- * чтобы {@link ApiException} не требовала указывать статус в каждом месте,
- * где её бросают.
+ * Error code catalog. Each code carries its own HTTP status so we don't
+ * have to specify one every time {@link ApiException} is thrown.
  */
 @Getter
 @RequiredArgsConstructor

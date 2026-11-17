@@ -18,9 +18,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * spec §6.3, §9.2. Этап 7.2. {@code on} — обычный синхронный
- * {@code @EventListener} (не {@code @TransactionalEventListener}): исключение
- * должно появиться в той же транзакции, что и удаление события.
+ * {@code on} is a plain synchronous {@code @EventListener}, not a
+ * {@code @TransactionalEventListener} - the exclusion has to land in the
+ * same transaction as the event deletion that triggered it.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,7 +42,7 @@ public class OccurrenceExclusionService {
         occurrenceExclusionRepository.save(new OccurrenceExclusion(id, event.deletedBy(), clock.instant()));
     }
 
-    /** Публичный метод — spec §9.4 ({@code loadPlanInput}), §9.5 шаг 4. */
+    /** Called when building the plan input, both for preview and apply. */
     @Transactional(readOnly = true)
     public Set<UUID> excludedFor(LocalDate weekStart, Collection<UUID> templateEventIds) {
         if (templateEventIds.isEmpty()) {
@@ -53,7 +53,7 @@ public class OccurrenceExclusionService {
                 .collect(Collectors.toSet());
     }
 
-    /** Публичный метод — spec §9.5 шаг 8 (REPLACE снимает исключения восстановленных вхождений). */
+    /** Called by REPLACE to clear exclusions for the occurrences it restores. */
     @Transactional
     public void clear(LocalDate weekStart, Collection<UUID> templateEventIds) {
         if (templateEventIds.isEmpty()) {

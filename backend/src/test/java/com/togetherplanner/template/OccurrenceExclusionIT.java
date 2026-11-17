@@ -27,7 +27,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §6.3, §9.2; roadmap 7.2. */
 class OccurrenceExclusionIT extends AbstractIntegrationTest {
 
     private static final LocalDate WEEK_START = LocalDate.of(2026, 11, 9);

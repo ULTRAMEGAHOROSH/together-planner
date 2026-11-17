@@ -10,8 +10,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/** spec §7.2: {@code 403 FORBIDDEN} из {@code AccessDeniedHandler}. В этом приложении почти не встречается — чужие
- * ресурсы отдают {@code 404}, а не {@code 403} (spec §8.0). */
+/**
+ * {@code 403 FORBIDDEN} from {@code AccessDeniedHandler}. Rarely hit in
+ * this app - resources that belong to someone else return {@code 404},
+ * not {@code 403}.
+ */
 @Component
 @RequiredArgsConstructor
 public class ProblemAccessDeniedHandler implements AccessDeniedHandler {

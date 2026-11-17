@@ -8,7 +8,7 @@ import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** spec §14.2: секрет короче 32 байт → {@code IllegalStateException} при старте, а не на первом запросе. */
+/** A secret shorter than 32 bytes should fail at startup, not on the first request. */
 class JwtConfigTest {
 
     @Test

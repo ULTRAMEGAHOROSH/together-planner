@@ -30,9 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * spec §14.3 (I-14). Отдельный класс: {@code @MockitoSpyBean} переопределяет
- * бин для всего контекста этого класса, Spring помечает контекст «грязным» и
- * пересоздаёт его для следующего класса — не смешиваем это с TemplateApplyIT.
+ * Kept as its own class: {@code @MockitoSpyBean} overrides a bean for
+ * this class's whole context, which marks the context dirty and forces
+ * Spring to rebuild it for whatever runs next - better not to mix that
+ * into {@code TemplateApplyIT}.
  */
 class TemplateApplyRollbackIT extends AbstractIntegrationTest {
 
@@ -62,11 +63,11 @@ class TemplateApplyRollbackIT extends AbstractIntegrationTest {
 
         List<EventResponse> afterRollback = testApi.listEvents(alice.accessToken(), workspace.id(), WEEK_START, WEEK_START.plusDays(6));
         assertThat(afterRollback).hasSize(1);
-        assertThat(afterRollback.get(0).id()).isEqualTo(beforeReplace.get(0).id()); // удаление откатилось, новое не создано
+        assertThat(afterRollback.get(0).id()).isEqualTo(beforeReplace.get(0).id()); // the delete rolled back and nothing new was created
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/workspaces/" + workspace.id() + "/template-applications")
                         .header("Authorization", "Bearer " + alice.accessToken()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1)); // запись не создана; осталась только от MERGE
+                .andExpect(jsonPath("$.totalElements").value(1)); // no new entry - only the one from MERGE remains
     }
 }

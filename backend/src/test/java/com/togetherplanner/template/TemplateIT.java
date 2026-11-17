@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.7 (T1–T5); roadmap 5.2. */
 class TemplateIT extends AbstractIntegrationTest {
 
     @Test
@@ -45,21 +44,21 @@ class TemplateIT extends AbstractIntegrationTest {
                         .header("Authorization", "Bearer " + alice.accessToken()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Other"))      // по name: "Other" < "Usual week"
+                .andExpect(jsonPath("$[0].name").value("Other"))      // by name: "Other" sorts before "Usual week"
                 .andExpect(jsonPath("$[1].name").value("Usual week"));
 
         TemplateResponse fetched = testApi.getTemplate(alice.accessToken(), workspace.id(), created.id());
         assertThat(fetched.id()).isEqualTo(created.id());
 
         TemplateRequest updateRequest = new TemplateRequest("Renamed", "new desc", List.of(
-                eventRequest(keptEventId, DayOfWeek.MONDAY, LocalTime.of(10, 0), alice.userId()),  // id есть -> обновить
-                eventRequest(null, DayOfWeek.WEDNESDAY, LocalTime.of(8, 0), alice.userId())        // id == null -> создать
+                eventRequest(keptEventId, DayOfWeek.MONDAY, LocalTime.of(10, 0), alice.userId()),  // has an id -> updates it
+                eventRequest(null, DayOfWeek.WEDNESDAY, LocalTime.of(8, 0), alice.userId())        // id == null -> creates a new row
         ), created.version());
         testApi.putTemplate(alice.accessToken(), workspace.id(), created.id(), updateRequest)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Renamed"))
                 .andExpect(jsonPath("$.events.length()").value(2))
-                .andExpect(jsonPath("$.events[0].id").value(keptEventId.toString()))  // Monday сортируется первым
+                .andExpect(jsonPath("$.events[0].id").value(keptEventId.toString()))  // Monday sorts first
                 .andExpect(jsonPath("$.version").value(1));
 
         testApi.deleteTemplate(alice.accessToken(), workspace.id(), created.id(), 1L)
@@ -111,7 +110,6 @@ class TemplateIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("TEMPLATE_EVENT_NOT_FOUND"));
     }
 
-    // I-24
     @Test
     void deleteVersionCases() throws Exception {
         RegisteredUser alice = testApi.register("alice5@example.com", "Alice");
@@ -127,13 +125,12 @@ class TemplateIT extends AbstractIntegrationTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("VERSION_CONFLICT"));
 
-        testApi.getTemplate(alice.accessToken(), workspace.id(), created.id()); // ещё существует
+        testApi.getTemplate(alice.accessToken(), workspace.id(), created.id()); // still there
 
         testApi.deleteTemplate(alice.accessToken(), workspace.id(), created.id(), 0L)
                 .andExpect(status().isNoContent());
     }
 
-    // S-04 (часть)
     @Test
     void creatingATemplateInSomeoneElsesWorkspaceReturns404() throws Exception {
         RegisteredUser alice = testApi.register("alice6@example.com", "Alice");

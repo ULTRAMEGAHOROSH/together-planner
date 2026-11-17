@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.4 (W1–W4); roadmap 3.2. */
 class WorkspaceIT extends AbstractIntegrationTest {
 
     @Test
@@ -75,7 +74,6 @@ class WorkspaceIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.timeZone").value("Asia/Almaty"));
     }
 
-    // S-04 (часть): W3 на чужое пространство
     @Test
     void patchingSomeoneElsesWorkspaceReturns404() throws Exception {
         RegisteredUser alice = testApi.register("alice5@example.com", "Alice");
@@ -90,7 +88,6 @@ class WorkspaceIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("WORKSPACE_NOT_FOUND"));
     }
 
-    // S-04 (часть): W4 на чужое пространство
     @Test
     void listingMembersOfSomeoneElsesWorkspaceReturns404() throws Exception {
         RegisteredUser alice = testApi.register("alice6@example.com", "Alice");

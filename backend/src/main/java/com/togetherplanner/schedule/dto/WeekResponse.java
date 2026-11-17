@@ -7,7 +7,6 @@ import com.togetherplanner.workspace.dto.MemberResponse;
 import java.time.LocalDate;
 import java.util.List;
 
-/** spec §8.5 (S1). */
 public record WeekResponse(
         LocalDate weekStart,
         LocalDate weekEnd,

@@ -4,6 +4,6 @@ import com.togetherplanner.event.dto.EventResponse;
 
 import java.util.List;
 
-/** spec §8.8 — ответ T7. */
+/** Response for applying a template. */
 public record ApplyResultResponse(TemplateApplicationResponse application, List<EventResponse> createdEvents) {
 }

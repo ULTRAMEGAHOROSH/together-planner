@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-/** {@code existsById} для {@code OccurrenceExclusionService} — этап 7.2. */
+/** {@code existsById} is used by {@code OccurrenceExclusionService}. */
 public interface TemplateEventRepository extends JpaRepository<TemplateEvent, UUID> {
 }

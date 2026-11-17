@@ -23,14 +23,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.net.URI;
 
 /**
- * Единая точка превращения исключений в {@code ProblemDetail} с полем
- * {@code code} (spec §7.1, §7.2). Таблица соответствий исключение → код
- * воспроизводит spec §7.2 построчно.
+ * Turns exceptions into a {@code ProblemDetail} with a {@code code} field.
  *
- * <p>{@code 401} и {@code 403} из Spring Security сюда не попадают — они
- * возникают в фильтрах до контроллеров и пишутся
+ * <p>401/403 from Spring Security never reach here - those happen in
+ * filters before the controller and are written by
  * {@code ProblemAuthenticationEntryPoint} / {@code ProblemAccessDeniedHandler}
- * через общий {@code ProblemResponseWriter} (появятся в модуле {@code security}).
+ * through the shared {@code ProblemResponseWriter}.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -71,13 +69,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Postgres обнаружил дедлок (или таймаут блокировки) между двумя
-     * параллельными запросами и прервал один из них (spec §14.4, C-06):
-     * два конкурентных изменения {@code @ElementCollection} одной и той же
-     * сущности могут столкнуться на уровне блокировок строк раньше, чем
-     * сервис дойдёт до проверки {@code version}. Это гонка, пойманная БД,
-     * а не баг запроса — тот же код, что и для прочих не предусмотренных
-     * сервисом конфликтов.
+     * Postgres hit a deadlock (or a lock timeout) between two concurrent
+     * requests and killed one of them. Two updates racing on the same
+     * {@code @ElementCollection} can collide at the row-lock level before
+     * the service even gets to its own version check - a DB-caught race,
+     * not a request bug, so it gets the same code as any other conflict
+     * the service didn't anticipate.
      */
     @ExceptionHandler(CannotAcquireLockException.class)
     public ResponseEntity<ProblemDetail> handleCannotAcquireLock(
@@ -91,7 +88,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problemResponse(ErrorCode.INTERNAL_ERROR, "Internal error", request);
     }
 
-    // --- Переопределения ResponseEntityExceptionHandler: тело уже ProblemDetail, добавляем "code" ---
+    // ResponseEntityExceptionHandler overrides below - body is already a ProblemDetail, just add "code"
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(

@@ -18,8 +18,8 @@ import java.time.Clock;
 import java.util.Base64;
 
 /**
- * Encoder/decoder для access-токенов (spec §10.3). Секрет короче 32 байт —
- * падение на старте (`IllegalStateException`), а не на первом запросе.
+ * Encoder/decoder for access tokens. A secret shorter than 32 bytes fails
+ * at startup ({@code IllegalStateException}), not on the first request.
  */
 @Configuration
 @RequiredArgsConstructor
@@ -56,12 +56,11 @@ public class JwtConfig {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(jwtSecretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        // Тот же Clock, что и у выдачи токена — иначе тестовые токены,
-        // выпущенные при MutableClock, окажутся «истёкшими» по системным часам.
-        // Явный нулевой допуск: у JwtTimestampValidator() по умолчанию 60 с
-        // допуска на расхождение часов, из-за чего «истёк 60 с назад» токен
-        // всё ещё проходит — обнаружено тестом S-03 (exp + 16 мин на 15-минутном
-        // токене даёт ровно 60 с просрочки, т.е. точную границу допуска).
+        // Same Clock as token issuance - otherwise tokens issued under a test's
+        // MutableClock would look expired against the system clock.
+        // Zero skew tolerance is intentional: JwtTimestampValidator()'s default
+        // 60s allowance would let a token that expired 60s ago still pass,
+        // which is exactly the boundary test S-03 exercises.
         JwtTimestampValidator timestampValidator = new JwtTimestampValidator(java.time.Duration.ZERO);
         timestampValidator.setClock(clock);
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(

@@ -6,9 +6,9 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Clock;
 
 /**
- * Единственный источник «сейчас» в приложении. В тестах подменяется
- * {@code @Primary MutableClock} (spec §14.1), поэтому бизнес-код никогда не
- * обращается к {@code Instant.now()} / {@code LocalDateTime.now()} напрямую.
+ * The only source of "now" in the app. Tests swap in a {@code @Primary}
+ * {@code MutableClock}, so business code never calls {@code Instant.now()}
+ * / {@code LocalDateTime.now()} directly.
  */
 @Configuration
 public class ClockConfig {

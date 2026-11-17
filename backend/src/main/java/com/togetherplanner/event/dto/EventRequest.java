@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-/** Один DTO на POST и PUT (spec §8.6): {@code version} обязателен только в PUT, проверяется сервисом. */
+/** Shared by POST and PUT - {@code version} is required only on PUT, enforced by the service. */
 public record EventRequest(
         @NotBlank @Size(max = 100) String title,
         @Size(max = 2000) String description,

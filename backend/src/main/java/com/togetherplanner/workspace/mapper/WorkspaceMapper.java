@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Имя участника в {@code user}, не в {@code workspace_member} — список имён запрашивается оттуда (spec §6.4). */
+/** Display names live in the user module, not workspace_member - fetched from there in bulk. */
 @Component
 @RequiredArgsConstructor
 public class WorkspaceMapper {
 
     private final UserService userService;
 
-    /** {@code members} должен уже быть отсортирован по {@code seat} (см. {@code findByWorkspaceIdOrderBySeat}). */
+    /** Expects {@code members} already sorted by {@code seat} (see {@code findByWorkspaceIdOrderBySeat}). */
     public WorkspaceResponse toResponse(Workspace workspace, List<WorkspaceMember> members) {
         return new WorkspaceResponse(workspace.getId(), workspace.getName(), workspace.getTimeZone(),
                 toMemberResponses(members), workspace.getCreatedAt());

@@ -12,10 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §9.6, §14.3 (I-01, I-02, I-03); roadmap 3.3. */
 class InviteIT extends AbstractIntegrationTest {
 
-    // I-01
     @Test
     void registerCreateWorkspaceInviteAndJoinEndsWithTwoMembersOnSeatsOneAndTwo() throws Exception {
         RegisteredUser alice = testApi.register("alice@example.com", "Alice");
@@ -41,7 +39,6 @@ class InviteIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$[1].role").value("MEMBER"));
     }
 
-    // I-02
     @Test
     void thirdUserWithAFreshCodeGetsWorkspaceFull() throws Exception {
         RegisteredUser alice = testApi.register("alice2@example.com", "Alice");
@@ -57,7 +54,6 @@ class InviteIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("WORKSPACE_FULL"));
     }
 
-    // I-03a
     @Test
     void reusingAnAlreadyUsedCodeIsRejected() throws Exception {
         RegisteredUser alice = testApi.register("alice3@example.com", "Alice");
@@ -72,7 +68,6 @@ class InviteIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("INVITE_ALREADY_USED"));
     }
 
-    // I-03b
     @Test
     void expiredInviteIsRejected() throws Exception {
         RegisteredUser alice = testApi.register("alice4@example.com", "Alice");

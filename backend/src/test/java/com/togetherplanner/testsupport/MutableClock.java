@@ -6,9 +6,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 /**
- * Управляемые тестами часы (spec §14.1): {@code setInstant} переставляет
- * время, {@code advance} сдвигает вперёд. Нужны для окна ротации refresh-
- * токенов, срока приглашений и сценариев с «сейчас».
+ * A clock the tests can control: {@code setInstant} jumps to a time,
+ * {@code advance} moves it forward. Needed for the refresh-token rotation
+ * window, invite expiry, and anything that depends on "now".
  */
 public class MutableClock extends Clock {
 

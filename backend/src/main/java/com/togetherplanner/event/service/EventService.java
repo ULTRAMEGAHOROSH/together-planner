@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-/** E3–E6 (spec §8.6). {@code findOverlapping}, {@code createFromTemplate}, {@code deleteForTemplateReplace} — этап 7.1. */
+/** Event CRUD, plus the cross-module methods used by the template apply flow. */
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -49,7 +49,7 @@ public class EventService {
     private final TimeService timeService;
     private final Clock clock;
 
-    /** E3: {@code source = null}, {@code createdBy = updatedBy = текущий}. */
+    /** Manual creation: {@code source} is {@code null}, {@code createdBy} and {@code updatedBy} are the current user. */
     @Transactional
     public EventResponse create(UUID wsId, UUID userId, EventRequest request) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -66,10 +66,10 @@ public class EventService {
     }
 
     /**
-     * E4. {@code @Transactional} — иначе {@code toResponse} ловит
-     * {@code LazyInitializationException} на {@code participantIds}: сессия
-     * Hibernate уже закрыта к моменту чтения ленивой коллекции без
-     * открытой транзакции.
+     * {@code @Transactional} is required here - without it,
+     * {@code toResponse} hits a {@code LazyInitializationException} on
+     * {@code participantIds}: the Hibernate session is already closed by
+     * the time the lazy collection gets read outside a transaction.
      */
     @Transactional(readOnly = true)
     public EventResponse get(UUID wsId, UUID userId, UUID eventId) {
@@ -77,7 +77,7 @@ public class EventService {
         return eventMapper.toResponse(findOwned(wsId, eventId));
     }
 
-    /** E5: {@code source} не меняется — перенесённое из шаблона событие остаётся «из шаблона». */
+    /** {@code source} is never touched on update - an event moved out of its template slot stays tagged as template-sourced. */
     @Transactional
     public EventResponse update(UUID wsId, UUID userId, UUID eventId, EventRequest request) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -101,14 +101,14 @@ public class EventService {
         event.setUpdatedBy(userId);
         event.setUpdatedAt(clock.instant());
 
-        // flush() — иначе UPDATE выполняется только при коммите, ПОСЛЕ того,
-        // как метод уже вернул ответ: клиент получил бы старое значение
-        // version (@Version обновляется Hibernate во время самого UPDATE).
+        // flush() here - otherwise the UPDATE only runs at commit time, after
+        // this method has already returned, and the client would get back a
+        // stale version (Hibernate bumps @Version during the UPDATE itself).
         eventRepository.flush();
         return eventMapper.toResponse(event);
     }
 
-    /** E6: явная проверка {@code version} до удаления; если есть {@code source} — публикует исключение (spec §6.3). */
+    /** Checks the version explicitly before deleting; if the event has a {@code source}, publishes an exclusion event. */
     @Transactional
     public void deleteByUser(UUID wsId, UUID userId, UUID eventId, Long expectedVersion) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -124,7 +124,7 @@ public class EventService {
         }
     }
 
-    /** E1: {@code from}/{@code to} включительно → пересечение с {@code [from 00:00; to+1 00:00)}; диапазон ≤ 93 дня. */
+    /** {@code from}/{@code to} are inclusive dates, so this overlaps {@code [from 00:00, to+1 00:00)}; range is capped at 93 days. */
     @Transactional(readOnly = true)
     public List<EventResponse> listRange(UUID wsId, UUID userId, LocalDate from, LocalDate to) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -140,7 +140,7 @@ public class EventService {
                 .toList();
     }
 
-    /** E2: {@code end > now} в поясе пространства — идущие сейчас события включены. */
+    /** {@code end > now} in the workspace's time zone - events in progress right now are included. */
     @Transactional(readOnly = true)
     public PageResponse<EventResponse> upcoming(UUID wsId, UUID userId, Pageable pageable) {
         workspaceAccessService.requireMember(wsId, userId);
@@ -150,7 +150,7 @@ public class EventService {
         return PageResponse.of(page, eventMapper::toResponse);
     }
 
-    /** Публичный метод — spec §6.4. Вызывается {@code template}, {@code schedule}. */
+    /** Called by the template and schedule modules. */
     @Transactional(readOnly = true)
     public List<EventResponse> findOverlapping(UUID wsId, LocalDateTime from, LocalDateTime to) {
         return eventRepository.findOverlapping(wsId, from, to).stream()
@@ -158,7 +158,7 @@ public class EventService {
                 .toList();
     }
 
-    /** Публичный метод — spec §6.4. Отдельный запрос по метке происхождения, а не по времени (A-01). */
+    /** Called by the template module. A dedicated lookup by provenance, not by time - a moved occurrence still has to be found. */
     @Transactional(readOnly = true)
     public List<EventResponse> findBySourceWeek(UUID wsId, LocalDate weekStart, Collection<UUID> templateEventIds) {
         if (templateEventIds.isEmpty()) {
@@ -170,9 +170,9 @@ public class EventService {
     }
 
     /**
-     * Публичный метод — spec §6.4, §9.5 шаг 9. Тот же {@code EventValidator},
-     * что и у E3 (длительность, участники) — защита от испорченного шаблона,
-     * хотя при обычной работе эти данные уже прошли валидацию на входе.
+     * Called by the template apply flow. Runs through the same
+     * {@code EventValidator} as manual creation - cheap insurance against
+     * a corrupted template, even though this data should already be valid.
      */
     @Transactional
     public List<EventResponse> createFromTemplate(UUID wsId, UUID userId, List<NewTemplateEvent> newEvents) {
@@ -197,10 +197,11 @@ public class EventService {
     }
 
     /**
-     * Публичный метод — spec §6.4, §9.5 шаг 7. Удаляет и {@code flush()}
-     * сразу: без него Hibernate выполнит все INSERT раньше DELETE и
-     * нарушит {@code uq_event_template_source} (A-02), если какое-то
-     * вхождение удаляется и создаётся заново в одной транзакции (REPLACE).
+     * Called by the template apply flow during REPLACE. Deletes and
+     * flushes immediately - without the flush, Hibernate would run every
+     * INSERT before any DELETE and trip {@code uq_event_template_source}
+     * whenever an occurrence is deleted and recreated in the same
+     * transaction.
      */
     @Transactional
     public void deleteForTemplateReplace(UUID wsId, Collection<UUID> eventIds) {

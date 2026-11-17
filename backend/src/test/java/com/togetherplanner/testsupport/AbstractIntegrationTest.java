@@ -10,19 +10,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
- * Базовый класс всех {@code *IT} (spec §14.1). Один контейнер PostgreSQL на
- * весь прогон тестов — не через {@code @Testcontainers}/{@code @Container}:
- * эти аннотации делят статическое поле только в пределах ОДНОГО тестового
- * класса, а между классами каждый {@code afterAll} его останавливает (сам
- * Testcontainers документирует это как известное ограничение). Для общего
- * на весь прогон контейнера официальный приём — запуск в статическом
- * инициализаторе, без JUnit5-аннотаций вообще; закрывает его Ryuk при
- * завершении JVM. Spring кеширует {@code ApplicationContext} между классами
- * с одинаковой конфигурацией, так что сам Spring-контекст всё равно один.
+ * Base class for every {@code *IT}. One PostgreSQL container for the
+ * whole test run - not through {@code @Testcontainers}/{@code @Container},
+ * since those annotations only share a static field within a single test
+ * class and stop the container in {@code afterAll} between classes
+ * (Testcontainers itself documents this as a known limitation). Starting
+ * it in a static initializer, with no JUnit annotations at all, is the
+ * documented way to get one container for the whole run; Ryuk tears it
+ * down when the JVM exits. Spring caches the {@code ApplicationContext}
+ * across classes with the same configuration anyway, so the context
+ * itself is shared regardless.
  *
- * <p>На тестовых классах нет {@code @Transactional}: запросы через
- * {@link MockMvc} должны коммитить, как в реальности — иначе проверки
- * гонок (этап 9) были бы бессмысленны.
+ * <p>No {@code @Transactional} on test classes: requests through
+ * {@link MockMvc} need to actually commit, the way they would in
+ * production, or the concurrency tests would be testing nothing.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** spec §14 roadmap 5.1: каскады {@code week_template}. */
+/** Cascades on {@code week_template} deletion. */
 class WeekTemplateRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired

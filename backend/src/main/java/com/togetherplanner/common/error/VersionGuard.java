@@ -1,11 +1,11 @@
 package com.togetherplanner.common.error;
 
 /**
- * Общий приём для E5, E6, T4, T5 (spec §9.7): явная проверка версии от
- * клиента. JPA запрещает менять поле {@code @Version} вручную, поэтому
- * сравниваем сами, а не подставляем в сущность. {@code @Version} на
- * сущности — второй, независимый рубеж против гонки между этой проверкой
- * и SQL (spec §11).
+ * Shared version check used before any update or delete that takes a
+ * client-supplied version. JPA won't let us set {@code @Version} by hand,
+ * so we compare it ourselves instead of writing it onto the entity.
+ * {@code @Version} on the entity is the second, independent line of
+ * defense against a race between this check and the actual SQL.
  */
 public final class VersionGuard {
 

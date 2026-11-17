@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Обёртка страницы результатов (spec §8.2). Контроллеры никогда не
- * возвращают {@link org.springframework.data.domain.Page} напрямую — она
- * раскрывает детали Spring Data (сортировку, Pageable) в публичном API.
+ * Page wrapper for API responses. Controllers never return a
+ * {@link org.springframework.data.domain.Page} directly - it leaks Spring
+ * Data internals (sorting, Pageable) into the public API.
  */
 public record PageResponse<T>(List<T> items, int page, int size, long totalElements,
                                int totalPages, boolean hasNext) {

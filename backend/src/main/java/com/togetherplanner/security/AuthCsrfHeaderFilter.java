@@ -12,15 +12,14 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * Защита в глубину для четырёх эндпоинтов, где запрос может быть
- * аутентифицирован cookie {@code tp_refresh} без Bearer-токена (spec §8.0,
- * §10.5): без этого заголовка POST отклоняется. {@code /auth/logout-all}
- * сюда не входит — он только {@code bearer}, подделать его межсайтово и так
- * нельзя.
+ * Defense in depth for the endpoints that can be authenticated by the
+ * {@code tp_refresh} cookie alone, without a bearer token: these POSTs are
+ * rejected if this header is missing. {@code /auth/logout-all} isn't in
+ * the list - it's bearer-only, so it can't be forged cross-site anyway.
  *
- * <p>Создаётся через {@code new} в {@link SecurityConfig}, а не
- * {@code @Component}: иначе Spring Boot зарегистрировал бы его ещё и в
- * обычной цепочке сервлет-фильтров, и он сработал бы дважды.
+ * <p>Instantiated with {@code new} in {@link SecurityConfig}, not as a
+ * {@code @Component} - otherwise Spring Boot would also register it in
+ * the regular servlet filter chain and it would run twice.
  */
 public class AuthCsrfHeaderFilter extends OncePerRequestFilter {
 

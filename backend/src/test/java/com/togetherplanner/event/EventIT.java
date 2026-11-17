@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.6 (E3–E6); roadmap 4.3. C-04, C-06 — в {@code ConcurrencyIT} (roadmap 9.1). */
+/** Concurrency scenarios for create/update/delete live in {@code ConcurrencyIT}. */
 class EventIT extends AbstractIntegrationTest {
 
     private static final LocalDateTime START = LocalDateTime.of(2026, 11, 9, 9, 0);
@@ -56,7 +56,6 @@ class EventIT extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    // I-06
     @Test
     void eventWithTwoParticipantsKeepsBothInTheResponse() throws Exception {
         RegisteredUser alice = testApi.register("alice2@example.com", "Alice");
@@ -72,7 +71,6 @@ class EventIT extends AbstractIntegrationTest {
         assertThat(created.participantIds()).containsExactlyInAnyOrder(alice.userId(), bob.userId());
     }
 
-    // I-16
     @Test
     void secondPutWithStaleVersionGetsVersionConflict() throws Exception {
         RegisteredUser alice = testApi.register("alice3@example.com", "Alice");
@@ -89,7 +87,6 @@ class EventIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("VERSION_CONFLICT"));
     }
 
-    // I-23
     @Test
     void deleteVersionCases() throws Exception {
         RegisteredUser alice = testApi.register("alice4@example.com", "Alice");
@@ -105,13 +102,12 @@ class EventIT extends AbstractIntegrationTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("VERSION_CONFLICT"));
 
-        testApi.getEvent(alice.accessToken(), workspace.id(), created.id()); // ещё существует
+        testApi.getEvent(alice.accessToken(), workspace.id(), created.id()); // still there
 
         testApi.deleteEvent(alice.accessToken(), workspace.id(), created.id(), 0L)
                 .andExpect(status().isNoContent());
     }
 
-    // I-25
     @Test
     void dstGapShiftsStartForward() throws Exception {
         RegisteredUser alice = testApi.register("alice5@example.com", "Alice");
@@ -129,7 +125,6 @@ class EventIT extends AbstractIntegrationTest {
         assertThat(reloaded.start()).isEqualTo(LocalDateTime.of(2026, 3, 29, 3, 30));
     }
 
-    // S-05
     @Test
     void foreignEventIdUnderOwnWorkspaceReturns404() throws Exception {
         RegisteredUser alice = testApi.register("alice6@example.com", "Alice");
@@ -147,7 +142,6 @@ class EventIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("EVENT_NOT_FOUND"));
     }
 
-    // S-06
     @Test
     void participantFromAnotherWorkspaceIsRejected() throws Exception {
         RegisteredUser alice = testApi.register("alice7@example.com", "Alice");
@@ -162,7 +156,6 @@ class EventIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("EVENT_PARTICIPANT_NOT_MEMBER"));
     }
 
-    // S-04 (часть): чужое пространство на E3 и E6
     @Test
     void creatingAnEventInSomeoneElsesWorkspaceReturns404() throws Exception {
         RegisteredUser alice = testApi.register("alice8@example.com", "Alice");

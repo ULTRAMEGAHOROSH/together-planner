@@ -15,10 +15,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Публичные методы — spec §6.4. Вызывается модулями {@code event},
- * {@code template}, {@code schedule}. Межмодульные методы не проверяют
- * членство сами — его проверяет вызывающий публичный метод ровно один раз,
- * на входе сценария (spec §6.2, правило 4).
+ * Called by the event, template and schedule modules. Cross-module
+ * methods don't check membership themselves - the calling public method
+ * checks it exactly once, at the start of the use case.
  */
 @Service
 @RequiredArgsConstructor
@@ -27,10 +26,10 @@ public class WorkspaceAccessService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
 
-    /** Первая строка каждого публичного метода сервиса под {@code /workspaces/{wsId}} (spec §9.0). */
+    /** First line of every public service method under {@code /workspaces/{wsId}}. */
     public void requireMember(UUID wsId, UUID userId) {
         if (!workspaceMemberRepository.existsByWorkspaceIdAndUserId(wsId, userId)) {
-            // Чужое или несуществующее пространство — 404, никогда 403 (spec §8.0).
+            // Someone else's workspace and a nonexistent one both get 404, never 403.
             throw new ApiException(ErrorCode.WORKSPACE_NOT_FOUND, "Workspace not found");
         }
     }
@@ -48,9 +47,9 @@ public class WorkspaceAccessService {
     }
 
     /**
-     * Единственная пессимистическая блокировка в системе (spec §11) — только
-     * для применения шаблона (этап 7). Вызывающий метод уже должен быть
-     * {@code @Transactional}: лок живёт до конца его транзакции.
+     * The only pessimistic lock in the system - used solely for applying a
+     * template. The caller must already be {@code @Transactional}: the
+     * lock is held until that transaction ends.
      */
     public void lockForUpdate(UUID wsId) {
         workspaceRepository.findByIdForUpdate(wsId)

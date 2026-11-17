@@ -12,7 +12,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Публичный метод — spec §6.4. Пространство в токене не кодируется: членство проверяется по БД на каждом запросе. */
+/** Issues access tokens. Workspace membership isn't encoded in the token - it's checked against the DB on every request. */
 @Service
 @RequiredArgsConstructor
 public class JwtService {

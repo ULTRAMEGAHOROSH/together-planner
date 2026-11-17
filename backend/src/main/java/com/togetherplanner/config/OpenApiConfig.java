@@ -9,9 +9,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Схема безопасности {@code bearerAuth} для Swagger UI (spec §6.1). Публичные
- * эндпоинты (`/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`)
- * переопределяют требование на уровне операции в модуле {@code auth} (этап 2).
+ * {@code bearerAuth} security scheme for Swagger UI. The public endpoints
+ * ({@code /auth/register}, {@code /auth/login}, {@code /auth/refresh},
+ * {@code /auth/logout}) override this requirement at the operation level.
  */
 @Configuration
 public class OpenApiConfig {

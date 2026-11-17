@@ -14,7 +14,7 @@ import java.time.LocalTime;
 import java.util.Set;
 import java.util.UUID;
 
-/** {@code id == null} — новое событие шаблона; {@code id} есть — diff по id обновит эту строку (spec §9.8). */
+/** {@code id == null} means a new template event; a given {@code id} updates that row via the diff-by-id update. */
 public record TemplateEventRequest(
         UUID id,
         @NotBlank @Size(max = 100) String title,

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** spec §8.4, §9.6 (создатель — OWNER, место 1). Публичный метод {@code findForUser} — spec §6.4, вызывается {@code auth}. */
+/** The creator becomes OWNER at seat 1. {@code findForUser} is also called from the auth module. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -40,7 +40,7 @@ public class WorkspaceService {
     @Transactional
     public WorkspaceResponse create(UUID userId, CreateWorkspaceRequest request) {
         if (workspaceMemberRepository.existsByUserId(userId)) {
-            // Быстрый путь; uq_member_user — последний рубеж в гонке.
+            // Fast path; uq_member_user is the last line of defense if two requests race.
             throw new ApiException(ErrorCode.ALREADY_IN_WORKSPACE, "User already belongs to a workspace");
         }
         requireValidTimeZone(request.timeZone());
@@ -68,7 +68,7 @@ public class WorkspaceService {
         }
         if (request.timeZone() != null) {
             requireValidTimeZone(request.timeZone());
-            // Смена пояса не сдвигает события (§3, правило 9): здесь не трогаем ни одной строки event.
+            // Changing the time zone doesn't shift events - we don't touch a single event row here.
             workspace.setTimeZone(request.timeZone());
         }
         workspace.setUpdatedAt(clock.instant());

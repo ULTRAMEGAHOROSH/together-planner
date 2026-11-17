@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/** S1 (spec §8.5). */
+/** Returns a single week's events, members and applied templates. */
 @RestController
 @RequestMapping("/api/v1/workspaces/{wsId}/week")
 @RequiredArgsConstructor

@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Очистка БД между тестами (spec §14.1): {@code TRUNCATE … CASCADE} всех
- * таблиц, кроме {@code flyway_schema_history}. Список таблиц читается из
- * {@code pg_tables}, а не хранится статически, — он растёт с каждой новой
- * миграцией, и ручной список быстро устареет.
+ * Wipes the database between tests: {@code TRUNCATE ... CASCADE} on every
+ * table except {@code flyway_schema_history}. The table list is read
+ * from {@code pg_tables} rather than hardcoded - it grows with every new
+ * migration, and a hardcoded list would go stale fast.
  */
 @Component
 @RequiredArgsConstructor

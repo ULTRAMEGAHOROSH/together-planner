@@ -27,7 +27,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.3 (A1, A2, A6); roadmap 2.3. S-01–S-03 здесь, а не на временном эндпоинте этапа 2.2. */
 class AuthIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -92,7 +91,6 @@ class AuthIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
     }
 
-    // S-07 (часть): регистрация без X-Requested-With
     @Test
     void registerWithoutCsrfHeaderReturns403() throws Exception {
         mockMvc.perform(post("/api/v1/auth/register")
@@ -102,7 +100,6 @@ class AuthIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("CSRF_HEADER_MISSING"));
     }
 
-    // S-01
     @Test
     void meWithoutTokenReturns401() throws Exception {
         mockMvc.perform(get("/api/v1/auth/me"))
@@ -110,7 +107,6 @@ class AuthIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
 
-    // S-02 — подделанная подпись
     @Test
     void meWithForgedSignatureReturns401() throws Exception {
         JwtEncoder wrongKeyEncoder = NimbusJwtEncoder.withSecretKey(
@@ -121,7 +117,6 @@ class AuthIT extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // S-02 — чужой iss (подпись настоящим ключом)
     @Test
     void meWithWrongIssuerReturns401() throws Exception {
         JwtEncoder realKeyEncoder = NimbusJwtEncoder.withSecretKey(
@@ -132,7 +127,6 @@ class AuthIT extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // S-03
     @Test
     void meWithExpiredTokenReturns401() throws Exception {
         IssuedAccessToken issued = jwtService.issue(UUID.randomUUID());

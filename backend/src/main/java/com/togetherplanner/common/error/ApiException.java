@@ -3,10 +3,9 @@ package com.togetherplanner.common.error;
 import lombok.Getter;
 
 /**
- * Единственное бизнес-исключение приложения (spec §7.2). Любое ожидаемое
- * отклонение запроса — чужое пространство, конфликт версии, неверный пароль
- * и т.д. — выражается через {@link ErrorCode}, а не через отдельный класс
- * исключения.
+ * The only business exception in the app. Anything expected - wrong
+ * workspace, a version conflict, a bad password - comes through as an
+ * {@link ErrorCode} instead of its own exception class.
  */
 @Getter
 public class ApiException extends RuntimeException {

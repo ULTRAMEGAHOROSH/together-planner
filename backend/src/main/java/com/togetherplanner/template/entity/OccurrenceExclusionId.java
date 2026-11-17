@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
-/** spec §5.5. Составной ключ {@code template_occurrence_exclusion}. */
+/** Composite key for {@code template_occurrence_exclusion}. */
 @Embeddable
 public class OccurrenceExclusionId implements Serializable {
 

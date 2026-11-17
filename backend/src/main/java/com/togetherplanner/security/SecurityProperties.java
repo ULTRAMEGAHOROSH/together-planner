@@ -8,8 +8,8 @@ import org.springframework.validation.annotation.Validated;
 import java.time.Duration;
 
 /**
- * {@code app.security.*} из application.yml (spec §12.2). Валидация здесь
- * ловит опечатку в конфиге при старте, а не при первом запросе.
+ * {@code app.security.*} from application.yml. Validating here catches a
+ * typo in the config at startup instead of on the first request.
  */
 @ConfigurationProperties(prefix = "app.security")
 @Validated

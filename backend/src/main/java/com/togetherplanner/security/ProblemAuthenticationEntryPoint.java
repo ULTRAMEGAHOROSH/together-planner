@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/** Нет access-токена, или он неверный/истёк (spec §7.2, §10.1). */
+/** No access token, or it's invalid/expired. */
 @Component
 @RequiredArgsConstructor
 public class ProblemAuthenticationEntryPoint implements AuthenticationEntryPoint {

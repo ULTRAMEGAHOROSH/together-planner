@@ -17,7 +17,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** spec §14.2: токен содержит {@code iss}, {@code sub}, {@code exp = iat + 15 мин}. */
+/** The issued token should carry {@code iss}, {@code sub} and {@code exp = iat + 15 min}. */
 class JwtServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-11-06T06:00:00Z");

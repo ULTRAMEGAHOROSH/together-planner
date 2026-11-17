@@ -14,19 +14,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §14.5 (S-10, S-11); roadmap 9.2. */
 class ErrorResponseAndCorsIT extends AbstractIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
 
-    // S-10
     @Test
     void the500ResponseContainsNoStacktraceOrSql() throws Exception {
         RegisteredUser alice = testApi.register("alice@example.com", "Alice");
-        // Валидный JWT, который теперь ссылается на несуществующего пользователя —
-        // реальный путь к 500 (UserService.getById), без моков (spec: удаления пользователей
-        // в MVP нет, поэтому это IllegalStateException, а не ApiException).
+        // A valid JWT that now points at a user who no longer exists - a real
+        // path to 500 through UserService.getById, no mocks needed.
         userRepository.deleteById(alice.userId());
 
         MvcResult result = mockMvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + alice.accessToken()))
@@ -42,7 +39,6 @@ class ErrorResponseAndCorsIT extends AbstractIntegrationTest {
         assertThat(body).doesNotContain(alice.userId().toString());
     }
 
-    // S-11
     @Test
     void corsPreflightFromAForeignOriginGetsNoAccessControlAllowOriginHeader() throws Exception {
         mockMvc.perform(options("/api/v1/auth/refresh")
