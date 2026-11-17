@@ -1,6 +1,6 @@
 import type { ProblemDetail } from './common.models';
 import { ERROR_CODES, isErrorCode } from './error-codes';
-import * as samples from './testing/samples';
+import { PROBLEM_SAMPLES } from './testing/samples';
 
 describe('ERROR_CODES (spec §7.4)', () => {
   it('contains the 34 codes of the catalog, without duplicates', () => {
@@ -28,7 +28,7 @@ describe('ERROR_CODES (spec §7.4)', () => {
   );
 
   it('every captured backend ProblemDetail carries a known code', () => {
-    const all: ProblemDetail[] = Object.values(samples);
+    const all: readonly ProblemDetail[] = PROBLEM_SAMPLES;
     expect(all.length).toBeGreaterThan(0);
     for (const problem of all) {
       expect(isErrorCode(problem.code)).toBe(true);
