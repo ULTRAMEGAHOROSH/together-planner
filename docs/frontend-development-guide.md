@@ -51,6 +51,7 @@ cd frontend && npm start
 | `npm run lint` | каждая задача (после FND-08) |
 | `npm test` | каждая задача |
 | `npm run test:watch` | во время работы |
+| `npm run test:coverage` | задачи с порогом покрытия в DoD (отчёт в `coverage/`) |
 | `npm run build` | каждая задача |
 | `npm run e2e` | после WEEK-08 — в задачах, которые трогают доску, расписание или сквозные сценарии; перед завершением фазы — всегда |
 | `docker compose --profile app up --build` | FND-07, QA-05 и перед выпуском |
