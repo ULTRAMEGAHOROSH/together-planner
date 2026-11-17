@@ -1,7 +1,11 @@
 package com.togetherplanner.template.controller;
 
+import com.togetherplanner.template.dto.ApplyPreviewResponse;
+import com.togetherplanner.template.dto.ApplyResultResponse;
+import com.togetherplanner.template.dto.ApplyTemplateRequest;
 import com.togetherplanner.template.dto.TemplateRequest;
 import com.togetherplanner.template.dto.TemplateResponse;
+import com.togetherplanner.template.service.TemplateApplyService;
 import com.togetherplanner.template.service.TemplateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +26,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-/** T1–T5 (spec §8.7). T6–T8 — этапы 6–7. */
+/** T1–T5 (spec §8.7); T6, T7 (spec §8.8, §9.5) — этап 7. */
 @RestController
 @RequestMapping("/api/v1/workspaces/{wsId}/templates")
 @RequiredArgsConstructor
 public class TemplateController {
 
     private final TemplateService templateService;
+    private final TemplateApplyService templateApplyService;
 
     @GetMapping
     public List<TemplateResponse> list(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID wsId) {
@@ -58,6 +63,18 @@ public class TemplateController {
     public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID wsId, @PathVariable UUID templateId,
                         @RequestParam(required = false) Long version) {
         templateService.delete(wsId, userIdOf(jwt), templateId, version);
+    }
+
+    @PostMapping("/{templateId}/apply/preview")
+    public ApplyPreviewResponse preview(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID wsId, @PathVariable UUID templateId,
+                                         @Valid @RequestBody ApplyTemplateRequest request) {
+        return templateApplyService.preview(wsId, userIdOf(jwt), templateId, request);
+    }
+
+    @PostMapping("/{templateId}/apply")
+    public ApplyResultResponse apply(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID wsId, @PathVariable UUID templateId,
+                                      @Valid @RequestBody ApplyTemplateRequest request) {
+        return templateApplyService.apply(wsId, userIdOf(jwt), templateId, request);
     }
 
     private UUID userIdOf(Jwt jwt) {

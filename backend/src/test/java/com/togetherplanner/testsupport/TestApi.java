@@ -3,6 +3,9 @@ package com.togetherplanner.testsupport;
 import com.jayway.jsonpath.JsonPath;
 import com.togetherplanner.event.dto.EventRequest;
 import com.togetherplanner.event.dto.EventResponse;
+import com.togetherplanner.template.dto.ApplyPreviewResponse;
+import com.togetherplanner.template.dto.ApplyResultResponse;
+import com.togetherplanner.template.dto.ApplyTemplateRequest;
 import com.togetherplanner.template.dto.TemplateRequest;
 import com.togetherplanner.template.dto.TemplateResponse;
 import com.togetherplanner.workspace.dto.InviteResponse;
@@ -14,6 +17,8 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -151,6 +156,41 @@ public class TestApi {
                 .andExpect(status().isOk())
                 .andReturn();
         return jsonMapper.readValue(result.getResponse().getContentAsString(), TemplateResponse.class);
+    }
+
+    public List<EventResponse> listEvents(String accessToken, UUID wsId, LocalDate from, LocalDate to) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/workspaces/" + wsId + "/events")
+                        .param("from", from.toString())
+                        .param("to", to.toString())
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(),
+                jsonMapper.getTypeFactory().constructCollectionType(List.class, EventResponse.class));
+    }
+
+    public ResultActions postApplyPreview(String accessToken, UUID wsId, UUID templateId, ApplyTemplateRequest request) throws Exception {
+        return mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/templates/" + templateId + "/apply/preview")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)));
+    }
+
+    public ApplyPreviewResponse previewApply(String accessToken, UUID wsId, UUID templateId, ApplyTemplateRequest request) throws Exception {
+        MvcResult result = postApplyPreview(accessToken, wsId, templateId, request).andExpect(status().isOk()).andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), ApplyPreviewResponse.class);
+    }
+
+    public ResultActions postApply(String accessToken, UUID wsId, UUID templateId, ApplyTemplateRequest request) throws Exception {
+        return mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/templates/" + templateId + "/apply")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)));
+    }
+
+    public ApplyResultResponse applyTemplate(String accessToken, UUID wsId, UUID templateId, ApplyTemplateRequest request) throws Exception {
+        MvcResult result = postApply(accessToken, wsId, templateId, request).andExpect(status().isOk()).andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), ApplyResultResponse.class);
     }
 
     private RegisteredUser toRegisteredUser(MvcResult result) throws java.io.UnsupportedEncodingException {
