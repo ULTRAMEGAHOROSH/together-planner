@@ -12,18 +12,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** spec §8.6 (E3–E6); roadmap 4.3. */
+/** spec §8.6 (E3–E6); roadmap 4.3. C-04, C-06 — в {@code ConcurrencyIT} (roadmap 9.1). */
 class EventIT extends AbstractIntegrationTest {
 
     private static final LocalDateTime START = LocalDateTime.of(2026, 11, 9, 9, 0);
@@ -194,64 +188,4 @@ class EventIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.code").value("WORKSPACE_NOT_FOUND"));
     }
 
-    // C-04
-    @Test
-    void concurrentPutsWithTheSameVersionResultInExactlyOneWinner() throws Exception {
-        RegisteredUser alice = testApi.register("alice10@example.com", "Alice");
-        WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
-        EventResponse created = testApi.createEvent(alice.accessToken(), workspace.id(),
-                new EventRequest("Work", null, START, END, Set.of(alice.userId()), EventCategory.WORK, null, null));
-
-        EventRequest updateA = new EventRequest("A", null, START, END, Set.of(alice.userId()), EventCategory.WORK, null, 0L);
-        EventRequest updateB = new EventRequest("B", null, START, END, Set.of(alice.userId()), EventCategory.WORK, null, 0L);
-
-        List<Integer> statuses = runConcurrently(
-                () -> testApi.putEvent(alice.accessToken(), workspace.id(), created.id(), updateA).andReturn().getResponse().getStatus(),
-                () -> testApi.putEvent(alice.accessToken(), workspace.id(), created.id(), updateB).andReturn().getResponse().getStatus());
-
-        assertThat(statuses).containsExactlyInAnyOrder(200, 409);
-    }
-
-    // C-06
-    @Test
-    void concurrentPutAndDeleteWithTheSameVersionResultInExactlyOneWinner() throws Exception {
-        RegisteredUser alice = testApi.register("alice11@example.com", "Alice");
-        WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
-        EventResponse created = testApi.createEvent(alice.accessToken(), workspace.id(),
-                new EventRequest("Work", null, START, END, Set.of(alice.userId()), EventCategory.WORK, null, null));
-
-        EventRequest update = new EventRequest("Updated", null, START, END, Set.of(alice.userId()), EventCategory.WORK, null, 0L);
-
-        List<Integer> statuses = runConcurrently(
-                () -> testApi.putEvent(alice.accessToken(), workspace.id(), created.id(), update).andReturn().getResponse().getStatus(),
-                () -> testApi.deleteEvent(alice.accessToken(), workspace.id(), created.id(), 0L).andReturn().getResponse().getStatus());
-
-        // Либо PUT выиграл (200) и DELETE получил 409/404, либо DELETE выиграл (204) и PUT получил 404/409.
-        assertThat(statuses).anyMatch(s -> s == 200 || s == 204);
-        long successCount = statuses.stream().filter(s -> s == 200 || s == 204).count();
-        assertThat(successCount).isEqualTo(1);
-    }
-
-    private List<Integer> runConcurrently(Callable<Integer> taskA, Callable<Integer> taskB) throws Exception {
-        CountDownLatch ready = new CountDownLatch(2);
-        CountDownLatch start = new CountDownLatch(1);
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        try {
-            Future<Integer> resultA = executor.submit(withGate(taskA, ready, start));
-            Future<Integer> resultB = executor.submit(withGate(taskB, ready, start));
-            ready.await();
-            start.countDown();
-            return List.of(resultA.get(10, TimeUnit.SECONDS), resultB.get(10, TimeUnit.SECONDS));
-        } finally {
-            executor.shutdown();
-        }
-    }
-
-    private Callable<Integer> withGate(Callable<Integer> task, CountDownLatch ready, CountDownLatch start) {
-        return () -> {
-            ready.countDown();
-            start.await();
-            return task.call();
-        };
-    }
 }

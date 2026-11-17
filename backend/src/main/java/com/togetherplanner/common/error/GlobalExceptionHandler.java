@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -67,6 +68,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             DataIntegrityViolationException ex, HttpServletRequest request) {
         ErrorCode code = constraintErrorMapper.map(ex);
         return problemResponse(code, "The request conflicts with existing data", request);
+    }
+
+    /**
+     * Postgres обнаружил дедлок (или таймаут блокировки) между двумя
+     * параллельными запросами и прервал один из них (spec §14.4, C-06):
+     * два конкурентных изменения {@code @ElementCollection} одной и той же
+     * сущности могут столкнуться на уровне блокировок строк раньше, чем
+     * сервис дойдёт до проверки {@code version}. Это гонка, пойманная БД,
+     * а не баг запроса — тот же код, что и для прочих не предусмотренных
+     * сервисом конфликтов.
+     */
+    @ExceptionHandler(CannotAcquireLockException.class)
+    public ResponseEntity<ProblemDetail> handleCannotAcquireLock(
+            CannotAcquireLockException ex, HttpServletRequest request) {
+        return problemResponse(ErrorCode.DATA_CONFLICT, "The request conflicts with a concurrent request", request);
     }
 
     @ExceptionHandler(Exception.class)
