@@ -3,6 +3,7 @@ package com.togetherplanner.testsupport;
 import com.jayway.jsonpath.JsonPath;
 import com.togetherplanner.event.dto.EventRequest;
 import com.togetherplanner.event.dto.EventResponse;
+import com.togetherplanner.schedule.dto.WeekResponse;
 import com.togetherplanner.template.dto.ApplyPreviewResponse;
 import com.togetherplanner.template.dto.ApplyResultResponse;
 import com.togetherplanner.template.dto.ApplyTemplateRequest;
@@ -191,6 +192,15 @@ public class TestApi {
     public ApplyResultResponse applyTemplate(String accessToken, UUID wsId, UUID templateId, ApplyTemplateRequest request) throws Exception {
         MvcResult result = postApply(accessToken, wsId, templateId, request).andExpect(status().isOk()).andReturn();
         return jsonMapper.readValue(result.getResponse().getContentAsString(), ApplyResultResponse.class);
+    }
+
+    public WeekResponse getWeek(String accessToken, UUID wsId, LocalDate date) throws Exception {
+        var builder = get("/api/v1/workspaces/" + wsId + "/week").header("Authorization", "Bearer " + accessToken);
+        if (date != null) {
+            builder = builder.param("date", date.toString());
+        }
+        MvcResult result = mockMvc.perform(builder).andExpect(status().isOk()).andReturn();
+        return jsonMapper.readValue(result.getResponse().getContentAsString(), WeekResponse.class);
     }
 
     private RegisteredUser toRegisteredUser(MvcResult result) throws java.io.UnsupportedEncodingException {
