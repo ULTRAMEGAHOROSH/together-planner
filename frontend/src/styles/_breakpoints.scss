@@ -1,0 +1,11 @@
+// The only breakpoint of the app (FD-60, roadmap WEEK-13): below 820px the
+// schedule switches to the day view and the header compacts.
+// Usage in a component: @use 'breakpoints' as bp;  @include bp.narrow { ... }
+
+$narrow-max: 819.98px;
+
+@mixin narrow {
+  @media (max-width: $narrow-max) {
+    @content;
+  }
+}

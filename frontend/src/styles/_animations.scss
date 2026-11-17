@@ -1,0 +1,40 @@
+// Keyframes from the prototype. Components use them as
+// `animation: tpIn var(--tp-duration-modal) var(--tp-ease-soft)` and
+// `animation: tpFade var(--tp-duration-fade) ease-out`.
+
+@keyframes tpIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tpFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// FD-64: no animations, transitions or hover lift for users who ask for reduced motion.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --tp-hover-lift: none;
+    --tp-press-shift: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
