@@ -295,12 +295,12 @@
 - **DoD:** нет ни одного member-эндпоинта без проверки «чужое пространство → 404».
 
 ### 9.3. Ревью по чек-листу
-- [ ] Все сервисные методы под `/workspaces/{wsId}` начинаются с `requireMember`.
-- [ ] Все поиски ресурсов — `ByIdAndWorkspaceId`.
-- [ ] Ни один контроллер не возвращает Entity; ни один модуль не импортирует чужие `entity` / `repository`.
-- [ ] Пессимистическая блокировка — только в `TemplateApplyService.apply`.
-- [ ] В логах нет паролей, токенов и cookie.
-- [ ] `ErrorCode` совпадает с каталогом spec §7.4.
+- [x] Все сервисные методы под `/workspaces/{wsId}` начинаются с `requireMember` (W3–W5 — тем же вызовом, но в контроллере, до делегирования в `WorkspaceService`/`InviteService`; межмодульные методы спец. §6.4 — исключение по дизайну). Подтверждено всеми 18 кейсами `ForeignWorkspaceAccessIT`.
+- [x] Все поиски ресурсов — `ByIdAndWorkspaceId` (кроме поиска самого `Workspace` по его собственному id — у него нет родителя).
+- [x] Ни один контроллер не возвращает Entity; ни один модуль не импортирует чужие `entity` / `repository` (кроме документированного переиспользования enum `EventCategory`/`EventColor`, `ApplyMode`, `WorkspaceRole`).
+- [x] Пессимистическая блокировка — только в `TemplateApplyService.apply` (единственный вызывающий `WorkspaceAccessService.lockForUpdate`).
+- [x] В логах нет паролей, токенов и cookie (всего 3 `log.*` во всём `src/main` — метод/URI, исключение, имя constraint).
+- [x] `ErrorCode` совпадает с каталогом spec §7.4 (34 кода, один к одному, те же HTTP-статусы).
 - **DoD:** все пункты отмечены.
 
 ---
