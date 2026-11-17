@@ -11,6 +11,7 @@ import com.togetherplanner.user.service.UserService;
 import com.togetherplanner.workspace.service.WorkspaceService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.util.UUID;
  * (один вызов даёт и access-, и refresh-токен, spec §10.4), чтобы не
  * выпускать access-токен дважды с разными {@code iat}.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -58,6 +60,7 @@ public class AuthService {
 
         String passwordHash = passwordEncoder.encode(request.password());
         UUID userId = userService.create(email, request.displayName(), passwordHash);
+        log.info("User registered: userId={}", userId);
         return userService.getById(userId);
     }
 

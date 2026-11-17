@@ -14,6 +14,7 @@ import com.togetherplanner.workspace.mapper.WorkspaceMapper;
 import com.togetherplanner.workspace.repository.WorkspaceMemberRepository;
 import com.togetherplanner.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /** spec §8.4, §9.6 (создатель — OWNER, место 1). Публичный метод {@code findForUser} — spec §6.4, вызывается {@code auth}. */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkspaceService {
@@ -47,6 +49,7 @@ public class WorkspaceService {
         Workspace workspace = workspaceRepository.save(new Workspace(request.name().trim(), request.timeZone(), now));
         WorkspaceMember owner = workspaceMemberRepository.save(
                 new WorkspaceMember(workspace.getId(), userId, WorkspaceRole.OWNER, OWNER_SEAT, now));
+        log.info("Workspace created: workspaceId={}, ownerId={}", workspace.getId(), userId);
         return workspaceMapper.toResponse(workspace, List.of(owner));
     }
 

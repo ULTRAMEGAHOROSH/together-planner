@@ -14,6 +14,7 @@ import com.togetherplanner.workspace.repository.WorkspaceInviteRepository;
 import com.togetherplanner.workspace.repository.WorkspaceMemberRepository;
 import com.togetherplanner.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 /** spec §9.6. W5 создаёт приглашение, W6 присоединяет — без пессимистической блокировки (A-11). */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InviteService {
@@ -91,6 +93,7 @@ public class InviteService {
         Workspace workspace = workspaceRepository.findById(invite.getWorkspaceId())
                 .orElseThrow(() -> new ApiException(ErrorCode.WORKSPACE_NOT_FOUND, "Workspace not found"));
         List<WorkspaceMember> members = memberRepository.findByWorkspaceIdOrderBySeat(workspace.getId());
+        log.info("User joined workspace: workspaceId={}, userId={}", workspace.getId(), userId);
         return workspaceMapper.toResponse(workspace, members);
     }
 }

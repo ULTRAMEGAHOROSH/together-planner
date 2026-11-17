@@ -23,6 +23,7 @@ import com.togetherplanner.template.repository.TemplateApplicationRepository;
 import com.togetherplanner.template.repository.WeekTemplateRepository;
 import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
  * T6/T7/T8 (spec §8.8, §9.5). {@code preview} и {@code apply} делят один
  * {@code buildPlan} — поэтому их бизнес-правила не могут разойтись.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TemplateApplyService {
@@ -113,6 +115,8 @@ public class TemplateApplyService {
                 userId, clock.instant());
         TemplateApplication saved = templateApplicationRepository.save(application);
 
+        log.info("Template applied: workspaceId={}, templateId={}, weekStart={}, mode={}, created={}, skipped={}, deleted={}",
+                wsId, template.getId(), request.weekStart(), request.mode(), created.size(), skippedCount, plan.toDelete().size());
         return new ApplyResultResponse(templateMapper.toApplicationResponse(saved), created);
     }
 

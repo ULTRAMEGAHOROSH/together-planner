@@ -10,6 +10,7 @@ import com.togetherplanner.security.IssuedAccessToken;
 import com.togetherplanner.security.JwtService;
 import com.togetherplanner.security.SecurityProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.HexFormat;
 import java.util.UUID;
 
 /** spec §10.4. */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
@@ -71,6 +73,7 @@ public class RefreshTokenService {
                     throw new ApiException(ErrorCode.REFRESH_TOKEN_ROTATED, "Token was just rotated elsewhere");
                 }
                 refreshTokenRepository.revokeAllActive(token.getUserId(), RevokeReason.REUSE_DETECTED, now);
+                log.warn("Refresh token reuse detected: userId={}", token.getUserId());
                 throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token reuse detected");
             }
             throw new ApiException(ErrorCode.REFRESH_TOKEN_INVALID, "Refresh token has been revoked");
