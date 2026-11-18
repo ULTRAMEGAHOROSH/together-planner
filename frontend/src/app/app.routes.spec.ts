@@ -64,17 +64,18 @@ describe('app routes (FND-05 skeleton)', () => {
 
 describe('app routes × session (AUTH-06)', () => {
   it.each([
-    ['anonymous', '/login', 'Вход и регистрация', 'Вход — Together Planner'],
-    ['anonymous', '/register', 'Вход и регистрация', 'Регистрация — Together Planner'],
+    // The auth page shows its mode from the route data: the button text.
+    ['anonymous', '/login', 'Войти', 'Вход — Together Planner'],
+    ['anonymous', '/register', 'Создать аккаунт', 'Регистрация — Together Planner'],
     ['no workspace', '/onboarding', 'Общее пространство', 'Общее пространство — Together Planner'],
-  ] as const)('%s: %s shows its placeholder', async (status, path, heading, title) => {
-    TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
+  ] as const)('%s: %s shows its placeholder', async (status, path, content, title) => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter(routes, withComponentInputBinding())],
+    });
     signIn(status);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(path);
-    expect((harness.routeNativeElement as HTMLElement).querySelector('h1')?.textContent).toBe(
-      heading,
-    );
+    expect((harness.routeNativeElement as HTMLElement).textContent).toContain(content);
     expect(TestBed.inject(Title).getTitle()).toBe(title);
   });
 
@@ -120,7 +121,9 @@ describe('app routes × session (AUTH-06)', () => {
   ])('%s', async (path, expected) => {
     for (const status of ['anonymous', 'no workspace', 'workspace'] as const) {
       TestBed.resetTestingModule();
-      TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
+      TestBed.configureTestingModule({
+        providers: [provideRouter(routes, withComponentInputBinding())],
+      });
       signIn(status);
       const harness = await RouterTestingHarness.create();
       await harness.navigateByUrl(path);

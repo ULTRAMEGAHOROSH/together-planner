@@ -9,12 +9,14 @@ export const routes: Routes = [
   {
     path: 'login',
     canActivate: [guestGuard],
+    data: { mode: 'login' },
     title: 'Вход — Together Planner',
     loadComponent: () => import('@features/auth/auth-page/auth-page').then((m) => m.AuthPage),
   },
   {
     path: 'register',
     canActivate: [guestGuard],
+    data: { mode: 'register' },
     title: 'Регистрация — Together Planner',
     loadComponent: () => import('@features/auth/auth-page/auth-page').then((m) => m.AuthPage),
   },
