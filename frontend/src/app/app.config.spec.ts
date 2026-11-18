@@ -4,7 +4,8 @@ import { LOCALE_ID } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/api/api-base-url';
-import { PROBLEM_UNAUTHORIZED } from '@core/api/models/testing/samples';
+import { AUTH_RESPONSE, PROBLEM_UNAUTHORIZED } from '@core/api/models/testing/samples';
+import { SessionStore } from '@core/auth/session-store';
 import { isApiError } from '@core/error/api-error';
 import { firstValueFrom } from 'rxjs';
 import { appConfig } from './app.config';
@@ -42,5 +43,23 @@ describe('appConfig interceptors (CORE-04)', () => {
       .flush(PROBLEM_UNAUTHORIZED, { status: 401, statusText: 'Unauthorized' });
     const error = await result;
     expect(isApiError(error) && error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('authInterceptor runs first (AUTH-04): headers are set, and it sees ApiError', async () => {
+    TestBed.configureTestingModule({
+      providers: [...appConfig.providers, provideHttpClientTesting()],
+    });
+    TestBed.inject(SessionStore).setAuth(AUTH_RESPONSE);
+    const result = firstValueFrom(TestBed.inject(HttpClient).get('/api/v1/auth/me')).catch(
+      (error: unknown) => error,
+    );
+    const backend = TestBed.inject(HttpTestingController);
+    const me = backend.expectOne('/api/v1/auth/me');
+    expect(me.request.headers.get('X-Requested-With')).toBe('XMLHttpRequest');
+    expect(me.request.headers.get('Authorization')).toBe(`Bearer ${AUTH_RESPONSE.accessToken}`);
+    // A 401 starts a refresh only if the interceptor recognises it as an ApiError.
+    me.flush(PROBLEM_UNAUTHORIZED, { status: 401, statusText: 'Unauthorized' });
+    backend.expectOne('/api/v1/auth/refresh').flush(null, { status: 503, statusText: 'x' });
+    expect(await result).toMatchObject({ code: 'UNKNOWN', status: 503 });
   });
 });
