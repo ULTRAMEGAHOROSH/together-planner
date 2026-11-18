@@ -1,7 +1,11 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+  type TestRequest,
+} from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import type { ProblemDetail } from '../api/models/common.models';
 import {
@@ -129,6 +133,49 @@ describe('AuthService', () => {
     expect(await result).toMatchObject({ code: 'INVALID_CREDENTIALS' });
     expect(session.status()).toBe('unknown');
     expect(toast.current()).toBeNull();
+  });
+
+  describe('logout', () => {
+    beforeEach(() => {
+      session.setAuth(AUTH_RESPONSE);
+      session.setWorkspace(ME_WITH_WORKSPACE.workspace);
+    });
+
+    it('A4 without Bearer → session cleared → /login', async () => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const done = firstValueFrom(auth.logout(), { defaultValue: undefined });
+      const req = backend.expectOne('/api/v1/auth/logout');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.has('Authorization')).toBe(false);
+      // Still signed in while the server answers.
+      expect(session.isAuthenticated()).toBe(true);
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await done;
+      expect(session.status()).toBe('anonymous');
+      expect(session.workspace()).toBeNull();
+      expect(session.accessToken()).toBeNull();
+      expect(navigate).toHaveBeenCalledWith('/login');
+    });
+
+    it.each([
+      ['network down', (r: TestRequest) => r.error(new ProgressEvent('error'))],
+      [
+        'server error',
+        (r: TestRequest) =>
+          r.flush(
+            { status: 500, title: 'x', code: 'INTERNAL_ERROR' },
+            { status: 500, statusText: 'x' },
+          ),
+      ],
+    ])('%s does not keep the user signed in here', async (_, fail) => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const result = settle(firstValueFrom(auth.logout(), { defaultValue: undefined }));
+      fail(backend.expectOne('/api/v1/auth/logout'));
+      expect(await result).toBe('done');
+      expect(session.status()).toBe('anonymous');
+      expect(navigate).toHaveBeenCalledWith('/login');
+      expect(toast.current()).toBeNull();
+    });
   });
 
   it('reloadWorkspace puts the current workspace (or null) into the session', async () => {
