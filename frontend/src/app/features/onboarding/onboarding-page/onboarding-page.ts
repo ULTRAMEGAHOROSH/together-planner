@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { SessionStore } from '@core/auth/session-store';
 import { Button } from '@shared/ui/button/button';
+import { CreateWorkspaceForm } from '../create-workspace-form/create-workspace-form';
 
 /** Left card: the create form, then the created workspace with its invite. */
 export type OnboardingStep = 'create' | 'created';
@@ -13,7 +14,7 @@ export type OnboardingStep = 'create' | 'created';
  */
 @Component({
   selector: 'tp-onboarding-page',
-  imports: [Button],
+  imports: [Button, CreateWorkspaceForm],
   templateUrl: './onboarding-page.html',
   styleUrl: './onboarding-page.scss',
 })
@@ -23,7 +24,7 @@ export class OnboardingPage {
   protected readonly step = signal<OnboardingStep>('create');
   protected readonly workspace = inject(SessionStore).workspace;
 
-  /** The create form (WS-03) calls it after W1 has put the workspace into the session. */
+  /** After W1 has put the workspace into the session (the create form). */
   showCreated(): void {
     this.step.set('created');
   }

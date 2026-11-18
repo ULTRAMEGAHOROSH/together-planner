@@ -1,0 +1,16 @@
+<form class="form" [formGroup]="form" (ngSubmit)="submit()">
+  <tp-form-field label="Название" [error]="errors().name">
+    <input tpControl formControlName="name" autocomplete="off" />
+  </tp-form-field>
+  @if (zoneReplaced()) {
+    <p class="zone" role="status">
+      Часовой пояс: {{ timeZone() }}. Пояс браузера не подошёл — проверьте и создайте ещё раз.
+    </p>
+  } @else {
+    <p class="zone">Часовой пояс: {{ timeZone() }} (определён по браузеру)</p>
+  }
+  @if (errors().form; as text) {
+    <p class="form-error" role="alert">{{ text }}</p>
+  }
+  <button tpButton type="submit" [loading]="pending()">Создать и получить код</button>
+</form>

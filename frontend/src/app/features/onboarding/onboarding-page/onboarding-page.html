@@ -15,7 +15,7 @@
         <button tpButton type="button" (click)="toSchedule()">К расписанию</button>
       } @else {
         <h2 id="tp-onboarding-create">Создать пространство</h2>
-        <!-- WS-03: create-workspace form; on success it calls showCreated(). -->
+        <tp-create-workspace-form (created)="showCreated()" />
       }
     </section>
 
