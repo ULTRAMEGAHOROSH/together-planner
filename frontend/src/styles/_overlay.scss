@@ -1,0 +1,49 @@
+// Dialog frame on top of the CDK overlay (FD-40, CORE-10). Global, because CDK renders
+// dialogs in its own container at the end of <body>, outside any component.
+// CDK 22 injects its structural overlay styles itself at runtime, after this file:
+// selectors here use `.cdk-overlay-pane.tp-dialog-panel` to win over them.
+// Values from the prototype modals (design/Main.dc.html, «ДИАЛОГ СОБЫТИЯ»).
+@use 'breakpoints' as bp;
+
+.tp-dialog-backdrop {
+  background: var(--tp-color-backdrop);
+  animation: tpFade var(--tp-duration-fade) ease-out;
+}
+
+.cdk-overlay-pane.tp-dialog-panel {
+  width: calc(100% - 32px);
+  max-width: 580px;
+  // Viewport units: the CDK container inherits max-height, a % would not resolve there.
+  max-height: calc(100dvh - 32px);
+
+  &--sm {
+    max-width: 440px;
+  }
+
+  &--lg {
+    max-width: 680px;
+  }
+
+  // The card itself: the dialog container scrolls, the footer of the shell sticks to its bottom.
+  .cdk-dialog-container {
+    max-height: inherit;
+    overflow: auto;
+    border-radius: var(--tp-radius-3xl);
+    background: var(--tp-color-surface);
+    box-shadow: var(--tp-shadow-dialog);
+    outline: none;
+    animation: tpIn var(--tp-duration-modal) var(--tp-ease-soft);
+  }
+
+  // Phones: full width, docked to the bottom (roadmap CORE-10).
+  @include bp.narrow {
+    align-self: flex-end;
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+
+    .cdk-dialog-container {
+      border-radius: var(--tp-radius-3xl) var(--tp-radius-3xl) 0 0;
+    }
+  }
+}

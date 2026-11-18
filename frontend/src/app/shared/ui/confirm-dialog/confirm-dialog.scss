@@ -1,0 +1,39 @@
+// Buttons as in the prototype dialog footer («Отмена» / main action). Moves to the shared
+// button component when it appears (CORE-11).
+.text {
+  margin: 0;
+  color: var(--tp-color-text-body);
+  line-height: 1.5;
+}
+
+button {
+  height: 42px;
+  border-radius: var(--tp-radius-lg);
+  cursor: pointer;
+  transition:
+    background-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+}
+
+.cancel {
+  padding: 0 16px;
+  border: 1px solid var(--tp-color-border);
+  background: var(--tp-color-surface);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--tp-color-hover);
+  }
+}
+
+.confirm {
+  padding: 0 20px;
+  border: 0;
+  background: var(--tp-color-danger);
+  color: var(--tp-color-text-inverse);
+  font-weight: 700;
+}

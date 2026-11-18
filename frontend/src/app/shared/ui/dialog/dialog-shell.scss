@@ -1,0 +1,77 @@
+// Values from the prototype modals (design/Main.dc.html). The card (background, radius,
+// shadow, scrolling) is the CDK container: styles/_overlay.scss.
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 4px;
+}
+
+.title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--tp-font-display);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.close {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--tp-radius-lg);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:hover {
+    background: var(--tp-color-hover);
+  }
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 20px 18px;
+}
+
+.foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--tp-color-divider);
+  background: var(--tp-color-surface);
+
+  &:empty {
+    display: none;
+  }
+}
