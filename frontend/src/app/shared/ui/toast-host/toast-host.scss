@@ -1,0 +1,69 @@
+// Values from the prototype toast (design/Main.dc.html, «УВЕДОМЛЕНИЕ»).
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 80;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--tp-radius-xl);
+  background: var(--tp-color-toast-bg);
+  color: var(--tp-color-text-inverse);
+  box-shadow: var(--tp-shadow-toast);
+  font-size: 13.5px;
+  animation: tpFade var(--tp-duration-fade) ease-out;
+}
+
+.text {
+  line-height: 1.4;
+}
+
+button {
+  height: 34px;
+  border: 0;
+  border-radius: var(--tp-radius-md);
+  color: var(--tp-color-text-inverse);
+  cursor: pointer;
+  transition:
+    background-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+
+  // The global accent outline is hard to see on the dark toast.
+  &:focus-visible {
+    outline-color: var(--tp-color-text-inverse);
+  }
+}
+
+.action {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  background: var(--tp-color-toast-action);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  padding: 0;
+  background: transparent;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+}

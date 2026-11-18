@@ -1,0 +1,25 @@
+<div class="tp-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+  @for (toast of visible(); track toast.id) {
+    <span>{{ toast.text }}</span>
+  }
+</div>
+
+@for (toast of visible(); track toast.id) {
+  <div
+    class="toast"
+    (mouseenter)="setHovered(true)"
+    (mouseleave)="setHovered(false)"
+    (focusin)="setFocused(true)"
+    (focusout)="setFocused(false)"
+  >
+    <span class="text" aria-hidden="true">{{ toast.text }}</span>
+    @if (toast.action; as action) {
+      <button type="button" class="action" (click)="toasts.runAction()">{{ action.label }}</button>
+    }
+    <button type="button" class="close" aria-label="Закрыть уведомление" (click)="toasts.dismiss()">
+      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+}
