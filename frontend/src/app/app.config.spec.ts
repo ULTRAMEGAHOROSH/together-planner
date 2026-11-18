@@ -1,10 +1,14 @@
 import { DecimalPipe, formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { LOCALE_ID } from '@angular/core';
+import { ApplicationInitStatus, LOCALE_ID } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/api/api-base-url';
-import { AUTH_RESPONSE, PROBLEM_UNAUTHORIZED } from '@core/api/models/testing/samples';
+import {
+  AUTH_RESPONSE,
+  ME_WITHOUT_WORKSPACE,
+  PROBLEM_UNAUTHORIZED,
+} from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
 import { isApiError } from '@core/error/api-error';
 import { firstValueFrom } from 'rxjs';
@@ -61,5 +65,20 @@ describe('appConfig interceptors (CORE-04)', () => {
     me.flush(PROBLEM_UNAUTHORIZED, { status: 401, statusText: 'Unauthorized' });
     backend.expectOne('/api/v1/auth/refresh').flush(null, { status: 503, statusText: 'x' });
     expect(await result).toMatchObject({ code: 'UNKNOWN', status: 503 });
+  });
+});
+
+describe('appConfig session restore (AUTH-05)', () => {
+  it('the app starts only after refresh → me', async () => {
+    TestBed.configureTestingModule({
+      providers: [...appConfig.providers, provideHttpClientTesting()],
+    });
+    const init = TestBed.inject(ApplicationInitStatus);
+    const backend = TestBed.inject(HttpTestingController);
+    expect(init.done).toBe(false);
+    backend.expectOne('/api/v1/auth/refresh').flush(AUTH_RESPONSE);
+    backend.expectOne('/api/v1/auth/me').flush(ME_WITHOUT_WORKSPACE);
+    await init.donePromise;
+    expect(TestBed.inject(SessionStore).status()).toBe('authenticated');
   });
 });
