@@ -1,0 +1,50 @@
+// Prototype screen «СОЗДАНИЕ ПРОСТРАНСТВА» (design/Main.dc.html).
+:host {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--tp-color-bg);
+}
+
+.content {
+  width: 100%;
+  max-width: 880px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+h1 {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  margin: 6px 0 0;
+  color: var(--tp-color-text-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.paths {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--tp-color-surface);
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-card);
+}
+
+h2 {
+  font-size: 18px;
+  letter-spacing: normal;
+}

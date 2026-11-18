@@ -1,0 +1,29 @@
+<div class="content">
+  <header>
+    <h1>Общее пространство</h1>
+    <p class="lead">
+      Один из вас создаёт пространство, второй присоединяется по коду или ссылке. В пространстве
+      максимум два человека.
+    </p>
+  </header>
+
+  <div class="paths">
+    <section class="card" aria-labelledby="tp-onboarding-create">
+      @if (step() === 'created') {
+        <h2 id="tp-onboarding-create">Пространство «{{ workspace()?.name }}» создано</h2>
+        <!-- WS-04: invite card (code, link, copy). -->
+        <button tpButton type="button" (click)="toSchedule()">К расписанию</button>
+      } @else {
+        <h2 id="tp-onboarding-create">Создать пространство</h2>
+        <!-- WS-03: create-workspace form; on success it calls showCreated(). -->
+      }
+    </section>
+
+    @if (step() === 'create') {
+      <section class="card" aria-labelledby="tp-onboarding-join">
+        <h2 id="tp-onboarding-join">У меня есть код</h2>
+        <!-- WS-05: join-workspace form. -->
+      </section>
+    }
+  </div>
+</div>
