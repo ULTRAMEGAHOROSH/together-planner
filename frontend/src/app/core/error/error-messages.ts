@@ -1,5 +1,6 @@
 // The only dictionary of user-facing error texts (FD-67): every code of spec §7.4
 // plus the client codes. Used by ToastService.error() and forms.
+import { plural } from '@shared/time';
 import { type ApiErrorCode, isApiError } from './api-error';
 
 const SOMETHING_WENT_WRONG = 'Что-то пошло не так. Попробуйте ещё раз.';
@@ -52,3 +53,17 @@ export const ERROR_MESSAGES: Readonly<Record<ApiErrorCode, string>> = {
 export function messageFor(error: unknown): string {
   return ERROR_MESSAGES[isApiError(error) ? error.code : 'UNKNOWN'];
 }
+
+/**
+ * Texts for errors of a single form field (CORE-12 `controlErrorMessage`). Server
+ * `errors[].message` is not shown: it is a Bean Validation text in the language of the
+ * server JVM (Russian locally, English in a container); the field gets `invalid` instead.
+ */
+export const FIELD_ERROR_MESSAGES = {
+  required: 'Заполните поле.',
+  email: 'Введите email, например you@example.com.',
+  minlength: (min: number) => `Минимум ${min} ${plural(min, 'символ', 'символа', 'символов')}.`,
+  maxlength: (max: number) => `Не больше ${max} ${plural(max, 'символа', 'символов', 'символов')}.`,
+  tooLong: 'Слишком длинный текст.',
+  invalid: 'Проверьте это поле.',
+} as const;
