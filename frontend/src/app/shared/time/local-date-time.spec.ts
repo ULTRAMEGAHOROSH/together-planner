@@ -8,6 +8,7 @@ import {
   fromLocalMinutes,
   minutesOfDay,
   parseDate,
+  parseInstant,
   parseLocalDateTime,
   parseTime,
   toLocalMinutes,
@@ -144,6 +145,25 @@ describe('local date-time (FD-30…32)', () => {
       '2026-11-20T10:00',
     ]);
     expect(compareLocal('2026-11-20T08:00', '2026-11-20T08:00:00')).toBe(0);
+  });
+
+  it('parseInstant: a backend Instant with 0–9 fractional digits → epoch ms', () => {
+    const base = Date.UTC(2026, 10, 24, 11, 6, 48);
+    expect(parseInstant('2026-11-24T11:06:48Z')).toBe(base);
+    expect(parseInstant('2026-11-24T11:06:48.004Z')).toBe(base + 4);
+    expect(parseInstant('2026-11-24T11:06:48.004457Z')).toBe(base + 4);
+    expect(parseInstant('2026-11-24T11:06:48.004457800Z')).toBe(base + 4);
+    expect(parseInstant('2026-11-24T11:06Z')).toBe(base - 48_000);
+  });
+
+  it.each([
+    '2026-11-24T11:06:48', // a wall-clock time, not an instant
+    '2026-11-24T11:06:48+05:00',
+    '2026-11-24T11:06:48.0044578001Z',
+    '2026-11-24T25:06:48Z',
+    '24.11.2026',
+  ])('parseInstant(%j) throws', (value) => {
+    expect(() => parseInstant(value)).toThrow(RangeError);
   });
 
   it('does not depend on the browser time zone', () => {

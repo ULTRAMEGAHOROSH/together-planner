@@ -7,6 +7,7 @@ import {
   formatDate,
   formatTime,
   fromLocalMinutes,
+  type LocalMinutes,
   minutesOfDay,
   parseDate,
   parseLocalDateTime,
@@ -138,6 +139,12 @@ export function monthTitle(date: IsoDate): string {
 export function dateLong(date: IsoDate): string {
   const { day, month, weekday } = partsOf(date);
   return `${WEEKDAYS_LONG[weekday]}, ${day} ${MONTHS_GENITIVE[month]}`;
+}
+
+/** «24 ноября, 16:06» — a local date-time, e.g. when an invite code expires. */
+export function dayMonthTime(minutes: LocalMinutes): string {
+  const { day, month } = fromLocalMinutes(minutes);
+  return `${day} ${MONTHS_GENITIVE[month - 1]}, ${formatTime(minutesOfDay(minutes))}`;
 }
 
 /** «пн, 9 нояб.». */

@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
@@ -34,7 +34,7 @@ describe('OnboardingPage', () => {
     expect(page().querySelector('tp-create-workspace-form')).not.toBeNull();
   });
 
-  it('the create form reports success: its name, no join path, «К расписанию» → /week', async () => {
+  it('the create form reports success: name, the invite card, no join path, «К расписанию» → /week', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     TestBed.inject(SessionStore).setWorkspace(WORKSPACE_CREATED);
     // What the form does after W1: the workspace is in the session, then `created`.
@@ -43,8 +43,14 @@ describe('OnboardingPage', () => {
     await fixture.whenStable();
 
     expect(headings()).toEqual(['Пространство «Мы» создано']);
-    const button = page().querySelector('button')!;
-    expect(button.textContent?.trim()).toBe('К расписанию');
+    expect(page().querySelector('tp-invite-card')).not.toBeNull();
+    // The card asks for a code at once (its own spec covers the rest).
+    TestBed.inject(HttpTestingController).expectOne(
+      `/api/v1/workspaces/${WORKSPACE_CREATED.id}/invites`,
+    );
+    const button = Array.from(page().querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'К расписанию',
+    )!;
     button.click();
     expect(navigate).toHaveBeenCalledWith('/week');
   });

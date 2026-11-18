@@ -29,6 +29,8 @@ const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 // HH:mm, HH:mm:ss or HH:mm:ss.f…f (1–9 digits). Seconds are accepted and dropped:
 // events and templates have minute precision.
 const TIME = /^(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?$/;
+// Backend Instant: UTC with "Z" and 0–9 fractional digits (6 or 9 in practice).
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?Z$/;
 
 function invalid(kind: string, value: unknown): never {
   throw new RangeError(`Invalid ${kind}: ${JSON.stringify(value)}`);
@@ -88,6 +90,19 @@ export function parseLocalDateTime(value: string): LocalMinutes {
   } catch {
     return invalid('local date-time', value);
   }
+}
+
+/**
+ * Backend `Instant` ("2026-11-24T11:06:48.004457800Z") → epoch milliseconds. A moment, not a
+ * wall-clock time: turn it into local minutes with `ZoneClock.nowIn(zone, ms)`. Digits after
+ * the milliseconds are dropped: not every engine parses more than three.
+ */
+export function parseInstant(value: string): number {
+  const ms = INSTANT.test(value) ? Date.parse(value.replace(/(\.\d{3})\d+Z$/, '$1Z')) : NaN;
+  if (Number.isNaN(ms)) {
+    invalid('instant', value);
+  }
+  return ms;
 }
 
 /** Always "YYYY-MM-DDTHH:mm" — the format the frontend sends (FD-32). */

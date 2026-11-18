@@ -1,0 +1,46 @@
+@if (invite(); as invite) {
+  <p class="hint">Отправьте код партнёру. Код одноразовый и действует до {{ invite.expires }}.</p>
+  <div class="code" aria-label="Код приглашения">{{ invite.displayCode }}</div>
+  <p class="link">{{ invite.link }}</p>
+  <div class="actions">
+    <button
+      tpButton
+      variant="ghost"
+      type="button"
+      (click)="copy(invite.displayCode, 'Код скопирован.')"
+    >
+      Скопировать код
+    </button>
+    <button
+      tpButton
+      variant="ghost"
+      type="button"
+      (click)="copy(invite.link, 'Ссылка скопирована.')"
+    >
+      Скопировать ссылку
+    </button>
+  </div>
+  <button
+    tpButton
+    class="renew"
+    variant="ghost"
+    size="sm"
+    type="button"
+    [loading]="renewing()"
+    (click)="renew()"
+  >
+    Новый код
+  </button>
+} @else {
+  @switch (status()) {
+    @case ('full') {
+      <p class="full" role="status">Партнёр уже присоединился.</p>
+    }
+    @case ('error') {
+      <tp-error-state [text]="errorText()" (retry)="load()" />
+    }
+    @default {
+      <tp-spinner class="loading" label="Создаём код приглашения…" />
+    }
+  }
+}

@@ -7,6 +7,7 @@ import {
   capitalize,
   dateLong,
   dateShort,
+  dayMonthTime,
   durText,
   monthTitle,
   rangeText,
@@ -15,6 +16,7 @@ import {
   weekLabel,
   weekShort,
 } from './format-ru';
+import { parseLocalDateTime } from './local-date-time';
 import { addDays } from './week';
 
 // Expected strings are the prototype's output (design/Main.dc.html).
@@ -73,6 +75,11 @@ describe('format-ru: days', () => {
       expect(dateLong(`2026-${month}-01`)).toMatch(new RegExp(`, 1 ${m}$`));
       expect(dateShort(`2026-${month}-01`)).toMatch(new RegExp(`, 1 ${MONTHS_SHORT[i]}$`));
     });
+  });
+
+  it('dayMonthTime: «24 ноября, 16:06»', () => {
+    expect(dayMonthTime(parseLocalDateTime('2026-11-24T16:06'))).toBe('24 ноября, 16:06');
+    expect(dayMonthTime(parseLocalDateTime('2027-01-01T00:00'))).toBe('1 января, 00:00');
   });
 
   it('capitalize', () => {

@@ -11,7 +11,7 @@
     <section class="card" aria-labelledby="tp-onboarding-create">
       @if (step() === 'created') {
         <h2 id="tp-onboarding-create">Пространство «{{ workspace()?.name }}» создано</h2>
-        <!-- WS-04: invite card (code, link, copy). -->
+        <tp-invite-card />
         <button tpButton type="button" (click)="toSchedule()">К расписанию</button>
       } @else {
         <h2 id="tp-onboarding-create">Создать пространство</h2>

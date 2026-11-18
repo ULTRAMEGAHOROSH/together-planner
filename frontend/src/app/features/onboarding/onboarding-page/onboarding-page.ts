@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { SessionStore } from '@core/auth/session-store';
 import { Button } from '@shared/ui/button/button';
 import { CreateWorkspaceForm } from '../create-workspace-form/create-workspace-form';
+import { InviteCard } from '../invite-card/invite-card';
 
 /** Left card: the create form, then the created workspace with its invite. */
 export type OnboardingStep = 'create' | 'created';
@@ -14,7 +15,7 @@ export type OnboardingStep = 'create' | 'created';
  */
 @Component({
   selector: 'tp-onboarding-page',
-  imports: [Button, CreateWorkspaceForm],
+  imports: [Button, CreateWorkspaceForm, InviteCard],
   templateUrl: './onboarding-page.html',
   styleUrl: './onboarding-page.scss',
 })
