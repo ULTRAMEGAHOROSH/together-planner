@@ -105,12 +105,15 @@ export function capitalize(text: string): string {
 }
 
 /**
- * «9 – 15 ноября 2026», «30 ноября – 6 декабря 2026». The year is the year of Sunday,
- * as in the prototype: «28 декабря – 3 января 2027».
+ * «9 – 15 ноября 2026», «30 ноября – 6 декабря 2026». A week across New Year shows
+ * both years: «28 декабря 2026 – 3 января 2027» (the prototype printed only the second).
  */
 export function weekLabel(weekStart: IsoDate): string {
   const [from, to] = weekBounds(weekStart);
   const tail = `${to.day} ${MONTHS_GENITIVE[to.month]} ${to.year}`;
+  if (from.year !== to.year) {
+    return `${from.day} ${MONTHS_GENITIVE[from.month]} ${from.year} – ${tail}`;
+  }
   return from.month === to.month
     ? `${from.day} – ${tail}`
     : `${from.day} ${MONTHS_GENITIVE[from.month]} – ${tail}`;

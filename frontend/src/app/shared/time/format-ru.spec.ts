@@ -27,8 +27,11 @@ describe('format-ru: weeks', () => {
     expect(weekLabel('2026-11-30')).toBe('30 ноября – 6 декабря 2026');
   });
 
-  it('weekLabel across the year shows the year of Sunday (prototype rule)', () => {
-    expect(weekLabel('2026-12-28')).toBe('28 декабря – 3 января 2027');
+  it('weekLabel across New Year shows both years', () => {
+    expect(weekLabel('2026-12-28')).toBe('28 декабря 2026 – 3 января 2027');
+    expect(weekLabel('2027-12-27')).toBe('27 декабря 2027 – 2 января 2028');
+    // A week ending on 31 December stays inside one year.
+    expect(weekLabel('2028-12-25')).toBe('25 – 31 декабря 2028');
   });
 
   it('FR-03: weekShort inside one month and across months', () => {
