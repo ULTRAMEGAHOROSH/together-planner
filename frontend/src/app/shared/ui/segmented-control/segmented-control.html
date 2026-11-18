@@ -1,0 +1,12 @@
+@for (option of options(); track option.value; let i = $index) {
+  <button
+    #option
+    type="button"
+    role="radio"
+    [attr.aria-checked]="i === selected()"
+    [tabIndex]="i === focusable() ? 0 : -1"
+    (click)="choose(i)"
+  >
+    {{ option.label }}
+  </button>
+}

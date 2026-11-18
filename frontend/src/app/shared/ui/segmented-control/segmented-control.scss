@@ -1,0 +1,44 @@
+// Values from the prototype switches (design/Main.dc.html: auth tabs, «Неделя / День»).
+:host {
+  --tp-segment-height: 38px;
+  --tp-segment-font-size: 14px;
+
+  display: flex;
+  padding: 3px;
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-hover);
+}
+
+:host(.sm) {
+  --tp-segment-height: 34px;
+  --tp-segment-font-size: 13px;
+}
+
+button {
+  flex: 1 1 0;
+  height: var(--tp-segment-height);
+  padding: 0 14px;
+  border: 0;
+  // Inner radius = outer radius minus the track padding.
+  border-radius: calc(var(--tp-radius-lg) - 3px);
+  background: transparent;
+  color: var(--tp-color-text-muted);
+  font-size: var(--tp-segment-font-size);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--tp-duration-fast) ease,
+    box-shadow var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+
+  &[aria-checked='true'] {
+    background: var(--tp-color-surface);
+    color: var(--tp-color-text);
+    box-shadow: var(--tp-shadow-sm);
+  }
+}

@@ -1,5 +1,6 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { Component, inject } from '@angular/core';
+import { Button } from '@shared/ui/button/button';
 import { DialogShell } from '@shared/ui/dialog/dialog-shell';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
 import type { Observable } from 'rxjs';
@@ -19,7 +20,7 @@ export interface ConfirmDialogData {
  */
 @Component({
   selector: 'tp-confirm-dialog',
-  imports: [DialogShell],
+  imports: [Button, DialogShell],
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.scss',
 })

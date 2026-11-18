@@ -30,7 +30,7 @@ describe('ConfirmDialog', () => {
     expect(dialog.querySelector('h2')?.textContent?.trim()).toBe('Удалить шаблон?');
     expect(dialog.querySelector('p')?.textContent).toContain('останутся на своих неделях');
     expect(button('Отмена')).toBeDefined();
-    expect(button('Удалить')?.classList).toContain('confirm');
+    expect(button('Удалить')?.classList).toContain('danger');
     expect(document.querySelector('.tp-dialog-panel--sm')).not.toBeNull();
   });
 

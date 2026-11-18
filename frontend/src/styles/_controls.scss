@@ -1,0 +1,44 @@
+// Input look (`.tp-control`, set by the `tpControl` directive inside tp-form-field, CORE-11).
+// Global, because the control is content projected into tp-form-field: neither the field
+// nor the page styles reach it without ::ng-deep (FD-63).
+// Values from the prototype inputs (design/Main.dc.html, `.tp-in`).
+
+.tp-control {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--tp-color-border-input);
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-surface);
+  font-size: 15px;
+  transition:
+    border-color var(--tp-duration-fast) ease,
+    box-shadow var(--tp-duration-fast) ease;
+
+  &::placeholder {
+    color: var(--tp-color-text-subtle);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--tp-color-danger);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--tp-color-accent);
+    box-shadow: 0 0 0 3px var(--tp-color-accent-ring);
+  }
+
+  &:disabled {
+    background: var(--tp-color-surface-sunken);
+    color: var(--tp-color-text-subtle);
+  }
+
+  &:is(textarea) {
+    height: auto;
+    min-height: 64px;
+    padding: 10px 14px;
+    font-size: 14px;
+    resize: vertical;
+  }
+}

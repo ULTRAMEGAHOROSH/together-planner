@@ -1,0 +1,8 @@
+<label class="label" [for]="controlId">{{ label() }}</label>
+<ng-content />
+@if (hint(); as text) {
+  <span class="hint" [id]="hintId">{{ text }}</span>
+}
+@if (error(); as text) {
+  <span class="error" [id]="errorId">{{ text }}</span>
+}

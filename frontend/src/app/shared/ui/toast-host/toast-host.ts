@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { ToastService } from '@core/notify/toast-service';
+import { Icon } from '@shared/ui/icon/icon';
 
 /**
  * Shows the current toast (FD-68). Placed once, in `App`.
@@ -10,6 +11,7 @@ import { ToastService } from '@core/notify/toast-service';
  */
 @Component({
   selector: 'tp-toast-host',
+  imports: [Icon],
   templateUrl: './toast-host.html',
   styleUrl: './toast-host.scss',
 })

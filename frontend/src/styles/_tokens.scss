@@ -29,6 +29,7 @@
   --tp-color-divider: #f0eee9; // dialog footer
   --tp-color-border-input: #ddd9d2;
   --tp-color-border-dashed: #c9c4bc;
+  --tp-color-border-dashed-soft: #d9d5ce; // empty state
   --tp-color-grid-hour: #efede8;
   --tp-color-grid-day: #f0eee9;
 
@@ -37,6 +38,7 @@
   --tp-color-accent-hover: #3730a3;
   --tp-color-accent-ring: rgba(79, 70, 229, 0.16);
   --tp-color-accent-wash: rgba(79, 70, 229, 0.035); // empty slot hover
+  --tp-color-disabled: #9c9aa8; // disabled main button
 
   // Danger
   --tp-color-danger: #c42b2b;

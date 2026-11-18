@@ -1,0 +1,29 @@
+// Values from the prototype header avatars (design/Main.dc.html).
+:host {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--tp-color-text-inverse);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+:host(.sm) {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
+:host(.seat-1) {
+  background: var(--tp-color-seat-1);
+}
+
+:host(.seat-2) {
+  background: var(--tp-color-seat-2);
+}

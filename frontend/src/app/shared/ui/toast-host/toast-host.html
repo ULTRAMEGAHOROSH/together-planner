@@ -17,9 +17,7 @@
       <button type="button" class="action" (click)="toasts.runAction()">{{ action.label }}</button>
     }
     <button type="button" class="close" aria-label="Закрыть уведомление" (click)="toasts.dismiss()">
-      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M18 6L6 18M6 6l12 12" />
-      </svg>
+      <tp-icon name="close" [size]="14" />
     </button>
   </div>
 }

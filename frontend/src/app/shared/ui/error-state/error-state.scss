@@ -1,0 +1,23 @@
+// Not drawn in the prototype: the empty-state card with a solid border and the alert icon
+// of the event dialog warnings.
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-xl);
+  background: var(--tp-color-surface);
+}
+
+.icon {
+  color: var(--tp-color-danger);
+}
+
+.text {
+  flex: 1 1 220px;
+  margin: 0;
+  color: var(--tp-color-text-body);
+  line-height: 1.45;
+}

@@ -1,5 +1,6 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { Component, inject, input } from '@angular/core';
+import { Icon } from '@shared/ui/icon/icon';
 
 let fallbackId = 1;
 
@@ -16,6 +17,7 @@ let fallbackId = 1;
  */
 @Component({
   selector: 'tp-dialog-shell',
+  imports: [Icon],
   templateUrl: './dialog-shell.html',
   styleUrl: './dialog-shell.scss',
 })

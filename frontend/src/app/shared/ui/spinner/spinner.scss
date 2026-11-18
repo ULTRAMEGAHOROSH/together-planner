@@ -1,0 +1,25 @@
+// Not drawn in the prototype: a plain ring in the current text color.
+:host {
+  display: inline-flex;
+  flex: 0 0 auto;
+  --tp-spinner-size: 24px;
+
+  &.sm {
+    --tp-spinner-size: 16px;
+  }
+}
+
+.ring {
+  width: var(--tp-spinner-size);
+  height: var(--tp-spinner-size);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: tpSpin 0.7s linear infinite;
+}
+
+@keyframes tpSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

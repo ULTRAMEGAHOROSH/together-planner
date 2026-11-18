@@ -1,0 +1,86 @@
+// Values from the prototype buttons (design/Main.dc.html, `.tp-btn`, `.tp-ghost`): only
+// ghost buttons change color on hover; all of them shift down 1px when pressed.
+:host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: var(--tp-radius-lg);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--tp-duration-fast) ease,
+    border-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:active:not(:disabled, .loading) {
+    transform: var(--tp-press-shift);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &.loading {
+    cursor: progress;
+  }
+}
+
+:host(.sm) {
+  height: 40px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+:host(.primary) {
+  background: var(--tp-color-accent);
+  color: var(--tp-color-text-inverse);
+}
+
+:host(.danger) {
+  background: var(--tp-color-danger);
+  color: var(--tp-color-text-inverse);
+}
+
+:host(.primary:disabled),
+:host(.danger:disabled) {
+  background: var(--tp-color-disabled);
+}
+
+:host(.ghost) {
+  border-color: var(--tp-color-border);
+  background: var(--tp-color-surface);
+  color: var(--tp-color-text);
+  font-weight: 600;
+
+  &:hover:not(:disabled, .loading) {
+    background: var(--tp-color-hover);
+  }
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
+// The label stays in place (width, accessible name) but is not seen under the spinner.
+:host(.loading) .label {
+  opacity: 0;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: max-content;
+  height: max-content;
+}

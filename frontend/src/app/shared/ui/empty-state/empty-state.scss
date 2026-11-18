@@ -1,0 +1,28 @@
+// Values from the prototype empty week banner (design/Main.dc.html, `weekEmpty`).
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  border: 1px dashed var(--tp-color-border-dashed-soft);
+  border-radius: var(--tp-radius-xl);
+  background: var(--tp-color-surface);
+}
+
+.text {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--tp-color-text-body);
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  &:empty {
+    display: none;
+  }
+}

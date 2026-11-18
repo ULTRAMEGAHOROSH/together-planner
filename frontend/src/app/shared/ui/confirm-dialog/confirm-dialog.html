@@ -1,9 +1,16 @@
 <tp-dialog-shell [title]="data.title">
   <p class="text">{{ data.text }}</p>
-  <button tpDialogFooter type="button" class="cancel" cdkFocusInitial (click)="ref.close()">
+  <button
+    tpButton
+    tpDialogFooter
+    variant="ghost"
+    type="button"
+    cdkFocusInitial
+    (click)="ref.close()"
+  >
     {{ data.cancelLabel ?? 'Отмена' }}
   </button>
-  <button tpDialogFooter type="button" class="confirm" (click)="ref.close(true)">
+  <button tpButton tpDialogFooter variant="danger" type="button" (click)="ref.close(true)">
     {{ data.confirmLabel }}
   </button>
 </tp-dialog-shell>
