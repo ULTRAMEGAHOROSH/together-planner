@@ -6,13 +6,25 @@ import { SessionStore } from './session-store';
 
 /** Signed in, or → `/login?returnUrl=<the requested URL>`. */
 export function authGuard(): true | UrlTree {
+  return signedInOr('/login');
+}
+
+/**
+ * Signed in, or → `/register?returnUrl=<the requested URL>`: an invite link (`/join?code=`)
+ * usually reaches someone without an account yet (WS-06). The login tab keeps `returnUrl`.
+ */
+export function inviteeGuard(): true | UrlTree {
+  return signedInOr('/register');
+}
+
+function signedInOr(page: '/login' | '/register'): true | UrlTree {
   if (inject(SessionStore).isAuthenticated()) {
     return true;
   }
   const router = inject(Router);
   const requested = router.currentNavigation()?.extractedUrl;
   const returnUrl = requested ? router.serializeUrl(requested) : '/';
-  return router.createUrlTree(['/login'], {
+  return router.createUrlTree([page], {
     queryParams: returnUrl === '/' ? {} : { returnUrl },
   });
 }

@@ -81,6 +81,10 @@ export class AuthPage {
   private readonly formEvent = toSignal(this.form.events);
 
   protected readonly isRegister = computed(() => this.mode() === 'register');
+  /** Came from an invite link (WS-06): after sign-in the user goes back to `/join?code=`. */
+  protected readonly invited = computed(() =>
+    /^\/join(\?|$)/.test(safeReturnUrl(this.returnUrl()) ?? ''),
+  );
   /** Error texts, shown after the first submit or after leaving the field (FD-83). */
   protected readonly errors = computed(() => {
     this.formEvent();

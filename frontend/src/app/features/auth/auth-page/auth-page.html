@@ -40,6 +40,12 @@
   </section>
 
   <form class="card" [formGroup]="form" (ngSubmit)="submit()">
+    @if (invited()) {
+      <p class="invite" role="note">
+        Вас пригласили в пространство. Зарегистрируйтесь или войдите — код приглашения подставится
+        сам.
+      </p>
+    }
     <tp-segmented-control
       label="Вход или регистрация"
       [options]="tabs"
@@ -79,7 +85,7 @@
     <button tpButton type="submit" class="submit" [loading]="pending()">
       {{ isRegister() ? 'Создать аккаунт' : 'Войти' }}
     </button>
-    @if (isRegister()) {
+    @if (isRegister() && !invited()) {
       <p class="note">
         После регистрации создайте пространство или присоединитесь по коду партнёра.
       </p>

@@ -112,6 +112,29 @@ describe('AuthPage', () => {
     expect(input('displayName')).not.toBeNull();
   });
 
+  const inviteNote = () => page().querySelector('[role="note"]')?.textContent?.trim() ?? null;
+
+  it.each(['/register', '/login'])(
+    'from an invite link (%s): «Вас пригласили в пространство», no «create a workspace» note',
+    async (path) => {
+      await harness.navigateByUrl(`${path}?returnUrl=%2Fjoin%3Fcode%3DK7QM2XPA`);
+      expect(inviteNote()).toBe(
+        'Вас пригласили в пространство. Зарегистрируйтесь или войдите — код приглашения подставится сам.',
+      );
+      expect(page().textContent).not.toContain('После регистрации создайте пространство');
+    },
+  );
+
+  it.each([
+    ['without returnUrl', '/register'],
+    ['another page', '/register?returnUrl=%2Fweek'],
+    ['a path that only starts like it', '/register?returnUrl=%2Fjoined'],
+    ['an unsafe returnUrl', '/register?returnUrl=%2F%2Fevil.test%2Fjoin'],
+  ])('no invite note: %s', async (_, path) => {
+    await harness.navigateByUrl(path);
+    expect(inviteNote()).toBeNull();
+  });
+
   it('errors appear after leaving the field or after a submit, and nothing is sent', async () => {
     await harness.navigateByUrl('/register');
     await type('password', '123');

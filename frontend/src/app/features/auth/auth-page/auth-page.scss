@@ -133,3 +133,14 @@ h1 {
   line-height: 1.45;
   color: var(--tp-color-text-subtle);
 }
+
+// Shown above the tabs when the user came from an invite link (WS-06).
+.invite {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-seat-1-tint);
+  color: var(--tp-color-text-2);
+  font-size: 13px;
+  line-height: 1.45;
+}

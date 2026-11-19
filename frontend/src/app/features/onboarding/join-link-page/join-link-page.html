@@ -1,0 +1,13 @@
+<section class="card" aria-labelledby="tp-join-link-title">
+  <h1 id="tp-join-link-title">Приглашение в пространство</h1>
+  @if (workspace(); as workspace) {
+    <p class="lead">
+      Вы уже в пространстве «{{ workspace.name }}». Можно состоять только в одном пространстве,
+      поэтому присоединиться по этой ссылке не получится.
+    </p>
+    <button tpButton type="button" (click)="toSchedule()">К расписанию</button>
+  } @else {
+    <p class="lead">Партнёр прислал вам код. Проверьте его и нажмите «Присоединиться».</p>
+    <tp-join-workspace-form [code]="code() ?? ''" />
+  }
+</section>

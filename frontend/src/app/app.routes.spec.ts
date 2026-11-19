@@ -80,6 +80,7 @@ describe('app routes × session (AUTH-06)', () => {
   });
 
   const login = (returnUrl: string) => `/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+  const register = (returnUrl: string) => `/register?returnUrl=${encodeURIComponent(returnUrl)}`;
 
   it.each<[string, Record<Status, string>]>([
     ['/', { anonymous: '/login', 'no workspace': '/onboarding', workspace: '/week' }],
@@ -88,7 +89,7 @@ describe('app routes × session (AUTH-06)', () => {
     [
       '/join?code=K7QM2XPA',
       {
-        anonymous: '/join?code=K7QM2XPA',
+        anonymous: register('/join?code=K7QM2XPA'),
         'no workspace': '/join?code=K7QM2XPA',
         workspace: '/join?code=K7QM2XPA',
       },

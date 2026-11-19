@@ -73,6 +73,16 @@ describe('JoinWorkspaceForm', () => {
     expect(button().textContent?.trim()).toBe('Присоединиться');
   });
 
+  it('the `code` input fills the field and sends nothing by itself', async () => {
+    // A fresh instance: the input is read once, when the form starts.
+    const prefilled = TestBed.createComponent(JoinWorkspaceForm);
+    prefilled.componentRef.setInput('code', 'ACZ9AXJN');
+    await prefilled.whenStable();
+    const field = (prefilled.nativeElement as HTMLElement).querySelector('input')!;
+    expect(field.value).toBe('ACZ9AXJN');
+    backend.expectNone(URL);
+  });
+
   it('W6 with the code as typed (trimmed) → the workspace in the session → /week', async () => {
     await type('  acz9-axjn ');
     await submit();

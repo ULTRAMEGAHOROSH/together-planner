@@ -1,5 +1,11 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, noWorkspaceGuard, workspaceGuard } from '@core/auth/guards';
+import {
+  authGuard,
+  guestGuard,
+  inviteeGuard,
+  noWorkspaceGuard,
+  workspaceGuard,
+} from '@core/auth/guards';
 
 // Route map: docs/frontend-final-decisions.md §6. Every page is lazy (FD-45).
 // Not wired yet: AppShell component on the app parent (SHELL-01), `week` redirect
@@ -22,6 +28,7 @@ export const routes: Routes = [
   },
   {
     path: 'join',
+    canActivate: [inviteeGuard],
     title: 'Приглашение — Together Planner',
     loadComponent: () =>
       import('@features/onboarding/join-link-page/join-link-page').then((m) => m.JoinLinkPage),

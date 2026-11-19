@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { AUTH_RESPONSE, WORKSPACE_CREATED } from '../api/models/testing/samples';
-import { authGuard, guestGuard, noWorkspaceGuard, safeReturnUrl, workspaceGuard } from './guards';
+import {
+  authGuard,
+  guestGuard,
+  inviteeGuard,
+  noWorkspaceGuard,
+  safeReturnUrl,
+  workspaceGuard,
+} from './guards';
 import { SessionStore } from './session-store';
 
 describe('guards', () => {
@@ -18,16 +25,17 @@ describe('guards', () => {
   };
 
   it.each([
-    ['unknown', null, '/login', true, '/onboarding', true],
-    ['anonymous', null, '/login', true, '/onboarding', true],
-    ['without a workspace', false, true, '/week', '/onboarding', true],
-    ['with a workspace', true, true, '/week', true, '/week'],
-  ] as const)('%s', (status, workspace, auth, guest, needsWorkspace, needsNone) => {
+    ['unknown', null, '/login', '/register', true, '/onboarding', true],
+    ['anonymous', null, '/login', '/register', true, '/onboarding', true],
+    ['without a workspace', false, true, true, '/week', '/onboarding', true],
+    ['with a workspace', true, true, true, '/week', true, '/week'],
+  ] as const)('%s', (status, workspace, auth, invitee, guest, needsWorkspace, needsNone) => {
     if (status === 'anonymous') session.clear();
     if (workspace !== null) session.setAuth(AUTH_RESPONSE);
     if (workspace) session.setWorkspace(WORKSPACE_CREATED);
     // Outside a navigation authGuard has no URL to come back to.
     expect(run(authGuard)).toBe(auth);
+    expect(run(inviteeGuard)).toBe(invitee);
     expect(run(guestGuard)).toBe(guest);
     expect(run(workspaceGuard)).toBe(needsWorkspace);
     expect(run(noWorkspaceGuard)).toBe(needsNone);

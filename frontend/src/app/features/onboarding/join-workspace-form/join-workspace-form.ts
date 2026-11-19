@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, type OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -34,7 +34,10 @@ export const JOIN_SERVER_ERRORS: ServerErrorMap = {
   templateUrl: './join-workspace-form.html',
   styleUrl: './join-workspace-form.scss',
 })
-export class JoinWorkspaceForm {
+export class JoinWorkspaceForm implements OnInit {
+  /** Fills the field, e.g. from the invite link (WS-06); never sent without a click. */
+  readonly code = input('');
+
   private readonly api = inject(WorkspaceApi);
   private readonly session = inject(SessionStore);
   private readonly router = inject(Router);
@@ -55,6 +58,10 @@ export class JoinWorkspaceForm {
       form: this.form.hasError(SERVER_ERROR) ? controlErrorMessage(this.form) : null,
     };
   });
+
+  ngOnInit(): void {
+    this.form.controls.code.setValue(this.code());
+  }
 
   protected submit(): void {
     this.submitted.set(true);

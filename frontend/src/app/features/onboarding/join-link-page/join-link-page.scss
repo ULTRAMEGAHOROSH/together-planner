@@ -1,0 +1,33 @@
+// One card of the onboarding screen (design/Main.dc.html), centered on its own.
+:host {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--tp-color-bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 432px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--tp-color-surface);
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-card);
+}
+
+h1 {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0;
+  color: var(--tp-color-text-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
