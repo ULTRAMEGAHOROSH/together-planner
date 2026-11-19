@@ -14,6 +14,7 @@ import com.togetherplanner.testsupport.AbstractIntegrationTest;
 import com.togetherplanner.testsupport.RegisteredUser;
 import com.togetherplanner.workspace.dto.InviteResponse;
 import com.togetherplanner.workspace.dto.WorkspaceResponse;
+import com.togetherplanner.workspace.entity.WorkspaceInvite;
 import com.togetherplanner.workspace.repository.WorkspaceInviteRepository;
 import com.togetherplanner.workspace.repository.WorkspaceMemberRepository;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -77,6 +80,35 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         assertThat(statuses).containsExactlyInAnyOrder(200, 409);
         assertThat(workspaceMemberRepository.countByWorkspaceId(workspace.id())).isEqualTo(2);
         assertThat(workspaceInviteRepository.findByCode(invite.code()).orElseThrow().getUsedAt()).isNotNull();
+    }
+
+    /**
+     * C-07: two different unused codes (W5 keeps one, but a W5 racing a join can leave a second)
+     * and two joiners at once. Whichever check stops the loser - the member count or
+     * uq_member_workspace_seat - the workspace ends with two members and the loser's code unused.
+     */
+    @Test
+    void twoUsersJoiningWithDifferentCodesSimultaneouslyNeverMakeAThirdMember() throws Exception {
+        RegisteredUser alice = testApi.register("alice-c7@example.com", "Alice");
+        WorkspaceResponse workspace = testApi.createWorkspace(alice.accessToken(), "Our week", "Asia/Almaty");
+        String bobCode = testApi.createInvite(alice.accessToken(), workspace.id()).code();
+        String carolCode = "XTRA7CCC";
+        Instant now = clock.instant();
+        workspaceInviteRepository.saveAndFlush(
+                new WorkspaceInvite(workspace.id(), carolCode, alice.userId(), now, now.plus(Duration.ofDays(7))));
+        RegisteredUser bob = testApi.register("bob-c7@example.com", "Bob");
+        RegisteredUser carol = testApi.register("carol-c7@example.com", "Carol");
+
+        List<MvcResult> results = runConcurrently(
+                () -> testApi.join(bob.accessToken(), bobCode).andReturn(),
+                () -> testApi.join(carol.accessToken(), carolCode).andReturn());
+
+        assertThat(results).extracting(r -> r.getResponse().getStatus()).containsExactlyInAnyOrder(200, 409);
+        MvcResult loser = results.stream().filter(r -> r.getResponse().getStatus() == 409).findFirst().orElseThrow();
+        assertThat(loser.getResponse().getContentAsString()).contains("\"code\":\"WORKSPACE_FULL\"");
+        assertThat(workspaceMemberRepository.countByWorkspaceId(workspace.id())).isEqualTo(2);
+        String loserCode = loser == results.get(0) ? bobCode : carolCode;
+        assertThat(workspaceInviteRepository.findByCode(loserCode).orElseThrow().getUsedAt()).isNull();
     }
 
     @Test
@@ -188,13 +220,13 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         assertThat(successCount).isEqualTo(1);
     }
 
-    private List<Integer> runConcurrently(Callable<Integer> taskA, Callable<Integer> taskB) throws Exception {
+    private <T> List<T> runConcurrently(Callable<T> taskA, Callable<T> taskB) throws Exception {
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
-            Future<Integer> resultA = executor.submit(withGate(taskA, ready, start));
-            Future<Integer> resultB = executor.submit(withGate(taskB, ready, start));
+            Future<T> resultA = executor.submit(withGate(taskA, ready, start));
+            Future<T> resultB = executor.submit(withGate(taskB, ready, start));
             ready.await();
             start.countDown();
             return List.of(resultA.get(15, TimeUnit.SECONDS), resultB.get(15, TimeUnit.SECONDS));
@@ -203,7 +235,7 @@ class ConcurrencyIT extends AbstractIntegrationTest {
         }
     }
 
-    private Callable<Integer> withGate(Callable<Integer> task, CountDownLatch ready, CountDownLatch start) {
+    private <T> Callable<T> withGate(Callable<T> task, CountDownLatch ready, CountDownLatch start) {
         return () -> {
             ready.countDown();
             start.await();

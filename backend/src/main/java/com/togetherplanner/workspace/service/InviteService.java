@@ -41,9 +41,15 @@ public class InviteService {
     private final InviteCodeGenerator codeGenerator;
     private final Clock clock;
 
-    /** Clears any unused invite codes for the workspace before issuing a new one. */
+    /**
+     * W5. A full workspace gets {@code 409 WORKSPACE_FULL} and its invites stay untouched (D-10).
+     * Otherwise any unused codes are cleared before the new one is issued.
+     */
     @Transactional
     public InviteResponse createInvite(UUID wsId, UUID createdBy) {
+        if (memberRepository.countByWorkspaceId(wsId) >= MAX_MEMBERS) {
+            throw new ApiException(ErrorCode.WORKSPACE_FULL, "Workspace already has two members");
+        }
         inviteRepository.deleteUnusedByWorkspaceId(wsId);
 
         String code;
