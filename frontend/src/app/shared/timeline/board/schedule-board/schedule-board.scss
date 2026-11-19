@@ -1,0 +1,18 @@
+// Values from the prototype board frame (design/Main.dc.html, #tp-scroll). The host is the
+// only scroll container of the board (FD-57); the parent gives it a height (flex).
+:host {
+  display: block;
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  background: var(--tp-color-surface);
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-board);
+}
+
+// Two rows shared by all columns (subgrid): headers, then the 24 hours.
+.grid {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+}

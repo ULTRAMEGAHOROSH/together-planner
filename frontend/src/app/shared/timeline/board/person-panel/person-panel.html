@@ -1,0 +1,22 @@
+<div class="head" [class.seat-2]="panel().seat === 2">
+  <div class="person">
+    <tp-avatar [name]="panel().name" [seat]="panel().seat" size="sm" />
+    <span class="name">{{ panel().name }}</span>
+  </div>
+  <div class="days">
+    @for (day of panel().layout.days; track day.date) {
+      <tp-day-header [day]="day" />
+    }
+  </div>
+</div>
+
+<div class="days">
+  @for (day of panel().layout.days; track day.date) {
+    <tp-day-column
+      [day]="day"
+      [personId]="panel().layout.personId"
+      [personName]="panel().name"
+      (slotClick)="slotClick.emit($event)"
+    />
+  }
+</div>

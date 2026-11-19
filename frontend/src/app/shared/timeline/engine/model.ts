@@ -95,6 +95,12 @@ export interface EventBox {
 /** One day column of a panel. */
 export interface DayColumnLayout {
   readonly date: IsoDate;
+  /** Day header: «Пн». */
+  readonly weekdayShort: string;
+  /** Day header: 9. */
+  readonly dayOfMonth: number;
+  /** «понедельник, 9 ноября» — for the name of the day column button (§8.3). */
+  readonly dateLabel: string;
   readonly isToday: boolean;
   readonly isWeekend: boolean;
   readonly boxes: readonly EventBox[];

@@ -1,7 +1,7 @@
 import { CATEGORY_PALETTE } from '@shared/domain/category-palette';
 import { A, B, ev } from '../testing/event-builder';
 import { splitIntoDaySegments } from './day-segments';
-import { toBox } from './geometry';
+import { HOUR_MARKS, slotMinuteAt, toBox } from './geometry';
 import type { LaidOutSegment, TimelineEvent } from './model';
 
 const W = { firstDay: '2026-11-09', dayCount: 7 } as const;
@@ -94,5 +94,27 @@ describe('toBox (WEEK-04, FD-56)', () => {
   it('another scale (px per minute) moves and sizes the card by it', () => {
     const box = toBox(seg(ev('2026-11-09T09:00', '2026-11-09T10:00', [A])), 1);
     expect([box.top, box.height]).toEqual([541, 58]);
+  });
+});
+
+describe('time gutter and slot clicks (WEEK-05)', () => {
+  it('23 hour labels 01:00…23:00, centred on their lines', () => {
+    expect(HOUR_MARKS).toHaveLength(23);
+    expect(HOUR_MARKS[0]).toEqual({ label: '01:00', top: 32 });
+    expect(HOUR_MARKS[22]).toEqual({ label: '23:00', top: 912 });
+  });
+
+  it('a click at 9.5 h → 570; rounded down to 30 minutes', () => {
+    expect(slotMinuteAt(9.5 * 40)).toBe(570);
+    expect(slotMinuteAt(9.5 * 40 + 19)).toBe(570); // 09:58
+    expect(slotMinuteAt(10 * 40)).toBe(600);
+    expect(slotMinuteAt(0)).toBe(0);
+  });
+
+  it('at most 23:00; never negative; no click point (keyboard) → 09:00', () => {
+    expect(slotMinuteAt(959)).toBe(1380);
+    expect(slotMinuteAt(-5)).toBe(0);
+    expect(slotMinuteAt(null)).toBe(540);
+    expect(slotMinuteAt(90, 1)).toBe(90); // another scale
   });
 });

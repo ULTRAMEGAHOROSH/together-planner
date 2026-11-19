@@ -22,6 +22,17 @@ describe('buildPanelLayout (WEEK-04)', () => {
       '2026-11-15',
     ]);
     expect(days.filter((d) => d.isToday).map((d) => d.date)).toEqual(['2026-11-12']);
+    // Ready texts for the day header and the column button (WEEK-05).
+    expect(days.map((d) => `${d.weekdayShort} ${d.dayOfMonth}`)).toEqual([
+      'Пн 9',
+      'Вт 10',
+      'Ср 11',
+      'Чт 12',
+      'Пт 13',
+      'Сб 14',
+      'Вс 15',
+    ]);
+    expect(days[0].dateLabel).toBe('понедельник, 9 ноября');
     expect(days.filter((d) => d.isWeekend).map((d) => d.date)).toEqual([
       '2026-11-14',
       '2026-11-15',

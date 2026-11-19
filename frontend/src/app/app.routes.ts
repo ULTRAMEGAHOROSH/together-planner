@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 import {
   authGuard,
@@ -7,9 +8,13 @@ import {
   workspaceGuard,
 } from '@core/auth/guards';
 
+/** Routes that exist only in a dev build (`ng serve`, tests): in production they are absent. */
+export function devOnly(devRoutes: Routes, dev = isDevMode()): Routes {
+  return dev ? devRoutes : [];
+}
+
 // Route map: docs/frontend-final-decisions.md §6. Every page is lazy (FD-45).
-// Not wired yet: `week` redirect to the current Monday (WEEK-10), calendar/settings (P1),
-// /_dev/board (WEEK-05).
+// Not wired yet: `week` redirect to the current Monday (WEEK-10), calendar/settings (P1).
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'week' },
   {
@@ -40,6 +45,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('@features/onboarding/onboarding-page/onboarding-page').then((m) => m.OnboardingPage),
   },
+  // The board playground on fixtures: dev builds only, no sign-in (WEEK-05).
+  ...devOnly([
+    {
+      path: '_dev/board',
+      title: 'Площадка доски — Together Planner',
+      loadComponent: () =>
+        import('@features/schedule/dev/board-playground').then((m) => m.BoardPlayground),
+    },
+  ]),
   {
     // The app itself: signed in and with a workspace, inside the header frame (SHELL-01).
     path: '',

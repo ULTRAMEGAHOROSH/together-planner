@@ -6,7 +6,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { Title } from '@angular/platform-browser';
 import { AUTH_RESPONSE, WORKSPACE_CREATED } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
-import { routes } from './app.routes';
+import { devOnly, routes } from './app.routes';
 
 type Status = 'anonymous' | 'no workspace' | 'workspace';
 
@@ -85,6 +85,8 @@ describe('app routes × session (AUTH-06)', () => {
     ['anonymous', '/login', 'Войти', 'Вход — Together Planner'],
     ['anonymous', '/register', 'Создать аккаунт', 'Регистрация — Together Planner'],
     ['no workspace', '/onboarding', 'Общее пространство', 'Общее пространство — Together Planner'],
+    // Dev builds only, no sign-in: the board playground (WEEK-05).
+    ['anonymous', '/_dev/board', 'Площадка доски', 'Площадка доски — Together Planner'],
   ] as const)('%s: %s shows its placeholder', async (status, path, content, title) => {
     TestBed.configureTestingModule({
       providers: [
@@ -157,5 +159,15 @@ describe('app routes × session (AUTH-06)', () => {
       await harness.navigateByUrl(path);
       expect([status, TestBed.inject(Router).url]).toEqual([status, expected[status]]);
     }
+  });
+});
+
+describe('devOnly (WEEK-05)', () => {
+  it('dev routes are kept in a dev build and dropped in production', () => {
+    const playground = { path: '_dev/board' };
+    expect(devOnly([playground], true)).toEqual([playground]);
+    expect(devOnly([playground], false)).toEqual([]);
+    // Tests run as a dev build: the playground is registered.
+    expect(routes.some((r) => r.path === '_dev/board')).toBe(true);
   });
 });

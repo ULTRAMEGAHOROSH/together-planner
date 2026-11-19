@@ -1,0 +1,33 @@
+// Values from the prototype day headers (design/Main.dc.html).
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 0 8px;
+  border-left: 1px solid var(--tp-color-grid-day);
+}
+
+.weekday {
+  color: var(--tp-color-text-subtle);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: var(--tp-radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+
+  :host(.today) & {
+    background: var(--tp-color-accent);
+    color: var(--tp-color-text-inverse);
+  }
+}

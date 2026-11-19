@@ -1,0 +1,41 @@
+// Values from the prototype day column (design/Main.dc.html). `--board-hour` comes from
+// the board (PX_PER_HOUR): one hour line per hour, the day is 24 of them.
+:host {
+  display: block;
+  position: relative;
+  height: calc(var(--board-hour) * 24);
+  border-left: 1px solid var(--tp-color-grid-day);
+  background-color: var(--tp-color-day);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--tp-color-grid-hour) 0,
+    var(--tp-color-grid-hour) 1px,
+    transparent 1px,
+    transparent var(--board-hour)
+  );
+}
+
+:host(.weekend) {
+  background-color: var(--tp-color-day-weekend);
+}
+
+:host(.today) {
+  background-color: var(--tp-color-day-today);
+}
+
+.slot {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  // Inside the column: the board clips anything outside.
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}

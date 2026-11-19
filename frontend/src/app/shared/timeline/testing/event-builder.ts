@@ -1,4 +1,4 @@
-// Test helper for the timeline engine (used only by *.spec.ts).
+// Test helpers for the timeline engine: specs and the board fixtures (fixtures.ts).
 import type { Uuid } from '@core/api/models/common.models';
 import { parseLocalDateTime } from '@shared/time/local-date-time';
 import type { TimelineEvent } from '../engine/model';

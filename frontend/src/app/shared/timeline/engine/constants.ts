@@ -28,6 +28,15 @@ export const CARD_FONT_SIZE_TINY = 10.5;
 
 /** A week opens scrolled to 06:00 (FD-58). */
 export const SCROLL_START_HOUR = 6;
+/** Scroll offset of 06:00: the sticky headers stay above it, the 06:00 line just below. */
+export const SCROLL_START_TOP = SCROLL_START_HOUR * PX_PER_HOUR;
+
+/** A click on an empty slot rounds down to 30 minutes (prototype `slotClick`). */
+export const SLOT_STEP_MINUTES = 30;
+/** Keyboard activation has no click point: the new event starts at 09:00. */
+export const DEFAULT_SLOT_MINUTE = 9 * 60;
+/** The latest start offered by a click: 23:00, so a one-hour event still fits the day. */
+export const LATEST_SLOT_MINUTE = DAY_MINUTES - 60;
 
 /** Minimal board width in the «Неделя» mode; narrower → horizontal scroll (FD-57). */
 export const WEEK_MIN_WIDTH = 1080;

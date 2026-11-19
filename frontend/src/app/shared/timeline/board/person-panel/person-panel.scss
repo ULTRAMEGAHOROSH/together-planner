@@ -1,0 +1,44 @@
+// Values from the prototype panel header (design/Main.dc.html). The header sticks to the
+// top of the board's scroll container: one scroll for both panels (FD-57).
+:host {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  min-width: 0;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  min-width: 0;
+  background: var(--tp-color-sticky);
+  border-top: 3px solid var(--tp-color-seat-1);
+  border-bottom: 1px solid var(--tp-color-border-card);
+
+  &.seat-2 {
+    border-top-color: var(--tp-color-seat-2);
+  }
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px 6px;
+}
+
+.name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(var(--days), minmax(0, 1fr));
+  min-width: 0;
+}

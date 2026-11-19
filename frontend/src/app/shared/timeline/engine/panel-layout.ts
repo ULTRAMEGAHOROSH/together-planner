@@ -1,4 +1,5 @@
 import type { IsoDate, Uuid } from '@core/api/models/common.models';
+import { dateLong, WEEKDAYS_SHORT } from '@shared/time/format-ru';
 import { addDays, isoDayOfWeek } from '@shared/time/week';
 import { splitIntoDaySegments } from './day-segments';
 import { toBox } from './geometry';
@@ -27,10 +28,14 @@ export function buildPanelLayout(
   }
   const days = byDay.map((segments, index): DayColumnLayout => {
     const date = addDays(range.firstDay, index);
+    const dayOfWeek = isoDayOfWeek(date);
     return {
       date,
+      weekdayShort: WEEKDAYS_SHORT[dayOfWeek - 1],
+      dayOfMonth: Number(date.slice(8, 10)),
+      dateLabel: dateLong(date),
       isToday: date === today,
-      isWeekend: isoDayOfWeek(date) >= 6,
+      isWeekend: dayOfWeek >= 6,
       boxes: assignLanes(segments).map((segment) => toBox(segment)),
     };
   });

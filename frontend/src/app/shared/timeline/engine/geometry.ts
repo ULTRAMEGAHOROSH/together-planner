@@ -7,8 +7,12 @@ import {
   CARD_GAP,
   CARD_RADIUS,
   CARD_RADIUS_CUT,
+  DEFAULT_SLOT_MINUTE,
+  LATEST_SLOT_MINUTE,
   MIN_CARD_HEIGHT,
+  PX_PER_HOUR,
   PX_PER_MIN,
+  SLOT_STEP_MINUTES,
   TALL_CARD_MIN_HEIGHT,
   TINY_CARD_MAX_HEIGHT,
 } from './constants';
@@ -43,6 +47,30 @@ export function toBox(segment: LaidOutSegment, pxPerMin = PX_PER_MIN): EventBox 
     joint: event.joint,
     fromTemplate: event.fromTemplate,
   };
+}
+
+/** A label of the time gutter. */
+export interface HourMark {
+  readonly label: string;
+  /** px; the label is centred on its hour line (16 px tall text, prototype `h * H − 8`). */
+  readonly top: number;
+}
+
+/** 01:00 … 23:00 (00:00 and 24:00 are the edges of the day). */
+export const HOUR_MARKS: readonly HourMark[] = Array.from({ length: 23 }, (_, i) => ({
+  label: formatTime((i + 1) * 60),
+  top: (i + 1) * PX_PER_HOUR - 8,
+}));
+
+/**
+ * Start minute for a click on an empty slot of a day column (prototype `slotClick`):
+ * the click offset from the column top, rounded down to 30 minutes, at most 23:00;
+ * `null` (keyboard, no click point) → 09:00.
+ */
+export function slotMinuteAt(offsetPx: number | null, pxPerMin = PX_PER_MIN): number {
+  if (offsetPx === null) return DEFAULT_SLOT_MINUTE;
+  const minute = Math.floor(offsetPx / pxPerMin / SLOT_STEP_MINUTES) * SLOT_STEP_MINUTES;
+  return Math.max(0, Math.min(minute, LATEST_SLOT_MINUTE));
 }
 
 function densityOf(height: number): CardDensity {
