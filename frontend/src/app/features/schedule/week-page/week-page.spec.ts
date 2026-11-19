@@ -4,9 +4,16 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { AUTH_RESPONSE, WEEK, WORKSPACE_FULL_PAIR } from '@core/api/models/testing/samples';
+import {
+  AUTH_RESPONSE,
+  PROBLEM_MALFORMED,
+  WEEK,
+  WORKSPACE_FULL_PAIR,
+} from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
+import { DataChanges } from '@core/changes/data-changes';
 import { errorInterceptor } from '@core/error/error-interceptor';
+import { ERROR_MESSAGES } from '@core/error/error-messages';
 import { CLOCK } from '@core/time/zone-clock';
 import { ViewContext } from '@core/view/view-context';
 import { WeekPage } from './week-page';
@@ -214,5 +221,125 @@ describe('WeekPage navigation (WEEK-11)', () => {
     expect(router().url).toBe('/week/2026-11-16');
     await goBack();
     expect(router().url).toBe('/week/2026-11-09');
+  });
+});
+
+describe('WeekPage states (WEEK-12)', () => {
+  let backend: HttpTestingController;
+  let fixture: ComponentFixture<WeekPage>;
+  const host = () => fixture.nativeElement as HTMLElement;
+  const q = (selector: string) => host().querySelector(selector);
+  const NOV_23 = URL('2026-11-23');
+  const NOV_16 = URL('2026-11-16');
+  const emptyWeek = (weekStart: string) => ({
+    ...WEEK,
+    weekStart,
+    events: [],
+    appliedTemplates: [],
+  });
+
+  async function settle() {
+    await fixture.whenStable();
+  }
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: CLOCK, useValue: () => NOW },
+      ],
+    });
+    const session = TestBed.inject(SessionStore);
+    session.setAuth(AUTH_RESPONSE);
+    session.setWorkspace(WORKSPACE_FULL_PAIR);
+    backend = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(WeekPage);
+    fixture.componentRef.setInput('weekStart', '2026-11-23');
+    await settle();
+  });
+
+  afterEach(() => backend.verify());
+
+  it('the first load: the skeleton of the board, no strip, no banners; gone when the week arrives', async () => {
+    expect(q('.skeleton')?.getAttribute('aria-label')).toBe('Загружаем неделю…');
+    expect(q('tp-schedule-board')).toBeNull();
+    expect(q('[role="progressbar"]')).toBeNull();
+    expect(q('tp-empty-state')).toBeNull();
+    expect(q('tp-error-state')).toBeNull();
+
+    backend.expectOne(NOV_23).flush(WEEK);
+    await settle();
+    expect(q('.skeleton')).toBeNull();
+    expect(q('tp-schedule-board')).not.toBeNull();
+  });
+
+  it('the next week: the old board stays, a thin strip shows above it, no skeleton', async () => {
+    backend.expectOne(NOV_23).flush(WEEK);
+    await settle();
+
+    fixture.componentRef.setInput('weekStart', '2026-11-16');
+    await settle();
+    expect(q('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Загружаем неделю…');
+    expect(q('tp-schedule-board')).not.toBeNull();
+    expect(q('.skeleton')).toBeNull();
+
+    backend.expectOne(NOV_16).flush(WEEK);
+    await settle();
+    expect(q('[role="progressbar"]')).toBeNull();
+  });
+
+  it('an empty week: the banner of the prototype over the board; a week with events: none', async () => {
+    backend.expectOne(NOV_23).flush(emptyWeek('2026-11-23'));
+    await settle();
+    expect(q('tp-empty-state')?.textContent).toContain('На эту неделю пока ничего нет.');
+    expect(q('tp-schedule-board')).not.toBeNull();
+
+    fixture.componentRef.setInput('weekStart', '2026-11-16');
+    await settle();
+    expect(q('tp-empty-state')).toBeNull(); // not known for the week that is loading
+    backend.expectOne(NOV_16).flush(WEEK);
+    await settle();
+    expect(q('tp-empty-state')).toBeNull();
+  });
+
+  it('an error: the message with «Повторить», no skeleton; a retry asks again and recovers', async () => {
+    backend.expectOne(NOV_23).error(new ProgressEvent('error'));
+    await settle();
+    expect(q('.skeleton')).toBeNull();
+    expect(q('tp-error-state')?.textContent).toContain(ERROR_MESSAGES.NETWORK_ERROR);
+    expect(q('tp-empty-state')).toBeNull();
+
+    (q('tp-error-state button') as HTMLButtonElement).click();
+    await settle();
+    expect(q('tp-error-state')).toBeNull();
+    expect(q('.skeleton')).not.toBeNull(); // nothing on screen: the skeleton again
+    backend.expectOne(NOV_23).flush(WEEK);
+    await settle();
+    expect(q('tp-error-state')).toBeNull();
+    expect(q('tp-schedule-board')).not.toBeNull();
+  });
+
+  it('a failed reload of the same week keeps the board under the error', async () => {
+    backend.expectOne(NOV_23).flush(WEEK);
+    await settle();
+    TestBed.inject(DataChanges).eventsChanged();
+    backend.expectOne(NOV_23).flush(PROBLEM_MALFORMED, { status: 400, statusText: 'Bad' });
+    await settle();
+    expect(q('tp-error-state')).not.toBeNull();
+    expect(q('tp-schedule-board')).not.toBeNull();
+  });
+
+  it('another week that fails: the board of the old week is gone, only the error is shown', async () => {
+    backend.expectOne(NOV_23).flush(WEEK);
+    await settle();
+    fixture.componentRef.setInput('weekStart', '2026-11-16');
+    await settle();
+    backend.expectOne(NOV_16).flush(PROBLEM_MALFORMED, { status: 400, statusText: 'Bad' });
+    await settle();
+    expect(q('tp-error-state')).not.toBeNull();
+    expect(q('tp-schedule-board')).toBeNull();
+    expect(q('.skeleton')).toBeNull();
   });
 });
