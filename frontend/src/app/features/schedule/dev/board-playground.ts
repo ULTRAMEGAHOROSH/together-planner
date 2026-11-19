@@ -92,6 +92,12 @@ type Mode = 'week' | 'day';
       gap: 10px 16px;
       padding: 14px 20px 10px;
     }
+    // The scenario switcher is wider than a phone: it scrolls inside the toolbar instead of
+    // making the page scroll sideways (SC-05).
+    tp-segmented-control {
+      max-width: 100%;
+      overflow-x: auto;
+    }
     h1 {
       margin: 0;
       font-size: 18px;

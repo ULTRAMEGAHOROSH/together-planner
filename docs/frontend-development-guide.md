@@ -56,6 +56,8 @@ cd frontend && npm start
 | `npm run e2e` | после WEEK-08 — в задачах, которые трогают доску, расписание или сквозные сценарии; перед завершением фазы — всегда |
 | `docker compose --profile app up --build` | FND-07, QA-05 и перед выпуском |
 
+**E2E без backend** (`e2e/board-scroll.spec.ts` на `/_dev/board`): `npm run e2e` — проекты `desktop` (1440×900) и `mobile` (375×812) в установленном Google Chrome (`channel: 'chrome'`; браузер не скачивается). Dev server на :4200 переиспользуется, а если не запущен — стартует `npm start`. Отчёты — в `test-results/` (в git не попадает); трейс упавшего теста: `npx playwright show-trace <trace.zip>`. Одна спека: `npm run e2e -- e2e/board-scroll.spec.ts --project=desktop`.
+
 E2E с backend (QA-01 и дальше) требуют запущенных backend и `npm start`. Тесты создают своих пользователей и не чистят БД — локальную базу можно пересоздать командой `docker compose down -v`.
 
 ### 3.3. Ручной прогон (2–3 минуты)
