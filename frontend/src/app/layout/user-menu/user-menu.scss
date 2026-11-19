@@ -1,4 +1,8 @@
 // Values from the prototype header and its menu (design/Main.dc.html, «ШАПКА»).
+// Below 820 px (SHELL-03) only the avatars stay, overlapping with a white ring as in the
+// prototype; the button keeps its name from `aria-label`.
+@use 'breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -20,6 +24,11 @@
   &[aria-expanded='true'] {
     background: var(--tp-color-hover);
   }
+
+  @include bp.narrow {
+    gap: 0;
+    padding: 0 2px;
+  }
 }
 
 .member {
@@ -29,6 +38,22 @@
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+
+  @include bp.narrow {
+    & + & {
+      margin-left: -10px;
+    }
+
+    tp-avatar {
+      box-shadow: 0 0 0 2px var(--tp-color-surface);
+    }
+  }
+}
+
+.member-name {
+  @include bp.narrow {
+    display: none;
+  }
 }
 
 .head {

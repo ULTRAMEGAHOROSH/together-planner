@@ -1,17 +1,20 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SessionStore } from '@core/auth/session-store';
+import { Icon, type IconName } from '@shared/ui/icon/icon';
 import { UserMenu } from '../user-menu/user-menu';
 
 interface Tab {
   readonly path: string;
   readonly label: string;
+  /** Shown only on a narrow screen, above the label (SHELL-03). */
+  readonly icon: IconName;
 }
 
 /** «Календарь» joins in CAL-01. A tab stays active on its nested pages (week, template). */
 const TABS: readonly Tab[] = [
-  { path: '/week', label: 'Расписание' },
-  { path: '/templates', label: 'Шаблоны' },
+  { path: '/week', label: 'Расписание', icon: 'schedule' },
+  { path: '/templates', label: 'Шаблоны', icon: 'layers' },
 ];
 
 /**
@@ -20,7 +23,7 @@ const TABS: readonly Tab[] = [
  */
 @Component({
   selector: 'tp-app-header',
-  imports: [RouterLink, RouterLinkActive, UserMenu],
+  imports: [RouterLink, RouterLinkActive, Icon, UserMenu],
   templateUrl: './app-header.html',
   styleUrl: './app-header.scss',
 })

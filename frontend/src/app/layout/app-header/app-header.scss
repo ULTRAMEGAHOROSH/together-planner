@@ -1,4 +1,8 @@
-// Values from the prototype header (design/Main.dc.html).
+// Values from the prototype header (design/Main.dc.html). Below 820 px (SHELL-03, the
+// prototype has no narrow header): one row that fits 375 px — the logo without its name,
+// tabs as an icon over a short label, smaller gaps; the workspace name shrinks first.
+@use 'breakpoints' as bp;
+
 :host {
   display: block;
   flex: 0 0 auto;
@@ -14,6 +18,12 @@
   padding: 10px 20px;
   background: var(--tp-color-surface);
   border-bottom: 1px solid var(--tp-color-border-card);
+
+  @include bp.narrow {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
 }
 
 .brand {
@@ -38,6 +48,10 @@
   font-weight: 800;
   font-size: 18px;
   letter-spacing: var(--tp-letter-spacing-display);
+
+  @include bp.narrow {
+    display: none;
+  }
 }
 
 .tabs {
@@ -46,6 +60,11 @@
   padding: 3px;
   border-radius: var(--tp-radius-pill);
   background: var(--tp-color-hover);
+
+  @include bp.narrow {
+    flex: 0 0 auto;
+    border-radius: var(--tp-radius-xl);
+  }
 }
 
 .tab {
@@ -72,6 +91,25 @@
     color: var(--tp-color-text);
     box-shadow: var(--tp-shadow-sm);
   }
+
+  @include bp.narrow {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    height: 44px;
+    padding: 0 10px;
+    // Inner radius = outer radius minus the track padding.
+    border-radius: calc(var(--tp-radius-xl) - 3px);
+    font-size: 11px;
+  }
+}
+
+.tab-icon {
+  display: none;
+
+  @include bp.narrow {
+    display: inline-flex;
+  }
 }
 
 .spacer {
@@ -84,6 +122,10 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
+
+  @include bp.narrow {
+    gap: 6px;
+  }
 }
 
 .workspace-name {

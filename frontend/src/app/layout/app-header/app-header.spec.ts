@@ -65,6 +65,19 @@ describe('AppHeader', () => {
     ]);
   });
 
+  it('each tab has its icon for the narrow header (SHELL-03) and the label as its name', () => {
+    const icon = (a: HTMLAnchorElement) => a.querySelector('tp-icon');
+    // `schedule` is the only icon drawn with a <rect>; `layers` is two paths.
+    expect(icon(tabs()[0])?.querySelector('rect')).not.toBeNull();
+    expect(icon(tabs()[1])?.querySelectorAll('path')).toHaveLength(2);
+    expect(tabs().map((a) => a.querySelector('.tab-label')?.textContent)).toEqual([
+      'Расписание',
+      'Шаблоны',
+    ]);
+    // Decorative: the link keeps the label as its accessible name.
+    expect(tabs().map((a) => icon(a)?.getAttribute('aria-hidden'))).toEqual(['true', 'true']);
+  });
+
   it.each([
     ['/week', 'Расписание'],
     ['/week/2026-11-16', 'Расписание'],

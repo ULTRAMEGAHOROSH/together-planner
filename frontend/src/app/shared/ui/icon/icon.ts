@@ -1,6 +1,9 @@
 import { Component, computed, input } from '@angular/core';
 
-/** Line icons drawn in the prototype (design/Main.dc.html), 24×24, stroke = currentColor. */
+/**
+ * Line icons drawn in the prototype (design/Main.dc.html), 24×24, stroke = currentColor.
+ * `schedule` is ours (the «Расписание» tab on a narrow screen): two columns side by side.
+ */
 export const ICON_NAMES = [
   'plus',
   'chevron-left',
@@ -11,6 +14,7 @@ export const ICON_NAMES = [
   'alert',
   'layers',
   'trash',
+  'schedule',
 ] as const;
 export type IconName = (typeof ICON_NAMES)[number];
 
