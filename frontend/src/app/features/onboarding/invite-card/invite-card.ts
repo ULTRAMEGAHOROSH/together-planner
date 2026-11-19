@@ -17,7 +17,7 @@ import { Spinner } from '@shared/ui/spinner/spinner';
 import { filter } from 'rxjs';
 
 /** What the card shows while there is no code. */
-type NoCode = 'loading' | 'full' | 'error';
+type NoCode = 'loading' | 'error';
 
 /**
  * Invite for the partner (prototype «Пространство создано»): W5 on start → the code, the
@@ -42,6 +42,8 @@ export class InviteCard {
   private readonly current = signal<{ invite: InviteResponse; timeZone: string } | null>(null);
   protected readonly status = signal<NoCode>('loading');
   protected readonly errorText = signal('');
+  /** W5 answered `WORKSPACE_FULL`: the backend says the partner has joined (D-10). */
+  protected readonly full = signal(false);
   /** «Новый код» is waiting for W5; the current code stays on the screen meanwhile. */
   protected readonly renewing = signal(false);
 
@@ -101,14 +103,16 @@ export class InviteCard {
     this.api.createInvite(workspace.id).subscribe({
       next: (invite) => {
         this.renewing.set(false);
+        this.full.set(false);
         this.current.set({ invite, timeZone: workspace.timeZone });
         onSuccess();
       },
       error: (error: unknown) => {
         this.renewing.set(false);
         if (isApiError(error) && error.code === 'WORKSPACE_FULL') {
-          this.current.set(null);
-          this.status.set('full');
+          // No new code was issued and the backend left the existing one as it was: the
+          // shown code (if any) stays, the message says why there is no new one.
+          this.full.set(true);
         } else if (this.current()) {
           // «Новый код» failed: the shown code is still the latest one the user has.
           this.toast.error(error);

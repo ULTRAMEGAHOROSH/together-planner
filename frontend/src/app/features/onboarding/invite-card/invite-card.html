@@ -1,3 +1,6 @@
+@if (full()) {
+  <p class="full" role="status">Партнёр уже присоединился.</p>
+}
 @if (invite(); as invite) {
   <p class="hint">Отправьте код партнёру. Код одноразовый и действует до {{ invite.expires }}.</p>
   <div class="code" aria-label="Код приглашения">{{ invite.displayCode }}</div>
@@ -31,16 +34,10 @@
   >
     Новый код
   </button>
-} @else {
-  @switch (status()) {
-    @case ('full') {
-      <p class="full" role="status">Партнёр уже присоединился.</p>
-    }
-    @case ('error') {
-      <tp-error-state [text]="errorText()" (retry)="load()" />
-    }
-    @default {
-      <tp-spinner class="loading" label="Создаём код приглашения…" />
-    }
+} @else if (!full()) {
+  @if (status() === 'error') {
+    <tp-error-state [text]="errorText()" (retry)="load()" />
+  } @else {
+    <tp-spinner class="loading" label="Создаём код приглашения…" />
   }
 }

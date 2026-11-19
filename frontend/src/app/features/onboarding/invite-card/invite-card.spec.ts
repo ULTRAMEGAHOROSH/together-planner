@@ -151,15 +151,43 @@ describe('InviteCard', () => {
     await failWith(409, 'WORKSPACE_FULL');
     expect(text('[role="status"]')).toBe('Партнёр уже присоединился.');
     expect(el().querySelector('button')).toBeNull();
+    expect(el().querySelector('.code')).toBeNull();
+    expect(el().querySelector('tp-spinner')).toBeNull();
+    expect(el().querySelector('tp-error-state')).toBeNull();
+    expect(toast()).toBeNull();
   });
 
-  it('WORKSPACE_FULL on «Новый код» → the code is gone, the message is shown', async () => {
+  it('WORKSPACE_FULL on «Новый код» → the message; the shown code stays, no new one', async () => {
     await setUp();
     await flushInvite();
     await confirmRenew('Создать новый код');
     await failWith(409, 'WORKSPACE_FULL');
-    expect(el().querySelector('.code')).toBeNull();
     expect(text('[role="status"]')).toBe('Партнёр уже присоединился.');
+    expect(text('.code')).toBe('ACZ9-AXJN');
+    expect(text('.link')).toBe(link('ACZ9AXJN'));
+    expect(button('Новый код')!.getAttribute('aria-busy')).toBeNull();
+    expect(toast()).toBeNull(); // no «Новый код создан»
+  });
+
+  it('after WORKSPACE_FULL a code that the backend does issue replaces the message', async () => {
+    await setUp();
+    await flushInvite();
+    await confirmRenew('Создать новый код');
+    await failWith(409, 'WORKSPACE_FULL');
+    await confirmRenew('Создать новый код');
+    await flushInvite(NEXT_INVITE);
+    expect(el().querySelector('[role="status"]')).toBeNull();
+    expect(text('.code')).toBe('K7Q2-M9XD');
+  });
+
+  it('another API error on «Новый код» → the common toast, the code stays', async () => {
+    await setUp();
+    await flushInvite();
+    await confirmRenew('Создать новый код');
+    await failWith(500, 'INTERNAL_ERROR');
+    expect(toast()).toBe(ERROR_MESSAGES.INTERNAL_ERROR);
+    expect(text('.code')).toBe('ACZ9-AXJN');
+    expect(el().querySelector('[role="status"]')).toBeNull();
   });
 
   it('a network error on start → the error with «Повторить» → W5 again', async () => {
