@@ -31,7 +31,7 @@ describe('InviteCard', () => {
   let backend: HttpTestingController;
   let copy: ReturnType<typeof vi.fn<(text: string) => boolean>>;
 
-  async function setUp({ workspace = true } = {}) {
+  async function setUp({ workspace = true, issueOnStart = true } = {}) {
     copy = vi.fn<(text: string) => boolean>(() => true);
     TestBed.configureTestingModule({
       providers: [
@@ -49,6 +49,7 @@ describe('InviteCard', () => {
       session.setWorkspace(WORKSPACE_CREATED);
     }
     fixture = TestBed.createComponent(InviteCard);
+    fixture.componentRef.setInput('issueOnStart', issueOnStart);
     await stable();
   }
 
@@ -200,6 +201,33 @@ describe('InviteCard', () => {
     expect(el().querySelector('tp-spinner')).not.toBeNull();
     await flushInvite();
     expect(text('.code')).toBe('ACZ9-AXJN');
+  });
+
+  describe('issueOnStart = false (opened again: menu, settings)', () => {
+    it('no W5 until «Получить код»; then the code as usual', async () => {
+      await setUp({ issueOnStart: false });
+      backend.expectNone(URL);
+      expect(el().querySelector('tp-spinner')).toBeNull();
+      expect(text('.hint')).toBe(
+        'Партнёр присоединится по коду или по ссылке. Если вы уже отправляли код, новый его заменит.',
+      );
+      button('Получить код')!.click();
+      await stable();
+      expect(el().querySelector('tp-spinner')).not.toBeNull();
+      expect(button('Получить код')).toBeUndefined();
+      await flushInvite();
+      expect(text('.code')).toBe('ACZ9-AXJN');
+      expect(button('Новый код')).toBeDefined();
+    });
+
+    it('«Получить код» → WORKSPACE_FULL → the message, nothing else', async () => {
+      await setUp({ issueOnStart: false });
+      button('Получить код')!.click();
+      await failWith(409, 'WORKSPACE_FULL');
+      expect(text('[role="status"]')).toBe('Партнёр уже присоединился.');
+      expect(button('Получить код')).toBeUndefined();
+      expect(el().querySelector('tp-error-state, tp-spinner')).toBeNull();
+    });
   });
 
   it('outside a workspace → no request, a message', async () => {

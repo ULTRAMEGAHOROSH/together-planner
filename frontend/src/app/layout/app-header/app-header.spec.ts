@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import type { WorkspaceResponse } from '@core/api/models/workspace.models';
@@ -20,6 +22,8 @@ describe('AppHeader', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([
           { path: 'week', component: Page },
           { path: 'week/:weekStart', component: Page },
@@ -42,7 +46,7 @@ describe('AppHeader', () => {
       .filter((a) => a.getAttribute('aria-current') === 'page')
       .map((a) => a.textContent?.trim());
   const members = () =>
-    Array.from(el().querySelectorAll('.members li')).map((li) => ({
+    Array.from(el().querySelectorAll('tp-user-menu .member')).map((li) => ({
       name: li.querySelector('.member-name')?.textContent,
       avatar: li.querySelector('tp-avatar')?.textContent,
       seat1: li.querySelector('tp-avatar')?.classList.contains('seat-1'),
@@ -78,7 +82,10 @@ describe('AppHeader', () => {
     const reversed: WorkspaceResponse = { ...WORKSPACE_FULL_PAIR, members: [second, first] };
     session.setWorkspace(reversed);
     await fixture.whenStable();
-    expect(el().querySelector('.members')?.getAttribute('aria-label')).toBe('Участники');
+    const trigger = el().querySelector('tp-user-menu button');
+    expect(trigger?.getAttribute('aria-label')).toBe(
+      `Меню: ${first.displayName} и ${second.displayName}`,
+    );
     expect(members()).toEqual([
       { name: first.displayName, avatar: first.displayName[0], seat1: true },
       { name: second.displayName, avatar: second.displayName[0], seat1: false },
@@ -96,8 +103,10 @@ describe('AppHeader', () => {
     expect(members()).toHaveLength(2);
   });
 
-  it('no buttons yet: «+ Событие» comes in EVT-04, the menu in SHELL-02', () => {
-    expect(el().querySelector('button')).toBeNull();
+  it('the only button is the members one (user menu); «+ Событие» comes in EVT-04', () => {
+    const buttons = Array.from(el().querySelectorAll('button'));
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].getAttribute('aria-haspopup')).toBe('menu');
   });
 
   it('without a workspace (session cleared on logout) → no workspace block', async () => {

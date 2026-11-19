@@ -37,6 +37,11 @@
 } @else if (!full()) {
   @if (status() === 'error') {
     <tp-error-state [text]="errorText()" (retry)="load()" />
+  } @else if (status() === 'idle') {
+    <p class="hint">
+      Партнёр присоединится по коду или по ссылке. Если вы уже отправляли код, новый его заменит.
+    </p>
+    <button tpButton class="issue" type="button" (click)="load()">Получить код</button>
   } @else {
     <tp-spinner class="loading" label="Создаём код приглашения…" />
   }

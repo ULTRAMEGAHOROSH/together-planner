@@ -1,6 +1,6 @@
 import { Clipboard } from '@angular/cdk/clipboard';
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, type OnInit, signal } from '@angular/core';
 import { WorkspaceApi } from '@core/api/workspace-api';
 import type { InviteResponse } from '@core/api/models/workspace.models';
 import { SessionStore } from '@core/auth/session-store';
@@ -16,13 +16,18 @@ import { ErrorState } from '@shared/ui/error-state/error-state';
 import { Spinner } from '@shared/ui/spinner/spinner';
 import { filter } from 'rxjs';
 
-/** What the card shows while there is no code. */
-type NoCode = 'loading' | 'error';
+/** What the card shows while there is no code; `idle` waits for «Получить код». */
+type NoCode = 'idle' | 'loading' | 'error';
 
 /**
- * Invite for the partner (prototype «Пространство создано»): W5 on start → the code, the
- * join link and when the code expires. W5 deletes the workspace's unused codes, so «Новый
- * код» asks first. Public: also used in the user menu (SHELL-02) and settings (SET-01).
+ * Invite for the partner (prototype «Пространство создано»): W5 → the code, the join link
+ * and when the code expires. W5 deletes the workspace's unused codes, so «Новый код» asks
+ * first. Public: also used in the user menu (SHELL-02) and settings (SET-01).
+ *
+ * There is no «get the current code» in the API: every W5 is a new code. Right after the
+ * workspace is created the card asks at once; anywhere it can be opened again
+ * (`issueOnStart = false`) it waits for «Получить код», so that just looking at it does not
+ * cancel a code already sent to the partner.
  */
 @Component({
   selector: 'tp-invite-card',
@@ -30,7 +35,10 @@ type NoCode = 'loading' | 'error';
   templateUrl: './invite-card.html',
   styleUrl: './invite-card.scss',
 })
-export class InviteCard {
+export class InviteCard implements OnInit {
+  /** `true`: W5 as soon as the card appears; `false`: only on «Получить код». */
+  readonly issueOnStart = input(true);
+
   private readonly api = inject(WorkspaceApi);
   private readonly session = inject(SessionStore);
   private readonly clock = inject(ZoneClock);
@@ -62,8 +70,12 @@ export class InviteCard {
     };
   });
 
-  constructor() {
-    this.load();
+  ngOnInit(): void {
+    if (this.issueOnStart()) {
+      this.load();
+    } else {
+      this.status.set('idle');
+    }
   }
 
   protected load(): void {

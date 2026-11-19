@@ -1,0 +1,13 @@
+// Values from the prototype user menu (design/Main.dc.html, «ШАПКА»).
+:host {
+  display: block;
+  width: 270px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-xl);
+  background: var(--tp-color-surface);
+  box-shadow: var(--tp-shadow-popover);
+  outline: none;
+  animation: tpIn var(--tp-duration-modal) var(--tp-ease-soft);
+}

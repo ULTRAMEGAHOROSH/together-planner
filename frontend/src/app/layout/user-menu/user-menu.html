@@ -1,0 +1,23 @@
+<button type="button" class="trigger" [attr.aria-label]="label()" [tpMenuTriggerFor]="menu">
+  @for (member of members(); track member.userId) {
+    <span class="member">
+      <tp-avatar [name]="member.displayName" [seat]="member.seat" />
+      <span class="member-name">{{ member.displayName }}</span>
+    </span>
+  }
+</button>
+
+<ng-template #menu>
+  <tp-menu aria-labelledby="tp-user-menu-head">
+    @if (user(); as user) {
+      <div class="head" id="tp-user-menu-head">
+        <div class="name">{{ user.displayName }}</div>
+        <div class="email">{{ user.email }}</div>
+      </div>
+    }
+    @if (partnerMissing()) {
+      <button tpMenuItem (triggered)="invite()">Пригласить по коду</button>
+    }
+    <button tpMenuItem variant="danger" (triggered)="logout()">Выйти</button>
+  </tp-menu>
+</ng-template>

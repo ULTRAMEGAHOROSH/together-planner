@@ -1,0 +1,51 @@
+// Values from the prototype header and its menu (design/Main.dc.html, «ШАПКА»).
+:host {
+  display: block;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--tp-radius-pill);
+  background: transparent;
+  color: var(--tp-color-text);
+  cursor: pointer;
+  transition: background-color var(--tp-duration-fast) ease;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--tp-color-hover);
+  }
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.head {
+  margin-bottom: 6px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--tp-color-divider);
+}
+
+.name {
+  font-weight: 700;
+}
+
+.email {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--tp-color-text-subtle);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

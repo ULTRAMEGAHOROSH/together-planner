@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -20,7 +22,11 @@ describe('app routes (FND-05 skeleton)', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      providers: [provideRouter(routes, withComponentInputBinding())],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(routes, withComponentInputBinding()),
+      ],
     });
     // Guests only reach the auth pages; the placeholders are checked as a full member.
     signIn('workspace');
@@ -81,7 +87,11 @@ describe('app routes × session (AUTH-06)', () => {
     ['no workspace', '/onboarding', 'Общее пространство', 'Общее пространство — Together Planner'],
   ] as const)('%s: %s shows its placeholder', async (status, path, content, title) => {
     TestBed.configureTestingModule({
-      providers: [provideRouter(routes, withComponentInputBinding())],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(routes, withComponentInputBinding()),
+      ],
     });
     signIn(status);
     const harness = await RouterTestingHarness.create();
@@ -136,7 +146,11 @@ describe('app routes × session (AUTH-06)', () => {
     for (const status of ['anonymous', 'no workspace', 'workspace'] as const) {
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
-        providers: [provideRouter(routes, withComponentInputBinding())],
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          provideRouter(routes, withComponentInputBinding()),
+        ],
       });
       signIn(status);
       const harness = await RouterTestingHarness.create();

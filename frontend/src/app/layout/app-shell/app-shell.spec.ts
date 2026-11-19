@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -13,6 +15,8 @@ describe('AppShell', () => {
   it('the header on top, the routed page inside main', async () => {
     TestBed.configureTestingModule({
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([
           { path: '', component: AppShell, children: [{ path: 'week', component: Page }] },
         ]),

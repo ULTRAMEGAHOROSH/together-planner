@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SessionStore } from '@core/auth/session-store';
-import { Avatar } from '@shared/ui/avatar/avatar';
+import { UserMenu } from '../user-menu/user-menu';
 
 interface Tab {
   readonly path: string;
@@ -15,12 +15,12 @@ const TABS: readonly Tab[] = [
 ];
 
 /**
- * Header of the workspace screens (prototype): logo, section tabs, workspace name and
- * members in seat order. «+ Событие» comes in EVT-04, the user menu in SHELL-02.
+ * Header of the workspace screens (prototype): logo, section tabs, workspace name and the
+ * members in seat order, which open the user menu. «+ Событие» comes in EVT-04.
  */
 @Component({
   selector: 'tp-app-header',
-  imports: [RouterLink, RouterLinkActive, Avatar],
+  imports: [RouterLink, RouterLinkActive, UserMenu],
   templateUrl: './app-header.html',
   styleUrl: './app-header.scss',
 })
@@ -29,5 +29,4 @@ export class AppHeader {
 
   protected readonly tabs = TABS;
   protected readonly workspace = this.session.workspace;
-  protected readonly members = this.session.members;
 }

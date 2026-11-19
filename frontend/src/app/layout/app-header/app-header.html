@@ -20,14 +20,7 @@
   @if (workspace(); as workspace) {
     <div class="workspace">
       <span class="workspace-name">{{ workspace.name }}</span>
-      <ul class="members" aria-label="Участники">
-        @for (member of members(); track member.userId) {
-          <li class="member">
-            <tp-avatar [name]="member.displayName" [seat]="member.seat" />
-            <span class="member-name">{{ member.displayName }}</span>
-          </li>
-        }
-      </ul>
+      <tp-user-menu />
     </div>
   }
 </header>
