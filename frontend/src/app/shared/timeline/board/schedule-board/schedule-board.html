@@ -10,4 +10,8 @@
       (eventClick)="eventClick.emit($event)"
     />
   }
+  @if (panels().length === 1) {
+    <tp-time-gutter [now]="now()" />
+    <ng-content select="[tpPartnerPlaceholder]" />
+  }
 </div>

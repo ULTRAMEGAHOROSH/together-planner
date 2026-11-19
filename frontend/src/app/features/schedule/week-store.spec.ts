@@ -74,6 +74,7 @@ describe('WeekStore (WEEK-09)', () => {
     expect(store.periodLabel()).toBe('');
     expect(store.panels()).toEqual([]);
     expect(store.today()).toBeNull();
+    expect(store.timeZone()).toBeNull();
     expect(store.appliedTemplates()).toEqual([]);
     expect(store.isEmpty()).toBe(false);
     store.reload(); // nothing to reload
@@ -117,6 +118,7 @@ describe('WeekStore (WEEK-09)', () => {
     const days = member(store.panels()[0]).layout.days;
     expect(days.filter((d) => d.isToday).map((d) => d.date)).toEqual(['2026-11-25']);
     expect(store.today()).toBe('2026-11-25');
+    expect(store.timeZone()).toBe('Asia/Almaty');
   });
 
   it('one member → the panel of seat 2 is a placeholder', () => {

@@ -7,6 +7,7 @@ import {
   noWorkspaceGuard,
   workspaceGuard,
 } from '@core/auth/guards';
+import { currentWeekPath } from '@features/schedule';
 
 /** Routes that exist only in a dev build (`ng serve`, tests): in production they are absent. */
 export function devOnly(devRoutes: Routes, dev = isDevMode()): Routes {
@@ -14,7 +15,7 @@ export function devOnly(devRoutes: Routes, dev = isDevMode()): Routes {
 }
 
 // Route map: docs/frontend-final-decisions.md §6. Every page is lazy (FD-45).
-// Not wired yet: `week` redirect to the current Monday (WEEK-10), calendar/settings (P1).
+// Not wired yet: calendar/settings (P1).
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'week' },
   {
@@ -61,12 +62,10 @@ export const routes: Routes = [
     loadComponent: () => import('@layout/app-shell/app-shell').then((m) => m.AppShell),
     children: [
       {
-        // Temporary: becomes a redirect to /week/<current Monday> in WEEK-10.
+        // /week → the Monday of the current week in the workspace zone (WEEK-10).
         path: 'week',
         pathMatch: 'full',
-        title: 'Расписание — Together Planner',
-        loadComponent: () =>
-          import('@features/schedule/week-page/week-page').then((m) => m.WeekPage),
+        redirectTo: currentWeekPath,
       },
       {
         path: 'week/:weekStart',

@@ -20,7 +20,8 @@ import { TimeGutter } from '../time-gutter/time-gutter';
  * [panel A] [time] [panel B]; the headers are sticky inside it, so both panels and the
  * scale scroll together without any JavaScript sync. Presentational: data only through
  * `panels`, intents only through outputs. Opens scrolled to 06:00 (FD-58).
- * Expects the two panels of a pair; the panel of a missing partner comes in WEEK-10.
+ * Two panels, or one: then the right half is the content marked `tpPartnerPlaceholder`
+ * (the invite card while the partner has not joined, WEEK-10).
  */
 @Component({
   selector: 'tp-schedule-board',

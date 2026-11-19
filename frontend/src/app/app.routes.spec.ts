@@ -6,7 +6,13 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { Title } from '@angular/platform-browser';
 import { AUTH_RESPONSE, WORKSPACE_CREATED } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
+import { CLOCK } from '@core/time/zone-clock';
 import { devOnly, routes } from './app.routes';
+
+// Thursday 12.11.2026 in Almaty: `/week` always goes to the Monday 09.11.
+const NOW = Date.UTC(2026, 10, 12, 9, 20);
+const THIS_WEEK = '/week/2026-11-09';
+const clock = { provide: CLOCK, useValue: () => NOW };
 
 type Status = 'anonymous' | 'no workspace' | 'workspace';
 
@@ -26,6 +32,7 @@ describe('app routes (FND-05 skeleton)', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter(routes, withComponentInputBinding()),
+        clock,
       ],
     });
     // Guests only reach the auth pages; the placeholders are checked as a full member.
@@ -40,7 +47,6 @@ describe('app routes (FND-05 skeleton)', () => {
 
   it.each([
     ['/join?code=K7QM2XPA', 'Приглашение в пространство', 'Приглашение — Together Planner'],
-    ['/week', 'Расписание', 'Расписание — Together Planner'],
     ['/templates', 'Шаблоны недель', 'Шаблоны — Together Planner'],
     ['/templates/new', 'Шаблон', 'Новый шаблон — Together Planner'],
   ])('%s shows its placeholder', async (path, expectedHeading, expectedTitle) => {
@@ -49,7 +55,7 @@ describe('app routes (FND-05 skeleton)', () => {
     expect(TestBed.inject(Title).getTitle()).toBe(expectedTitle);
   });
 
-  it.each(['/week', '/week/2026-11-16', '/templates', '/templates/new'])(
+  it.each(['/templates', '/templates/new'])(
     '%s opens inside AppShell: header above the page (SHELL-01)',
     async (path) => {
       await harness.navigateByUrl(path);
@@ -60,9 +66,25 @@ describe('app routes (FND-05 skeleton)', () => {
     },
   );
 
-  it('binds :weekStart to the WeekPage input', async () => {
+  it('/week/2026-11-16 opens the week page inside AppShell with the title (WEEK-10)', async () => {
     await harness.navigateByUrl('/week/2026-11-16');
-    expect(text()).toContain('Неделя с 2026-11-16');
+    const shell = harness.routeNativeElement as HTMLElement;
+    expect(shell.tagName.toLowerCase()).toBe('tp-app-shell');
+    expect(shell.querySelector('tp-app-header nav')).not.toBeNull();
+    expect(shell.querySelector('main tp-week-page')).not.toBeNull();
+    expect(TestBed.inject(Title).getTitle()).toBe('Расписание — Together Planner');
+    expect(url()).toBe('/week/2026-11-16');
+  });
+
+  it('/week → the Monday of the current week; a date in the middle of a week → its Monday', async () => {
+    await harness.navigateByUrl('/week');
+    expect(url()).toBe(THIS_WEEK);
+    await harness.navigateByUrl('/week/2026-11-18');
+    await harness.fixture.whenStable(); // the page replaces the address itself
+    expect(url()).toBe('/week/2026-11-16');
+    await harness.navigateByUrl('/week/no-date');
+    await harness.fixture.whenStable();
+    expect(url()).toBe(THIS_WEEK);
   });
 
   it('binds :templateId to the editor input, /templates/new has none', async () => {
@@ -72,10 +94,10 @@ describe('app routes (FND-05 skeleton)', () => {
     expect(text()).toContain('Новый шаблон');
   });
 
-  it.each(['/', '/no-such-page'])('%s redirects to /week', async (path) => {
+  it.each(['/', '/no-such-page'])('%s redirects to the current week', async (path) => {
     await harness.navigateByUrl(path);
-    expect(url()).toBe('/week');
-    expect(heading()).toBe('Расписание');
+    expect(url()).toBe(THIS_WEEK);
+    expect(harness.routeNativeElement?.querySelector('tp-week-page')).not.toBeNull();
   });
 });
 
@@ -93,6 +115,7 @@ describe('app routes × session (AUTH-06)', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter(routes, withComponentInputBinding()),
+        clock,
       ],
     });
     signIn(status);
@@ -108,9 +131,9 @@ describe('app routes × session (AUTH-06)', () => {
   const register = (returnUrl: string) => `/register?returnUrl=${encodeURIComponent(returnUrl)}`;
 
   it.each<[string, Record<Status, string>]>([
-    ['/', { anonymous: '/login', 'no workspace': '/onboarding', workspace: '/week' }],
-    ['/login', { anonymous: '/login', 'no workspace': '/onboarding', workspace: '/week' }],
-    ['/register', { anonymous: '/register', 'no workspace': '/onboarding', workspace: '/week' }],
+    ['/', { anonymous: '/login', 'no workspace': '/onboarding', workspace: THIS_WEEK }],
+    ['/login', { anonymous: '/login', 'no workspace': '/onboarding', workspace: THIS_WEEK }],
+    ['/register', { anonymous: '/register', 'no workspace': '/onboarding', workspace: THIS_WEEK }],
     [
       '/join?code=K7QM2XPA',
       {
@@ -121,9 +144,9 @@ describe('app routes × session (AUTH-06)', () => {
     ],
     [
       '/onboarding',
-      { anonymous: login('/onboarding'), 'no workspace': '/onboarding', workspace: '/week' },
+      { anonymous: login('/onboarding'), 'no workspace': '/onboarding', workspace: THIS_WEEK },
     ],
-    ['/week', { anonymous: login('/week'), 'no workspace': '/onboarding', workspace: '/week' }],
+    ['/week', { anonymous: login('/week'), 'no workspace': '/onboarding', workspace: THIS_WEEK }],
     [
       '/week/2026-11-16?day=2026-11-18',
       {
@@ -142,7 +165,7 @@ describe('app routes × session (AUTH-06)', () => {
     ],
     [
       '/no-such-page',
-      { anonymous: login('/no-such-page'), 'no workspace': '/onboarding', workspace: '/week' },
+      { anonymous: login('/no-such-page'), 'no workspace': '/onboarding', workspace: THIS_WEEK },
     ],
   ])('%s', async (path, expected) => {
     for (const status of ['anonymous', 'no workspace', 'workspace'] as const) {
@@ -152,6 +175,7 @@ describe('app routes × session (AUTH-06)', () => {
           provideHttpClient(),
           provideHttpClientTesting(),
           provideRouter(routes, withComponentInputBinding()),
+          clock,
         ],
       });
       signIn(status);

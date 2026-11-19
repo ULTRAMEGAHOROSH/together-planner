@@ -1,0 +1,36 @@
+// The same two rows as a person panel (subgrid), so that the header lines up with the
+// header of the first panel whatever its height.
+:host {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  min-width: 0;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px 6px;
+  background: var(--tp-color-sticky);
+  border-top: 3px solid var(--tp-color-seat-2);
+  border-bottom: 1px solid var(--tp-color-border-card);
+}
+
+.title {
+  color: var(--tp-color-text-muted);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.body {
+  max-width: 420px;
+  padding: 24px 16px;
+}
+
+.lead {
+  margin: 0 0 16px;
+  color: var(--tp-color-text-muted);
+}

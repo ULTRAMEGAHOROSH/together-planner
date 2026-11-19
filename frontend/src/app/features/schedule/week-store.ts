@@ -57,10 +57,12 @@ export class WeekStore {
   /** The week has loaded and there is not a single event in it. */
   readonly isEmpty = computed(() => this.data()?.events.length === 0 && this.status() === 'ready');
 
+  /** IANA zone of the loaded week; `null` until it arrives. */
+  readonly timeZone = computed(() => this.data()?.timeZone ?? null);
   /** «Today» in the zone of the loaded week; changes only at midnight there. */
   readonly today = computed(() => {
-    const zone = this.data()?.timeZone;
-    return zone === undefined ? null : this.zoneClock.todayIn(zone, this.zoneClock.minuteTick());
+    const zone = this.timeZone();
+    return zone === null ? null : this.zoneClock.todayIn(zone, this.zoneClock.minuteTick());
   });
 
   /**

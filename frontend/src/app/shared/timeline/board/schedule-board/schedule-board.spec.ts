@@ -1,3 +1,4 @@
+import { Component } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { CLOCK } from '@core/time/zone-clock';
 import { A, B, ev } from '../../testing/event-builder';
@@ -232,5 +233,46 @@ describe('tp-schedule-board: the now line (WEEK-07, FD-33)', () => {
       expect(lines()).toHaveLength(0);
       expect(label()).toBeNull();
     });
+  });
+});
+
+describe('tp-schedule-board with one panel (WEEK-10)', () => {
+  @Component({
+    imports: [ScheduleBoard],
+    template: `
+      <tp-schedule-board [panels]="panels">
+        <p tpPartnerPlaceholder>Пригласите партнёра</p>
+      </tp-schedule-board>
+    `,
+  })
+  class Host {
+    readonly panels = panels(7).slice(0, 1);
+  }
+
+  it('[panel] [time] [placeholder]: the marked content takes the right half', async () => {
+    const fixture = TestBed.createComponent(Host);
+    await fixture.whenStable();
+    const grid = (fixture.nativeElement as HTMLElement).querySelector('.grid')!;
+    expect(Array.from(grid.children).map((c) => c.tagName.toLowerCase())).toEqual([
+      'tp-person-panel',
+      'tp-time-gutter',
+      'p',
+    ]);
+    expect(grid.lastElementChild?.textContent).toBe('Пригласите партнёра');
+  });
+
+  it('two panels: the marked content is not shown', async () => {
+    @Component({
+      imports: [ScheduleBoard],
+      template: `
+        <tp-schedule-board [panels]="panels"><p tpPartnerPlaceholder>скрыто</p></tp-schedule-board>
+      `,
+    })
+    class Pair {
+      readonly panels = panels(7);
+    }
+    const fixture = TestBed.createComponent(Pair);
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('скрыто');
   });
 });
