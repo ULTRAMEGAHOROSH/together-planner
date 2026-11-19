@@ -1,0 +1,21 @@
+<form class="form" [formGroup]="form" (ngSubmit)="submit()">
+  <tp-form-field
+    label="Код приглашения"
+    hint="Код из 8 символов, например K7Q2-M9XD"
+    [error]="errors().code"
+  >
+    <input
+      tpControl
+      class="code"
+      formControlName="code"
+      placeholder="XXXX-XXXX"
+      autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
+    />
+  </tp-form-field>
+  @if (errors().form; as text) {
+    <p class="form-error" role="alert">{{ text }}</p>
+  }
+  <button tpButton type="submit" [loading]="pending()">Присоединиться</button>
+</form>

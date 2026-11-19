@@ -1,0 +1,18 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// Prototype: the code is typed large and spaced, like it is shown on the invite card.
+.code {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.form-error {
+  margin: 0;
+  color: var(--tp-color-danger);
+  font-size: 13px;
+}

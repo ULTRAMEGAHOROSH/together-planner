@@ -32,6 +32,7 @@ describe('OnboardingPage', () => {
       sections.map((s) => document.getElementById(s.getAttribute('aria-labelledby')!)),
     ).toEqual(Array.from(page().querySelectorAll('h2')));
     expect(page().querySelector('tp-create-workspace-form')).not.toBeNull();
+    expect(page().querySelector('tp-join-workspace-form')).not.toBeNull();
   });
 
   it('the create form reports success: name, the invite card, no join path, «К расписанию» → /week', async () => {

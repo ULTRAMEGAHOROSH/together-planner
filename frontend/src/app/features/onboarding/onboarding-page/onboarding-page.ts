@@ -4,6 +4,7 @@ import { SessionStore } from '@core/auth/session-store';
 import { Button } from '@shared/ui/button/button';
 import { CreateWorkspaceForm } from '../create-workspace-form/create-workspace-form';
 import { InviteCard } from '../invite-card/invite-card';
+import { JoinWorkspaceForm } from '../join-workspace-form/join-workspace-form';
 
 /** Left card: the create form, then the created workspace with its invite. */
 export type OnboardingStep = 'create' | 'created';
@@ -15,7 +16,7 @@ export type OnboardingStep = 'create' | 'created';
  */
 @Component({
   selector: 'tp-onboarding-page',
-  imports: [Button, CreateWorkspaceForm, InviteCard],
+  imports: [Button, CreateWorkspaceForm, InviteCard, JoinWorkspaceForm],
   templateUrl: './onboarding-page.html',
   styleUrl: './onboarding-page.scss',
 })
