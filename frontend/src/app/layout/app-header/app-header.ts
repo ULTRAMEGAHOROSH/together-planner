@@ -1,7 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SessionStore } from '@core/auth/session-store';
+import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { Icon, type IconName } from '@shared/ui/icon/icon';
+import { InviteDialog } from '../user-menu/invite-dialog';
 import { UserMenu } from '../user-menu/user-menu';
 
 interface Tab {
@@ -19,7 +21,8 @@ const TABS: readonly Tab[] = [
 
 /**
  * Header of the workspace screens (prototype): logo, section tabs, workspace name and the
- * members in seat order, which open the user menu. «+ Событие» comes in EVT-04.
+ * members in seat order, which open the user menu. While the partner has not joined, «+»
+ * «Пригласить» stands in for the second avatar (SHELL-04). «+ Событие» comes in EVT-04.
  */
 @Component({
   selector: 'tp-app-header',
@@ -29,7 +32,14 @@ const TABS: readonly Tab[] = [
 })
 export class AppHeader {
   private readonly session = inject(SessionStore);
+  private readonly dialogs = inject(DialogService);
 
   protected readonly tabs = TABS;
   protected readonly workspace = this.session.workspace;
+  protected readonly partnerMissing = this.session.isPartnerMissing;
+
+  /** The same dialog as «Пригласить по коду» in the user menu: no code until asked. */
+  protected invite(): void {
+    this.dialogs.open(InviteDialog, undefined, { size: 'sm' });
+  }
 }

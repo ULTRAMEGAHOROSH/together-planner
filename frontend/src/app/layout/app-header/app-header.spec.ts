@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ApplicationRef } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import type { WorkspaceResponse } from '@core/api/models/workspace.models';
@@ -10,6 +11,7 @@ import {
   WORKSPACE_FULL_PAIR,
 } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
+import { dialogElement, provideVisibleElements } from '@shared/ui/dialog/testing';
 import { AppHeader } from './app-header';
 
 @Component({ template: '' })
@@ -30,6 +32,7 @@ describe('AppHeader', () => {
           { path: 'templates', component: Page },
           { path: 'templates/:templateId', component: Page },
         ]),
+        provideVisibleElements(),
       ],
     });
     session = TestBed.inject(SessionStore);
@@ -37,6 +40,11 @@ describe('AppHeader', () => {
     session.setWorkspace(WORKSPACE_FULL_PAIR);
     fixture = TestBed.createComponent(AppHeader);
     await fixture.whenStable();
+  });
+
+  afterEach(() => {
+    TestBed.inject(HttpTestingController).verify();
+    document.querySelector('.cdk-overlay-container')?.remove();
   });
 
   const el = () => fixture.nativeElement as HTMLElement;
@@ -51,6 +59,7 @@ describe('AppHeader', () => {
       avatar: li.querySelector('tp-avatar')?.textContent,
       seat1: li.querySelector('tp-avatar')?.classList.contains('seat-1'),
     }));
+  const invite = () => el().querySelector<HTMLButtonElement>('button.invite');
   async function go(url: string) {
     await TestBed.inject(Router).navigateByUrl(url);
     await fixture.whenStable();
@@ -114,6 +123,35 @@ describe('AppHeader', () => {
     session.setWorkspace(WORKSPACE_FULL_PAIR);
     await fixture.whenStable();
     expect(members()).toHaveLength(2);
+  });
+
+  it('alone: «+ Пригласить» in place of the second avatar; it goes once the partner joins', async () => {
+    session.setWorkspace(WORKSPACE_CREATED);
+    await fixture.whenStable();
+    expect(invite()?.textContent?.trim()).toBe('Пригласить');
+    // The visible caption is part of the name (WCAG 2.5.3); on a narrow screen it is hidden.
+    expect(invite()?.getAttribute('aria-label')).toBe('Пригласить партнёра');
+    expect(invite()?.type).toBe('button');
+    expect(invite()?.querySelector('tp-icon')?.getAttribute('aria-hidden')).toBe('true');
+    // After the members, outside the menu button.
+    expect(invite()?.previousElementSibling?.tagName.toLowerCase()).toBe('tp-user-menu');
+
+    session.setWorkspace(WORKSPACE_FULL_PAIR);
+    await fixture.whenStable();
+    expect(invite()).toBeNull();
+  });
+
+  it('«Пригласить» opens the invite dialog; no code is issued until «Получить код»', async () => {
+    session.setWorkspace(WORKSPACE_CREATED);
+    await fixture.whenStable();
+    invite()!.click();
+    await TestBed.inject(ApplicationRef).whenStable();
+    const dialog = dialogElement();
+    expect(dialog?.querySelector('h2')?.textContent).toBe('Пригласить партнёра');
+    expect(dialog?.querySelector('tp-invite-card')).not.toBeNull();
+    TestBed.inject(HttpTestingController).expectNone(
+      `/api/v1/workspaces/${WORKSPACE_CREATED.id}/invites`,
+    );
   });
 
   it('the only button is the members one (user menu); «+ Событие» comes in EVT-04', () => {

@@ -136,3 +136,48 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+// SHELL-04: an empty dashed seat in place of the partner's avatar, the size of an avatar.
+// Narrow: the circle alone, like the avatars; the name stays in `aria-label`.
+.invite {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: var(--tp-radius-pill);
+  background: transparent;
+  color: var(--tp-color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--tp-duration-fast) ease;
+
+  &:hover {
+    background: var(--tp-color-hover);
+    color: var(--tp-color-text);
+  }
+
+  @include bp.narrow {
+    padding: 0 2px;
+  }
+}
+
+.invite-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 2px dashed var(--tp-color-border-dashed);
+  border-radius: 50%;
+}
+
+.invite-label {
+  @include bp.narrow {
+    display: none;
+  }
+}

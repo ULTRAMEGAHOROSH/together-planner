@@ -22,6 +22,12 @@
     <div class="workspace">
       <span class="workspace-name">{{ workspace.name }}</span>
       <tp-user-menu />
+      @if (partnerMissing()) {
+        <button type="button" class="invite" aria-label="Пригласить партнёра" (click)="invite()">
+          <span class="invite-circle"><tp-icon name="plus" /></span>
+          <span class="invite-label">Пригласить</span>
+        </button>
+      }
     </div>
   }
 </header>
