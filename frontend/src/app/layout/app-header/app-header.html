@@ -1,0 +1,33 @@
+<header class="header">
+  <div class="brand">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+      <circle class="seat-1" cx="11" cy="14" r="8" />
+      <circle class="seat-2" cx="17" cy="14" r="8" />
+    </svg>
+    <span class="brand-name">Together</span>
+  </div>
+
+  <nav class="tabs" aria-label="Разделы">
+    @for (tab of tabs; track tab.path) {
+      <a class="tab" [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page">
+        {{ tab.label }}
+      </a>
+    }
+  </nav>
+
+  <div class="spacer"></div>
+
+  @if (workspace(); as workspace) {
+    <div class="workspace">
+      <span class="workspace-name">{{ workspace.name }}</span>
+      <ul class="members" aria-label="Участники">
+        @for (member of members(); track member.userId) {
+          <li class="member">
+            <tp-avatar [name]="member.displayName" [seat]="member.seat" />
+            <span class="member-name">{{ member.displayName }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</header>

@@ -43,6 +43,17 @@ describe('app routes (FND-05 skeleton)', () => {
     expect(TestBed.inject(Title).getTitle()).toBe(expectedTitle);
   });
 
+  it.each(['/week', '/week/2026-11-16', '/templates', '/templates/new'])(
+    '%s opens inside AppShell: header above the page (SHELL-01)',
+    async (path) => {
+      await harness.navigateByUrl(path);
+      const shell = harness.routeNativeElement as HTMLElement;
+      expect(shell.tagName.toLowerCase()).toBe('tp-app-shell');
+      expect(shell.querySelector('tp-app-header nav')).not.toBeNull();
+      expect(shell.querySelector('main h1')).not.toBeNull();
+    },
+  );
+
   it('binds :weekStart to the WeekPage input', async () => {
     await harness.navigateByUrl('/week/2026-11-16');
     expect(text()).toContain('Неделя с 2026-11-16');
@@ -77,6 +88,8 @@ describe('app routes × session (AUTH-06)', () => {
     await harness.navigateByUrl(path);
     expect((harness.routeNativeElement as HTMLElement).textContent).toContain(content);
     expect(TestBed.inject(Title).getTitle()).toBe(title);
+    // The header frame is only for the workspace screens.
+    expect(harness.fixture.nativeElement.querySelector('tp-app-header')).toBeNull();
   });
 
   const login = (returnUrl: string) => `/login?returnUrl=${encodeURIComponent(returnUrl)}`;

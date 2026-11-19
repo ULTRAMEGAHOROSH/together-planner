@@ -8,8 +8,8 @@ import {
 } from '@core/auth/guards';
 
 // Route map: docs/frontend-final-decisions.md §6. Every page is lazy (FD-45).
-// Not wired yet: AppShell component on the app parent (SHELL-01), `week` redirect
-// to the current Monday (WEEK-10), calendar/settings (P1), /_dev/board (WEEK-05).
+// Not wired yet: `week` redirect to the current Monday (WEEK-10), calendar/settings (P1),
+// /_dev/board (WEEK-05).
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'week' },
   {
@@ -41,9 +41,10 @@ export const routes: Routes = [
       import('@features/onboarding/onboarding-page/onboarding-page').then((m) => m.OnboardingPage),
   },
   {
-    // The app itself: signed in and with a workspace. AppShell becomes its component (SHELL-01).
+    // The app itself: signed in and with a workspace, inside the header frame (SHELL-01).
     path: '',
     canMatch: [authGuard, workspaceGuard],
+    loadComponent: () => import('@layout/app-shell/app-shell').then((m) => m.AppShell),
     children: [
       {
         // Temporary: becomes a redirect to /week/<current Monday> in WEEK-10.
