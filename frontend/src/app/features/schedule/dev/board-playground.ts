@@ -1,6 +1,8 @@
-import { Component, computed, signal } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CLOCK, ZoneClock } from '@core/time/zone-clock';
 import { buildPanelLayout } from '@shared/timeline/engine/panel-layout';
+import { NARROW_BREAKPOINT } from '@shared/timeline/engine/constants';
 import type { DayRange } from '@shared/timeline/engine/model';
 import type { BoardPanel, SlotClick } from '@shared/timeline/board/board.models';
 import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
@@ -130,7 +132,12 @@ export class BoardPlayground {
   }));
 
   protected readonly scenario = signal(BOARD_SCENARIOS[0].id);
-  protected readonly mode = signal<Mode>('week');
+  // Like the week page below 820 px, it starts in «День»; here the switch stays free.
+  protected readonly mode = signal<Mode>(
+    inject(BreakpointObserver).isMatched(`(max-width: ${NARROW_BREAKPOINT - 0.02}px)`)
+      ? 'day'
+      : 'week',
+  );
   protected readonly day = signal(FIXTURE_TODAY);
   protected readonly lastSlot = signal<SlotClick | null>(null);
   protected readonly lastEvent = signal<string | null>(null);

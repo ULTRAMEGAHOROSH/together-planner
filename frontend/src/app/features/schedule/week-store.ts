@@ -13,7 +13,8 @@ import { SessionStore } from '@core/auth/session-store';
 import { DataChanges } from '@core/changes/data-changes';
 import { ApiError, isApiError } from '@core/error/api-error';
 import { ZoneClock } from '@core/time/zone-clock';
-import { weekLabel } from '@shared/time';
+import { addDays, daysBetween, weekLabel } from '@shared/time';
+import type { DayRange } from '@shared/timeline/engine/model';
 import type { BoardPanel } from '@shared/timeline/board/board.models';
 import { buildPanelLayout } from '@shared/timeline/engine/panel-layout';
 import { toTimelineEvents } from '@shared/timeline/engine/to-timeline-events';
@@ -40,6 +41,7 @@ export class WeekStore {
   private readonly statusState = signal<WeekStatus>('idle');
   private readonly dataState = signal<WeekResponse | null>(null);
   private readonly errorState = signal<ApiError | null>(null);
+  private readonly selectedDayState = signal<IsoDate | null>(null);
 
   /** The week that was asked for (it may be ahead of `data` while loading). */
   readonly weekStart = this.weekStartState.asReadonly();
@@ -47,6 +49,8 @@ export class WeekStore {
   /** The last week that arrived; kept while the next one loads (decisions §4). */
   readonly data = this.dataState.asReadonly();
   readonly error = this.errorState.asReadonly();
+  /** The day asked for in the «День» mode; `null` — the whole week. */
+  readonly selectedDay = this.selectedDayState.asReadonly();
 
   /** «9 – 15 ноября 2026» of the requested week; empty before the first request. */
   readonly periodLabel = computed(() => {
@@ -61,6 +65,20 @@ export class WeekStore {
   /** The week has loaded and there is not a single event in it. */
   readonly isEmpty = computed(() => this.data()?.events.length === 0 && this.status() === 'ready');
 
+  /**
+   * The day on the board: `selectedDay` kept inside the loaded week. While the next week
+   * loads, a day of it is not in the old data, and the board keeps the nearest edge day of
+   * the old week instead of jumping to the whole week. `null` — the whole week.
+   */
+  readonly shownDay = computed(() => {
+    const day = this.selectedDay();
+    const data = this.data();
+    if (day === null || data === null) {
+      return null;
+    }
+    const offset = daysBetween(data.weekStart, day);
+    return offset < 0 ? data.weekStart : offset > 6 ? addDays(data.weekStart, 6) : day;
+  });
   /** IANA zone of the loaded week; `null` until it arrives. */
   readonly timeZone = computed(() => this.data()?.timeZone ?? null);
   /** «Today» in the zone of the loaded week; changes only at midnight there. */
@@ -79,7 +97,9 @@ export class WeekStore {
       return [];
     }
     const events = toTimelineEvents(data.events);
-    const range = { firstDay: data.weekStart, dayCount: 7 } as const;
+    const day = this.shownDay();
+    const range: DayRange =
+      day === null ? { firstDay: data.weekStart, dayCount: 7 } : { firstDay: day, dayCount: 1 };
     const today = this.today();
     return SEATS.map((seat): WeekPanel => {
       const member = data.members.find((m) => m.seat === seat);
@@ -114,6 +134,11 @@ export class WeekStore {
     this.weekStartState.set(weekStart);
     this.statusState.set('loading');
     this.requests.next(weekStart);
+  }
+
+  /** Shows one day (`«День»`) or, with `null`, the whole week. No request: S1 holds the week. */
+  selectDay(day: IsoDate | null): void {
+    this.selectedDayState.set(day);
   }
 
   /** Asks the server again for the current week (after a change, or «Повторить»). */

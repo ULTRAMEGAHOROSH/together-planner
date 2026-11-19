@@ -34,7 +34,8 @@ const pageOverflowsSideways = (page: Page) =>
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/_dev/board');
-  await expect(page.locator('tp-day-column')).toHaveCount(14);
+  // 14 columns in «Неделя» (desktop), 2 in «День» (a phone starts there).
+  await expect(page.locator('tp-day-column').first()).toBeVisible();
 });
 
 test.describe('desktop', () => {
@@ -124,12 +125,10 @@ test.describe('mobile', () => {
     test.skip(testInfo.project.name !== 'mobile', 'the phone layout');
   });
 
-  // The board switches to «День» by itself below 820 px in WEEK-13; until then the playground
-  // switch is used, and the check starts from the same state.
-  test('SC-05: 375 px, «День» — no sideways scroll, both columns of the day are on screen', async ({
+  // Below 820 px the board opens in «День» by itself (WEEK-13): no click on the switch.
+  test('SC-05: 375 px opens in «День» — no sideways scroll, both columns of the day are on screen', async ({
     page,
   }) => {
-    await page.getByRole('radio', { name: 'День', exact: true }).click();
     await expect(page.locator('tp-day-column')).toHaveCount(2);
     expect(await pageOverflowsSideways(page)).toBe(false);
 
@@ -143,6 +142,8 @@ test.describe('mobile', () => {
   });
 
   test('«Неделя» on a phone scrolls inside the board, the page stays still', async ({ page }) => {
+    await page.getByRole('radio', { name: 'Неделя', exact: true }).click();
+    await expect(page.locator('tp-day-column')).toHaveCount(14);
     expect(await pageOverflowsSideways(page)).toBe(false);
     const [scrollWidth, clientWidth] = await board(page).evaluate((element) => [
       element.scrollWidth,

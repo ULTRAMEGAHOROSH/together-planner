@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import type { Uuid } from '@core/api/models/common.models';
+import type { IsoDate, Uuid } from '@core/api/models/common.models';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import type { NowMark } from '../../engine/model';
 import type { BoardPanel, SlotClick } from '../board.models';
@@ -24,6 +24,9 @@ import { DayHeader } from '../day-header/day-header';
 export class PersonPanel {
   readonly panel = input.required<BoardPanel>();
   readonly now = input<NowMark | null>(null);
+  /** The day headers are buttons: open the day / back to the week. */
+  readonly dayNavigation = input(false);
   readonly slotClick = output<SlotClick>();
   readonly eventClick = output<Uuid>();
+  readonly dayClick = output<IsoDate>();
 }

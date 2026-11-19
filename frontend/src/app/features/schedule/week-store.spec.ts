@@ -130,6 +130,61 @@ describe('WeekStore (WEEK-09)', () => {
     expect(right).toEqual({ kind: 'placeholder', seat: 2 });
   });
 
+  describe('one day («День», WEEK-13)', () => {
+    const loaded = () => {
+      store.setWeek(WEEK_23);
+      backend.expectOne(URL(WEEK_23)).flush(WEEK);
+    };
+    const days = () => member(store.panels()[0]).layout.days.map((d) => d.date);
+
+    it('no day selected: the whole week of 7 days; selectDay shows one day, no request', () => {
+      loaded();
+      expect(store.selectedDay()).toBeNull();
+      expect(store.shownDay()).toBeNull();
+      expect(days()).toHaveLength(7);
+
+      store.selectDay('2026-11-25');
+      expect(store.selectedDay()).toBe('2026-11-25');
+      expect(store.shownDay()).toBe('2026-11-25');
+      expect(store.status()).toBe('ready');
+      backend.expectNone(() => true);
+      expect(days()).toEqual(['2026-11-25']);
+      // The events of that day only; the joint dinner is in both panels.
+      expect(member(store.panels()[0]).layout.days[0].boxes).toHaveLength(1);
+      expect(member(store.panels()[1]).layout.days[0].boxes).toHaveLength(1);
+
+      store.selectDay(null);
+      expect(days()).toHaveLength(7);
+    });
+
+    it('nothing to show before the week arrives', () => {
+      store.selectDay('2026-11-25');
+      expect(store.shownDay()).toBeNull();
+      expect(store.panels()).toEqual([]);
+    });
+
+    it('a day of the next week while it loads: the board keeps the edge day of the old one', () => {
+      loaded();
+      store.selectDay('2026-11-29');
+      store.setWeek('2026-11-30');
+      store.selectDay('2026-11-30'); // Sunday → «›» → Monday
+      expect(store.shownDay()).toBe('2026-11-29');
+      expect(days()).toEqual(['2026-11-29']);
+      backend.expectOne(URL('2026-11-30')).flush(emptyWeek('2026-11-30'));
+      expect(store.shownDay()).toBe('2026-11-30');
+      expect(days()).toEqual(['2026-11-30']);
+    });
+
+    it('a day of the previous week while it loads: the first day of the old one', () => {
+      loaded();
+      store.setWeek(WEEK_16);
+      store.selectDay('2026-11-22');
+      expect(store.shownDay()).toBe(WEEK_23);
+      backend.expectOne(URL(WEEK_16)).flush(emptyWeek(WEEK_16));
+      expect(store.shownDay()).toBe('2026-11-22');
+    });
+  });
+
   it('a week without events is empty; with events — not', () => {
     store.setWeek(WEEK_23);
     expect(store.isEmpty()).toBe(false); // still loading

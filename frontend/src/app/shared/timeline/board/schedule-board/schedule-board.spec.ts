@@ -99,11 +99,11 @@ describe('tp-schedule-board (WEEK-05, FD-57…59)', () => {
     expect(opened).toEqual(['a-only', 'both']);
   });
 
-  it('DoD: data only through inputs — the panels and the zone of «now» (FD-59)', () => {
+  it('DoD: data only through inputs — the panels, the zone of «now» and the day headers mode (FD-59)', () => {
     const inputs = Object.keys(
       (ScheduleBoard as unknown as { ɵcmp: { inputs: object } }).ɵcmp.inputs,
     );
-    expect(inputs).toEqual(['panels', 'timeZone']);
+    expect(inputs).toEqual(['panels', 'timeZone', 'dayNavigation']);
   });
 });
 
@@ -233,6 +233,36 @@ describe('tp-schedule-board: the now line (WEEK-07, FD-33)', () => {
       expect(lines()).toHaveLength(0);
       expect(label()).toBeNull();
     });
+  });
+});
+
+describe('tp-schedule-board day headers (WEEK-13)', () => {
+  it('plain labels by default; with dayNavigation buttons that say which day was chosen', async () => {
+    const fixture = TestBed.createComponent(ScheduleBoard);
+    fixture.componentRef.setInput('panels', panels(7));
+    const chosen: string[] = [];
+    fixture.componentInstance.dayClick.subscribe((d) => chosen.push(d));
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelectorAll('tp-day-header button')).toHaveLength(0);
+
+    fixture.componentRef.setInput('dayNavigation', true);
+    await fixture.whenStable();
+    const buttons = host.querySelectorAll<HTMLButtonElement>('tp-day-header button');
+    expect(buttons).toHaveLength(14);
+    buttons[2].click();
+    expect(chosen).toEqual(['2026-11-11']);
+  });
+
+  it('on one open day the headers lead back to the week', async () => {
+    const fixture = TestBed.createComponent(ScheduleBoard);
+    fixture.componentRef.setInput('panels', panels(1));
+    fixture.componentRef.setInput('dayNavigation', true);
+    await fixture.whenStable();
+    const labels = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('tp-day-header button'),
+    ).map((b) => b.getAttribute('aria-label'));
+    expect(labels).toEqual(['Вернуться к неделе', 'Вернуться к неделе']);
   });
 });
 

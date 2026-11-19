@@ -5,7 +5,7 @@
     variant="ghost"
     size="sm"
     type="button"
-    aria-label="Предыдущая неделя"
+    [attr.aria-label]="day() === null ? 'Предыдущая неделя' : 'Предыдущий день'"
     (click)="go(-1)"
   >
     <tp-icon name="chevron-left" [size]="18" />
@@ -16,7 +16,7 @@
     variant="ghost"
     size="sm"
     type="button"
-    aria-label="Следующая неделя"
+    [attr.aria-label]="day() === null ? 'Следующая неделя' : 'Следующий день'"
     (click)="go(1)"
   >
     <tp-icon name="chevron-right" [size]="18" />
@@ -38,10 +38,12 @@
   <span class="sub">{{ subtitle() }}</span>
 </div>
 <div class="spacer"></div>
-<tp-segmented-control
-  label="Режим просмотра"
-  size="sm"
-  [options]="views"
-  [value]="view()"
-  (valueChange)="view.set($event)"
-/>
+@if (canChooseView()) {
+  <tp-segmented-control
+    label="Режим просмотра"
+    size="sm"
+    [options]="views"
+    [value]="view()"
+    (valueChange)="viewChange.emit($event)"
+  />
+}

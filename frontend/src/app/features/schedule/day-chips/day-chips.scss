@@ -1,0 +1,38 @@
+// Values from the prototype day chips (design/Main.dc.html, `dayChips`).
+:host {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 0 20px 10px;
+  overflow-x: auto;
+}
+
+.chip {
+  position: relative;
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--tp-color-border);
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-surface);
+  color: var(--tp-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    border-color: var(--tp-color-accent);
+    background: var(--tp-color-accent);
+    color: var(--tp-color-text-inverse);
+  }
+}
+
+.dot {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tp-color-accent);
+}

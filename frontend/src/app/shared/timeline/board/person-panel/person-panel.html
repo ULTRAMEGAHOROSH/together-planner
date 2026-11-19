@@ -5,7 +5,12 @@
   </div>
   <div class="days">
     @for (day of panel().layout.days; track day.date) {
-      <tp-day-header [day]="day" />
+      <tp-day-header
+        [day]="day"
+        [interactive]="dayNavigation()"
+        [open]="panel().layout.days.length === 1"
+        (pick)="dayClick.emit($event)"
+      />
     }
   </div>
 </div>

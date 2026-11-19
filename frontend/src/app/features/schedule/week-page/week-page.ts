@@ -1,49 +1,48 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import {
   Component,
   computed,
   DestroyRef,
   effect,
   inject,
-  Injector,
   input,
-  runInInjectionContext,
   signal,
   untracked,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import { map } from 'rxjs';
 import type { IsoDate } from '@core/api/models/common.models';
 import { SessionStore } from '@core/auth/session-store';
-import { ZoneClock } from '@core/time/zone-clock';
 import { messageFor } from '@core/error/error-messages';
+import { ZoneClock } from '@core/time/zone-clock';
 import { ViewContext } from '@core/view/view-context';
-import { isMonday, parseDate, weekStartOf } from '@shared/time';
+import { weekStartOf } from '@shared/time';
+import { NARROW_BREAKPOINT } from '@shared/timeline/engine/constants';
+import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
-import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
-import { currentWeekPath, currentWeekStart } from '../current-week';
+import { DayChips } from '../day-chips/day-chips';
 import { PartnerPlaceholder } from '../partner-placeholder/partner-placeholder';
+import { resolveAddress, type WeekAddress, weekUrl } from '../week-address';
 import { WeekStore } from '../week-store';
-import { WeekToolbar, type WeekView } from '../week-toolbar/week-toolbar';
+import { WeekToolbar } from '../week-toolbar/week-toolbar';
+import { WeekViewPreference, type WeekView } from '../week-view-preference';
 
-/** The Monday of the week that holds `raw`; `null` when `raw` is not a date at all. */
-function mondayOf(raw: string): IsoDate | null {
-  try {
-    parseDate(raw);
-  } catch {
-    return null;
-  }
-  return isMonday(raw) ? raw : weekStartOf(raw);
-}
+/** Below this width only «День» fits (FD-60, prototype: `window.innerWidth < 820`). */
+const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
 
 /**
- * `/week/:weekStart` (FD §6): the week of both members on the board. The address always
- * names a Monday: any other day is replaced by the Monday of its week and a malformed one
- * by the current week (`replaceUrl`: no extra history entry). The store loads; this page
- * only connects the address, the store and the board.
+ * `/week/:weekStart?day=` (FD §6, §8.2): the week of both members on the board, or one day
+ * of it. The address is always canonical — a Monday, and a `day` only if it is a date of
+ * that week; anything else is replaced (`replaceUrl`: no extra history entry). The mode is
+ * «День» when the address has a `day`, on a screen below 820 px, or when the user chose it
+ * last (FD-47); otherwise «Неделя». The store loads; this page only connects the address,
+ * the store and the board.
  */
 @Component({
   selector: 'tp-week-page',
-  imports: [ScheduleBoard, PartnerPlaceholder, WeekToolbar, EmptyState, ErrorState],
+  imports: [ScheduleBoard, PartnerPlaceholder, WeekToolbar, DayChips, EmptyState, ErrorState],
   providers: [WeekStore],
   template: `
     @if (refreshing()) {
@@ -52,34 +51,50 @@ function mondayOf(raw: string): IsoDate | null {
     @if (store.weekStart(); as weekStart) {
       <tp-week-toolbar
         [weekStart]="weekStart"
-        [currentWeek]="currentWeek()"
+        [day]="selectedDay()"
+        [today]="today()"
         [appliedTemplates]="store.appliedTemplates()"
+        [canChooseView]="!narrow()"
         [view]="mode()"
-        (viewChange)="mode.set($event)"
-        (weekChange)="show($event)"
+        (viewChange)="chooseView(weekStart, $event)"
+        (navigate)="show($event)"
       />
-    }
-    @if (store.status() === 'error') {
-      <tp-error-state class="notice" [text]="errorText()" (retry)="store.reload()" />
-    }
-    @if (store.isEmpty()) {
-      <tp-empty-state
-        class="notice"
-        text="На эту неделю пока ничего нет. Будущие события появятся здесь сами, а типовую неделю можно взять из шаблона."
-      />
-    }
-    @if (members().length > 0) {
-      <tp-schedule-board class="board" [panels]="members()" [timeZone]="store.timeZone()">
-        @if (partnerMissing()) {
-          <tp-partner-placeholder tpPartnerPlaceholder />
-        }
-      </tp-schedule-board>
-    } @else if (firstLoad()) {
-      <div class="board skeleton" role="status" aria-label="Загружаем неделю…">
-        <div class="column"></div>
-        <div class="gutter"></div>
-        <div class="column"></div>
-      </div>
+      @if (selectedDay(); as day) {
+        <tp-day-chips
+          [weekStart]="weekStart"
+          [selectedDay]="day"
+          [today]="today()"
+          (dayChange)="show({ weekStart, day: $event })"
+        />
+      }
+      @if (store.status() === 'error') {
+        <tp-error-state class="notice" [text]="errorText()" (retry)="store.reload()" />
+      }
+      @if (store.isEmpty()) {
+        <tp-empty-state
+          class="notice"
+          text="На эту неделю пока ничего нет. Будущие события появятся здесь сами, а типовую неделю можно взять из шаблона."
+        />
+      }
+      @if (members().length > 0) {
+        <tp-schedule-board
+          class="board"
+          [panels]="members()"
+          [timeZone]="store.timeZone()"
+          [dayNavigation]="!narrow()"
+          (dayClick)="toggleDay(weekStart, $event)"
+        >
+          @if (partnerMissing()) {
+            <tp-partner-placeholder tpPartnerPlaceholder />
+          }
+        </tp-schedule-board>
+      } @else if (firstLoad()) {
+        <div class="board skeleton" role="status" aria-label="Загружаем неделю…">
+          <div class="column"></div>
+          <div class="gutter"></div>
+          <div class="column"></div>
+        </div>
+      }
     }
   `,
   styles: `
@@ -152,20 +167,52 @@ function mondayOf(raw: string): IsoDate | null {
 export class WeekPage {
   /** The `:weekStart` of the address (component input binding). */
   readonly weekStart = input<string>();
+  /** The `?day=` of the address. */
+  readonly day = input<string>();
 
   protected readonly store = inject(WeekStore);
   private readonly router = inject(Router);
-  private readonly view = inject(ViewContext);
-  private readonly injector = inject(Injector);
+  private readonly viewContext = inject(ViewContext);
   private readonly session = inject(SessionStore);
   private readonly clock = inject(ZoneClock);
+  private readonly preference = inject(WeekViewPreference);
+  private readonly breakpoints = inject(BreakpointObserver);
 
-  /** «Неделя / День»; what «День» does is WEEK-13. */
-  protected readonly mode = signal<WeekView>('week');
-  /** The Monday of the current week; it moves on at midnight in the workspace zone. */
-  protected readonly currentWeek = computed(() =>
-    currentWeekStart(this.session.timeZone(), this.clock, this.clock.minuteTick()),
+  /** Below 820 px: only «День», no switch, the day headers are labels. */
+  protected readonly narrow = toSignal(
+    this.breakpoints.observe(NARROW_QUERY).pipe(map((state) => state.matches)),
+    { initialValue: this.breakpoints.isMatched(NARROW_QUERY) },
   );
+  /** What the user chose last on a wide screen (FD-47). */
+  private readonly preferred = signal<WeekView>(this.preference.read());
+
+  /** «Today» in the workspace zone; moves on at midnight there. */
+  protected readonly today = computed(() =>
+    this.clock.todayIn(this.session.timeZone() ?? 'UTC', this.clock.minuteTick()),
+  );
+  private readonly currentWeek = computed(() => weekStartOf(this.today()));
+
+  /** The address put right; `null` until the input is there. */
+  private readonly resolved = computed(() => {
+    const raw = this.weekStart();
+    return raw === undefined ? null : resolveAddress(raw, this.day(), this.currentWeek());
+  });
+  /** The week of the address once it is canonical (while it is being replaced — `null`). */
+  private readonly canonicalWeek = computed(() => {
+    const resolved = this.resolved();
+    return resolved?.canonical ? resolved.address.weekStart : null;
+  });
+  protected readonly mode = computed<WeekView>(() =>
+    this.narrow() || this.resolved()?.address.day || this.preferred() === 'day' ? 'day' : 'week',
+  );
+  /** The day shown, `null` in «Неделя»; without `?day` — today if it is this week, else Monday. */
+  protected readonly selectedDay = computed(() => {
+    const week = this.canonicalWeek();
+    if (week === null || this.mode() === 'week') {
+      return null;
+    }
+    return this.resolved()?.address.day ?? this.defaultDay(week);
+  });
 
   /** Panels of the members that exist; the board draws a placeholder for the missing one. */
   protected readonly members = computed(() =>
@@ -182,31 +229,61 @@ export class WeekPage {
   );
   protected readonly errorText = computed(() => messageFor(this.store.error()));
 
-  /** Goes to the week with that Monday: a history entry, so «Назад» returns to this one. */
-  protected show(weekStart: IsoDate): void {
-    void this.router.navigateByUrl(`/week/${weekStart}`);
+  /** Goes to a week (and day): a history entry, so «Назад» returns to where it was. */
+  protected show(address: WeekAddress): void {
+    void this.router.navigateByUrl(weekUrl(address));
+  }
+
+  /** «Неделя / День» of the switch: remembered, and the address follows. */
+  protected chooseView(week: IsoDate, view: WeekView): void {
+    this.remember(view);
+    this.show({ weekStart: week, day: view === 'day' ? this.defaultDay(week) : null });
+  }
+
+  /** A day header: opens that day on a week, leads back to the week on an open day. */
+  protected toggleDay(week: IsoDate, day: IsoDate): void {
+    if (this.mode() === 'day') {
+      this.chooseView(week, 'week');
+    } else {
+      this.remember('day');
+      this.show({ weekStart: week, day });
+    }
+  }
+
+  private remember(view: WeekView): void {
+    this.preferred.set(view);
+    this.preference.write(view);
+  }
+
+  private defaultDay(week: IsoDate): IsoDate {
+    return this.currentWeek() === week ? this.today() : week;
   }
 
   constructor() {
     effect(() => {
-      const raw = this.weekStart();
-      if (raw === undefined) {
-        return;
+      const resolved = this.resolved();
+      if (resolved !== null && !resolved.canonical) {
+        untracked(
+          () => void this.router.navigateByUrl(weekUrl(resolved.address), { replaceUrl: true }),
+        );
       }
-      const monday = mondayOf(raw);
-      untracked(() => {
-        if (monday === raw) {
-          this.store.setWeek(monday);
-          this.view.setFocusDate(monday);
-        } else {
-          const target =
-            monday === null
-              ? runInInjectionContext(this.injector, currentWeekPath)
-              : `/week/${monday}`;
-          void this.router.navigateByUrl(target, { replaceUrl: true });
-        }
-      });
     });
-    inject(DestroyRef).onDestroy(() => this.view.setFocusDate(null));
+    effect(() => {
+      const week = this.canonicalWeek();
+      if (week !== null) {
+        untracked(() => this.store.setWeek(week));
+      }
+    });
+    effect(() => {
+      const week = this.canonicalWeek();
+      const day = this.selectedDay();
+      if (week !== null) {
+        untracked(() => {
+          this.store.selectDay(day);
+          this.viewContext.setFocusDate(day ?? week);
+        });
+      }
+    });
+    inject(DestroyRef).onDestroy(() => this.viewContext.setFocusDate(null));
   }
 }

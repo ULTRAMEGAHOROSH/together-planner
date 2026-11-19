@@ -31,3 +31,24 @@
     color: var(--tp-color-text-inverse);
   }
 }
+
+// The header as a button: the whole cell is the hit area.
+.hit {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  margin: -4px 0 -8px;
+  padding: 4px 0 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--tp-color-hover);
+  }
+}

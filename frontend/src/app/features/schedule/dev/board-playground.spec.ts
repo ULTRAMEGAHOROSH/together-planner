@@ -1,3 +1,4 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { BoardPlayground } from './board-playground';
 
@@ -74,5 +75,16 @@ describe('BoardPlayground (/_dev/board, WEEK-05)', () => {
     slots[13].click();
     await fixture.whenStable();
     expect(el().querySelector('.last-slot')?.textContent).toContain('Партнёр, 2026-11-15');
+  });
+});
+
+describe('BoardPlayground below 820 px (WEEK-13)', () => {
+  it('starts in «День»: one day per panel; the switch stays free', async () => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: BreakpointObserver, useValue: { isMatched: () => true } }],
+    });
+    const fixture = TestBed.createComponent(BoardPlayground);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelectorAll('tp-day-column')).toHaveLength(2);
   });
 });

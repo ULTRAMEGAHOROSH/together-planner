@@ -1,12 +1,15 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { BreakpointObserver, type BreakpointState } from '@angular/cdk/layout';
 import { Location } from '@angular/common';
+import { BehaviorSubject } from 'rxjs';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import {
   AUTH_RESPONSE,
   PROBLEM_MALFORMED,
+  PROBLEM_WORKSPACE_NOT_FOUND,
   WEEK,
   WORKSPACE_FULL_PAIR,
 } from '@core/api/models/testing/samples';
@@ -105,6 +108,19 @@ describe('WeekPage (WEEK-10)', () => {
     expect(navigate).toHaveBeenCalledExactlyOnceWith('/week/2026-11-09', { replaceUrl: true });
   });
 
+  it('no workspace in the session → «today» is counted in UTC, the common «not found» route runs', async () => {
+    TestBed.inject(SessionStore).setWorkspace(null);
+    await open('next-week');
+    expect(navigate).toHaveBeenCalledExactlyOnceWith('/week/2026-11-09', { replaceUrl: true });
+    await open('2026-11-23');
+    // The store has no workspace: W2 is asked, there is none → onboarding.
+    backend.expectOne('/api/v1/workspaces/current').flush(PROBLEM_WORKSPACE_NOT_FOUND, {
+      status: 404,
+      statusText: 'Not Found',
+    });
+    expect(navigate).toHaveBeenLastCalledWith('/onboarding');
+  });
+
   it('no weekStart yet → nothing happens', async () => {
     await open();
     expect(navigate).not.toHaveBeenCalled();
@@ -201,18 +217,6 @@ describe('WeekPage navigation (WEEK-11)', () => {
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe(
       '16 – 22 ноября 2026',
     );
-  });
-
-  it('«День» can be chosen; the page keeps the choice across weeks (what it does: WEEK-13)', async () => {
-    const day = () =>
-      Array.from(
-        harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('[role="radio"]'),
-      )[1];
-    day().click();
-    await harness.fixture.whenStable();
-    click('Следующая неделя');
-    await harness.fixture.whenStable();
-    expect(day().getAttribute('aria-checked')).toBe('true');
   });
 
   it('a redirected address (not a Monday) leaves no extra history entry', async () => {
@@ -341,5 +345,211 @@ describe('WeekPage states (WEEK-12)', () => {
     expect(q('tp-error-state')).not.toBeNull();
     expect(q('tp-schedule-board')).toBeNull();
     expect(q('.skeleton')).toBeNull();
+  });
+});
+
+describe('WeekPage day mode (WEEK-13)', () => {
+  let harness: RouterTestingHarness;
+  let backend: HttpTestingController;
+  let narrow: BehaviorSubject<BreakpointState>;
+  const router = () => TestBed.inject(Router);
+  const el = () => harness.routeNativeElement!;
+  const q = (selector: string) => el().querySelector(selector);
+  const qa = (selector: string) => Array.from(el().querySelectorAll<HTMLElement>(selector));
+  const byName = (name: string) =>
+    qa('button').find(
+      (b) => b.getAttribute('aria-label') === name || b.textContent?.trim() === name,
+    )!;
+  const switchTo = (label: string) =>
+    qa('[role="radio"]')
+      .find((r) => r.textContent?.trim() === label)!
+      .click();
+  const url = () => router().url;
+
+  async function start(initialUrl: string, narrowScreen = false) {
+    narrow = new BehaviorSubject<BreakpointState>({ matches: narrowScreen, breakpoints: {} });
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(
+          [{ path: 'week/:weekStart', component: WeekPage }],
+          withComponentInputBinding(),
+        ),
+        { provide: CLOCK, useValue: () => NOW },
+        {
+          provide: BreakpointObserver,
+          useValue: { observe: () => narrow, isMatched: () => narrow.value.matches },
+        },
+      ],
+    });
+    const session = TestBed.inject(SessionStore);
+    session.setAuth(AUTH_RESPONSE);
+    session.setWorkspace(WORKSPACE_FULL_PAIR);
+    backend = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create(initialUrl);
+    router().initialNavigation();
+    await harness.fixture.whenStable();
+  }
+
+  async function loadWeek(weekStart: string) {
+    backend.expectOne(URL(weekStart)).flush({ ...WEEK, weekStart });
+    await harness.fixture.whenStable();
+  }
+
+  async function settle() {
+    await harness.fixture.whenStable();
+  }
+
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
+
+  it('a week without a day and without a choice: «Неделя», no chips', async () => {
+    await start('/week/2026-11-23');
+    await loadWeek('2026-11-23');
+    expect(qa('tp-day-chips')).toHaveLength(0);
+    expect(qa('tp-person-panel:first-of-type tp-day-column')).toHaveLength(7);
+    expect(byName('Следующая неделя')).toBeDefined();
+  });
+
+  it('?day= opens that day: one column per panel, chips, the day in the title; the week is not asked for again', async () => {
+    await start('/week/2026-11-23?day=2026-11-25');
+    await loadWeek('2026-11-23');
+    expect(url()).toBe('/week/2026-11-23?day=2026-11-25');
+    expect(q('h1')?.textContent).toBe('Среда, 25 ноября');
+    expect(qa('tp-person-panel').map((p) => p.querySelectorAll('tp-day-column').length)).toEqual([
+      1, 1,
+    ]);
+    expect(qa('tp-day-chips button')).toHaveLength(7);
+    expect(qa('tp-day-chips [aria-pressed="true"]').map((c) => c.textContent?.trim())).toEqual([
+      'Ср 25',
+    ]);
+    expect(byName('Следующий день')).toBeDefined();
+  });
+
+  it('a chip changes the day inside the week: the address follows, nothing is loaded', async () => {
+    await start('/week/2026-11-23?day=2026-11-25');
+    await loadWeek('2026-11-23');
+    qa('tp-day-chips button')[0].click();
+    await settle();
+    expect(url()).toBe('/week/2026-11-23?day=2026-11-23');
+    expect(q('h1')?.textContent).toBe('Понедельник, 23 ноября');
+    backend.expectNone(() => true);
+  });
+
+  it('Sunday → «›» → the Monday of the next week: the address and the week change', async () => {
+    await start('/week/2026-11-23?day=2026-11-29');
+    await loadWeek('2026-11-23');
+    byName('Следующий день').click();
+    await settle();
+    expect(url()).toBe('/week/2026-11-30?day=2026-11-30');
+    // While the next week loads the board keeps the last day of the old one.
+    expect(qa('tp-day-column')).toHaveLength(2);
+    await loadWeek('2026-11-30');
+    expect(q('h1')?.textContent).toBe('Понедельник, 30 ноября');
+  });
+
+  it('the switch: «День» opens today (this week) or the Monday (another), «Неделя» goes back; the choice is remembered', async () => {
+    await start('/week/2026-11-09');
+    await loadWeek('2026-11-09');
+    switchTo('День');
+    await settle();
+    expect(url()).toBe('/week/2026-11-09?day=2026-11-12'); // Thursday 12.11 is today
+    expect(localStorage.getItem('tp.week.view')).toBe('day');
+
+    switchTo('Неделя');
+    await settle();
+    expect(url()).toBe('/week/2026-11-09');
+    expect(localStorage.getItem('tp.week.view')).toBe('week');
+    expect(qa('tp-day-chips')).toHaveLength(0);
+
+    await harness.navigateByUrl('/week/2026-11-23');
+    await loadWeek('2026-11-23');
+    switchTo('День');
+    await settle();
+    expect(url()).toBe('/week/2026-11-23?day=2026-11-23');
+  });
+
+  it('FD-47: a remembered «День» opens a week without ?day in the day mode (today, or the Monday)', async () => {
+    localStorage.setItem('tp.week.view', 'day');
+    await start('/week/2026-11-09');
+    await loadWeek('2026-11-09');
+    expect(q('h1')?.textContent).toBe('Четверг, 12 ноября');
+    expect(url()).toBe('/week/2026-11-09');
+
+    await harness.navigateByUrl('/week/2026-11-16');
+    await loadWeek('2026-11-16');
+    expect(q('h1')?.textContent).toBe('Понедельник, 16 ноября');
+    // «Неделя» in the switch brings the week back, also for the next visits.
+    switchTo('Неделя');
+    await settle();
+    expect(qa('tp-day-chips')).toHaveLength(0);
+    expect(localStorage.getItem('tp.week.view')).toBe('week');
+  });
+
+  it('a day header opens the day, the same header leads back to the week', async () => {
+    await start('/week/2026-11-23');
+    await loadWeek('2026-11-23');
+    byName('Открыть день: среда, 25 ноября').click();
+    await settle();
+    expect(url()).toBe('/week/2026-11-23?day=2026-11-25');
+    expect(localStorage.getItem('tp.week.view')).toBe('day');
+    expect(qa('tp-person-panel').map((p) => p.querySelectorAll('tp-day-column').length)).toEqual([
+      1, 1,
+    ]);
+
+    qa('tp-day-header button')[0].click();
+    await settle();
+    expect(url()).toBe('/week/2026-11-23');
+    expect(localStorage.getItem('tp.week.view')).toBe('week');
+    expect(qa('tp-person-panel').map((p) => p.querySelectorAll('tp-day-column').length)).toEqual([
+      7, 7,
+    ]);
+  });
+
+  it('a day that is not in the week is dropped from the address (replace, no history entry)', async () => {
+    await start('/week/2026-11-09?day=2026-11-23');
+    expect(url()).toBe('/week/2026-11-09');
+    expect(qa('tp-day-chips')).toHaveLength(0);
+  });
+
+  it('ViewContext.focusDate follows the day, and is the Monday on a week', async () => {
+    await start('/week/2026-11-23');
+    expect(TestBed.inject(ViewContext).focusDate()).toBe('2026-11-23');
+    await harness.navigateByUrl('/week/2026-11-23?day=2026-11-26');
+    expect(TestBed.inject(ViewContext).focusDate()).toBe('2026-11-26');
+  });
+
+  describe('below 820 px', () => {
+    it('only «День»: today for the current week, no switch, the headers are labels', async () => {
+      await start('/week/2026-11-09', true);
+      await loadWeek('2026-11-09');
+      expect(q('h1')?.textContent).toBe('Четверг, 12 ноября');
+      expect(qa('[role="radio"]')).toHaveLength(0);
+      expect(qa('tp-day-header button')).toHaveLength(0);
+      expect(qa('tp-person-panel').map((p) => p.querySelectorAll('tp-day-column').length)).toEqual([
+        1, 1,
+      ]);
+      expect(qa('tp-day-chips button')).toHaveLength(7);
+      expect(url()).toBe('/week/2026-11-09'); // the address is not rewritten
+    });
+
+    it('another week: the day is its Monday; the screen narrowing or widening switches the mode', async () => {
+      await start('/week/2026-11-23');
+      await loadWeek('2026-11-23');
+      expect(qa('tp-day-chips')).toHaveLength(0);
+
+      narrow.next({ matches: true, breakpoints: {} });
+      await settle();
+      expect(q('h1')?.textContent).toBe('Понедельник, 23 ноября');
+      expect(qa('[role="radio"]')).toHaveLength(0);
+
+      narrow.next({ matches: false, breakpoints: {} });
+      await settle();
+      expect(qa('tp-day-chips')).toHaveLength(0);
+      expect(qa('[role="radio"]')).toHaveLength(2);
+      // Narrowing is not a choice of the user: nothing was remembered.
+      expect(localStorage.getItem('tp.week.view')).toBeNull();
+    });
   });
 });

@@ -7,7 +7,7 @@ import {
   input,
   output,
 } from '@angular/core';
-import type { Uuid } from '@core/api/models/common.models';
+import type { IsoDate, Uuid } from '@core/api/models/common.models';
 import { ZoneClock } from '@core/time/zone-clock';
 import { PX_PER_HOUR, SCROLL_START_TOP, WEEK_MIN_WIDTH } from '../../engine/constants';
 import { nowMark, sameNowMark } from '../../engine/now-mark';
@@ -37,7 +37,14 @@ export class ScheduleBoard {
    * line (template preview).
    */
   readonly timeZone = input<string | null>(null);
+  /**
+   * The day headers are buttons (the week page: open a day, back to the week); a template
+   * preview leaves them plain.
+   */
+  readonly dayNavigation = input(false);
   readonly slotClick = output<SlotClick>();
+  /** A day header was chosen: the day to open, or to leave when it is already open. */
+  readonly dayClick = output<IsoDate>();
   /** A card was clicked or activated: `eventId` to open (FD-59). */
   readonly eventClick = output<Uuid>();
 

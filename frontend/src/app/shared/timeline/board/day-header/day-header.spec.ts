@@ -24,4 +24,37 @@ describe('tp-day-header (WEEK-05)', () => {
     expect(host.classList).toContain('today');
     expect(host.getAttribute('aria-current')).toBe('date');
   });
+
+  describe('as a button (WEEK-13)', () => {
+    async function render(open: boolean, interactive = true) {
+      const fixture = TestBed.createComponent(DayHeader);
+      fixture.componentRef.setInput('day', WEEK[0]);
+      fixture.componentRef.setInput('interactive', interactive);
+      fixture.componentRef.setInput('open', open);
+      const picked: string[] = [];
+      fixture.componentInstance.pick.subscribe((d) => picked.push(d));
+      await fixture.whenStable();
+      return { host: fixture.nativeElement as HTMLElement, picked };
+    }
+
+    it('on a week it opens the day: the name says which, the click gives the date', async () => {
+      const { host, picked } = await render(false);
+      const button = host.querySelector('button')!;
+      expect(button.getAttribute('aria-label')).toBe('Открыть день: понедельник, 9 ноября');
+      expect(host.textContent?.replace(/\s+/g, ' ').trim()).toBe('Пн 9');
+      button.click();
+      expect(picked).toEqual(['2026-11-09']);
+    });
+
+    it('on an open day it leads back to the week', async () => {
+      const { host } = await render(true);
+      expect(host.querySelector('button')?.getAttribute('aria-label')).toBe('Вернуться к неделе');
+    });
+
+    it('without interactive it is a plain label', async () => {
+      const { host } = await render(false, false);
+      expect(host.querySelector('button')).toBeNull();
+      expect(host.textContent?.replace(/\s+/g, ' ').trim()).toBe('Пн 9');
+    });
+  });
 });

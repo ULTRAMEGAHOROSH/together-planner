@@ -1,15 +1,23 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import type { IsoDate } from '@core/api/models/common.models';
 import type { TemplateApplicationResponse } from '@core/api/models/template.models';
-import { addDays, daysBetween, relWeek, weekLabel } from '@shared/time';
+import {
+  addDays,
+  capitalize,
+  dateLong,
+  daysBetween,
+  relWeek,
+  weekLabel,
+  weekStartOf,
+} from '@shared/time';
 import { Button } from '@shared/ui/button/button';
 import { Icon } from '@shared/ui/icon/icon';
 import {
   SegmentedControl,
   type SegmentOption,
 } from '@shared/ui/segmented-control/segmented-control';
-
-export type WeekView = 'week' | 'day';
+import { shiftDay, type WeekAddress } from '../week-address';
+import type { WeekView } from '../week-view-preference';
 
 const VIEWS: readonly SegmentOption<WeekView>[] = [
   { value: 'week', label: 'Неделя' },
@@ -17,10 +25,10 @@ const VIEWS: readonly SegmentOption<WeekView>[] = [
 ];
 
 /**
- * The line above the board (prototype): «‹ › Сегодня», the period with what week it is and
- * which templates it was made from, and the «Неделя / День» switch. Presentational: it
- * only says which week to go to (`weekChange`), the page does the navigation. What the
- * «День» mode does is WEEK-13.
+ * The line above the board (prototype): «‹ ›» and «Сегодня», the period with what it is
+ * and which templates the week was made from, and the «Неделя / День» switch. In «День» the
+ * arrows step by a day (across the border of the week), the title is the day.
+ * Presentational: it only says where to go (`navigate`), the page does the navigation.
  */
 @Component({
   selector: 'tp-week-toolbar',
@@ -31,30 +39,54 @@ const VIEWS: readonly SegmentOption<WeekView>[] = [
 export class WeekToolbar {
   /** Monday of the shown week. */
   readonly weekStart = input.required<IsoDate>();
-  /** Monday of the current week in the workspace zone. */
-  readonly currentWeek = input.required<IsoDate>();
+  /** The shown day in «День»; `null` — the whole week. */
+  readonly day = input<IsoDate | null>(null);
+  /** «Today» in the workspace zone. */
+  readonly today = input.required<IsoDate>();
   /** Applications of templates to the shown week. */
   readonly appliedTemplates = input<readonly TemplateApplicationResponse[]>([]);
-  readonly view = model<WeekView>('week');
-  /** The Monday of the week the user asked for. */
-  readonly weekChange = output<IsoDate>();
+  /** The switch is hidden where only «День» is possible (a narrow screen). */
+  readonly canChooseView = input(true);
+  readonly view = input<WeekView>('week');
+  readonly viewChange = output<WeekView>();
+  /** The week (and day) the user asked for. */
+  readonly navigate = output<WeekAddress>();
 
   protected readonly views = VIEWS;
-  protected readonly title = computed(() => weekLabel(this.weekStart()));
-  protected readonly isCurrent = computed(() => this.weekStart() === this.currentWeek());
-  /** «Эта неделя · шаблон «Обычная неделя»». */
+  protected readonly title = computed(() => {
+    const day = this.day();
+    return day === null ? weekLabel(this.weekStart()) : capitalize(dateLong(day));
+  });
+  protected readonly isCurrent = computed(() => {
+    const day = this.day();
+    return day === null ? this.weekStart() === weekStartOf(this.today()) : day === this.today();
+  });
+  /** «Эта неделя · шаблон «Обычная неделя»»; in «День» the period of the week instead. */
   protected readonly subtitle = computed(() => {
-    const relative = relWeek(daysBetween(this.currentWeek(), this.weekStart()) / 7);
+    const day = this.day();
+    const base =
+      day === null
+        ? relWeek(daysBetween(weekStartOf(this.today()), this.weekStart()) / 7)
+        : weekLabel(this.weekStart());
     // One template applied twice (MERGE, then REPLACE) is named once.
     const names = [...new Set(this.appliedTemplates().map((a) => a.templateName))];
-    return names.length === 0 ? relative : `${relative} · шаблон «${names.join('», «')}»`;
+    return names.length === 0 ? base : `${base} · шаблон «${names.join('», «')}»`;
   });
 
-  protected go(weeks: number): void {
-    this.weekChange.emit(addDays(this.weekStart(), weeks * 7));
+  protected go(step: -1 | 1): void {
+    const day = this.day();
+    this.navigate.emit(
+      day === null
+        ? { weekStart: addDays(this.weekStart(), step * 7), day: null }
+        : shiftDay(day, step),
+    );
   }
 
   protected goToday(): void {
-    this.weekChange.emit(this.currentWeek());
+    const today = this.today();
+    this.navigate.emit({
+      weekStart: weekStartOf(today),
+      day: this.day() === null ? null : today,
+    });
   }
 }

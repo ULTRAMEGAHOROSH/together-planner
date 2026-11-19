@@ -6,6 +6,8 @@
     <tp-person-panel
       [panel]="panel"
       [now]="now()"
+      [dayNavigation]="dayNavigation()"
+      (dayClick)="dayClick.emit($event)"
       (slotClick)="slotClick.emit($event)"
       (eventClick)="eventClick.emit($event)"
     />
