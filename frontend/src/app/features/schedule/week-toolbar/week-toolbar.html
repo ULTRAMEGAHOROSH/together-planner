@@ -1,0 +1,47 @@
+<div class="nav">
+  <button
+    tpButton
+    class="arrow"
+    variant="ghost"
+    size="sm"
+    type="button"
+    aria-label="Предыдущая неделя"
+    (click)="go(-1)"
+  >
+    <tp-icon name="chevron-left" [size]="18" />
+  </button>
+  <button
+    tpButton
+    class="arrow"
+    variant="ghost"
+    size="sm"
+    type="button"
+    aria-label="Следующая неделя"
+    (click)="go(1)"
+  >
+    <tp-icon name="chevron-right" [size]="18" />
+  </button>
+  <button
+    tpButton
+    class="today"
+    variant="ghost"
+    size="sm"
+    type="button"
+    [disabled]="isCurrent()"
+    (click)="goToday()"
+  >
+    Сегодня
+  </button>
+</div>
+<div class="period">
+  <h1>{{ title() }}</h1>
+  <span class="sub">{{ subtitle() }}</span>
+</div>
+<div class="spacer"></div>
+<tp-segmented-control
+  label="Режим просмотра"
+  size="sm"
+  [options]="views"
+  [value]="view()"
+  (valueChange)="view.set($event)"
+/>

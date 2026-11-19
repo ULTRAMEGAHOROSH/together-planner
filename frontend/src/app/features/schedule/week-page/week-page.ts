@@ -7,16 +7,20 @@ import {
   Injector,
   input,
   runInInjectionContext,
+  signal,
   untracked,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import type { IsoDate } from '@core/api/models/common.models';
+import { SessionStore } from '@core/auth/session-store';
+import { ZoneClock } from '@core/time/zone-clock';
 import { ViewContext } from '@core/view/view-context';
 import { isMonday, parseDate, weekStartOf } from '@shared/time';
 import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
-import { currentWeekPath } from '../current-week';
+import { currentWeekPath, currentWeekStart } from '../current-week';
 import { PartnerPlaceholder } from '../partner-placeholder/partner-placeholder';
 import { WeekStore } from '../week-store';
+import { WeekToolbar, type WeekView } from '../week-toolbar/week-toolbar';
 
 /** The Monday of the week that holds `raw`; `null` when `raw` is not a date at all. */
 function mondayOf(raw: string): IsoDate | null {
@@ -36,9 +40,19 @@ function mondayOf(raw: string): IsoDate | null {
  */
 @Component({
   selector: 'tp-week-page',
-  imports: [ScheduleBoard, PartnerPlaceholder],
+  imports: [ScheduleBoard, PartnerPlaceholder, WeekToolbar],
   providers: [WeekStore],
   template: `
+    @if (store.weekStart(); as weekStart) {
+      <tp-week-toolbar
+        [weekStart]="weekStart"
+        [currentWeek]="currentWeek()"
+        [appliedTemplates]="store.appliedTemplates()"
+        [view]="mode()"
+        (viewChange)="mode.set($event)"
+        (weekChange)="show($event)"
+      />
+    }
     @if (members().length > 0) {
       <tp-schedule-board class="board" [panels]="members()" [timeZone]="store.timeZone()">
         @if (partnerMissing()) {
@@ -68,12 +82,26 @@ export class WeekPage {
   private readonly router = inject(Router);
   private readonly view = inject(ViewContext);
   private readonly injector = inject(Injector);
+  private readonly session = inject(SessionStore);
+  private readonly clock = inject(ZoneClock);
+
+  /** «Неделя / День»; what «День» does is WEEK-13. */
+  protected readonly mode = signal<WeekView>('week');
+  /** The Monday of the current week; it moves on at midnight in the workspace zone. */
+  protected readonly currentWeek = computed(() =>
+    currentWeekStart(this.session.timeZone(), this.clock, this.clock.minuteTick()),
+  );
 
   /** Panels of the members that exist; the board draws a placeholder for the missing one. */
   protected readonly members = computed(() =>
     this.store.panels().flatMap((p) => (p.kind === 'member' ? [p.panel] : [])),
   );
   protected readonly partnerMissing = computed(() => this.members().length === 1);
+
+  /** Goes to the week with that Monday: a history entry, so «Назад» returns to this one. */
+  protected show(weekStart: IsoDate): void {
+    void this.router.navigateByUrl(`/week/${weekStart}`);
+  }
 
   constructor() {
     effect(() => {

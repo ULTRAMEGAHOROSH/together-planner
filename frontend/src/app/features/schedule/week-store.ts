@@ -53,7 +53,11 @@ export class WeekStore {
     const weekStart = this.weekStart();
     return weekStart === null ? '' : weekLabel(weekStart);
   });
-  readonly appliedTemplates = computed(() => this.data()?.appliedTemplates ?? []);
+  /** Templates applied to the requested week; none while another week is still on screen. */
+  readonly appliedTemplates = computed(() => {
+    const data = this.data();
+    return data?.weekStart === this.weekStart() ? data.appliedTemplates : [];
+  });
   /** The week has loaded and there is not a single event in it. */
   readonly isEmpty = computed(() => this.data()?.events.length === 0 && this.status() === 'ready');
 

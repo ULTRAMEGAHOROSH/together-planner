@@ -1,7 +1,9 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { AUTH_RESPONSE, WEEK, WORKSPACE_FULL_PAIR } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
 import { errorInterceptor } from '@core/error/error-interceptor';
@@ -115,5 +117,102 @@ describe('WeekPage (WEEK-10)', () => {
       'tp-partner-placeholder',
     ]);
     expect(host().querySelector('tp-invite-card')).not.toBeNull();
+  });
+});
+
+describe('WeekPage navigation (WEEK-11)', () => {
+  let harness: RouterTestingHarness;
+  const router = () => TestBed.inject(Router);
+  const click = (label: string) =>
+    Array.from(harness.routeNativeElement!.querySelectorAll('button'))
+      .find((b) => b.getAttribute('aria-label') === label || b.textContent?.trim() === label)!
+      .click();
+
+  /** The browser's «Back»: the mock platform answers with a popstate on a later tick. */
+  async function goBack() {
+    TestBed.inject(Location).back();
+    await new Promise((resolve) => setTimeout(resolve));
+    await harness.fixture.whenStable();
+  }
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(
+          [{ path: 'week/:weekStart', component: WeekPage }],
+          withComponentInputBinding(),
+        ),
+        { provide: CLOCK, useValue: () => NOW },
+      ],
+    });
+    const session = TestBed.inject(SessionStore);
+    session.setAuth(AUTH_RESPONSE);
+    session.setWorkspace(WORKSPACE_FULL_PAIR);
+    harness = await RouterTestingHarness.create('/week/2026-11-09');
+    // TestBed does not start the router's listening to the browser history; the app does.
+    router().initialNavigation();
+  });
+
+  it('the toolbar shows the requested week at once, before the answer', () => {
+    const el = harness.routeNativeElement!;
+    expect(el.querySelector('h1')?.textContent).toBe('9 – 15 ноября 2026');
+    expect(el.querySelector('.sub')?.textContent).toBe('Эта неделя');
+  });
+
+  it('NV-01: «Следующая неделя» goes to /week/2026-11-16', async () => {
+    click('Следующая неделя');
+    await harness.fixture.whenStable();
+    expect(router().url).toBe('/week/2026-11-16');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe(
+      '16 – 22 ноября 2026',
+    );
+    expect(harness.routeNativeElement?.querySelector('.sub')?.textContent).toBe('Следующая неделя');
+  });
+
+  it('NV-03: «Сегодня» goes to the current week by CLOCK and is off there', async () => {
+    await harness.navigateByUrl('/week/2026-12-14');
+    click('Сегодня');
+    await harness.fixture.whenStable();
+    expect(router().url).toBe('/week/2026-11-09');
+    const today = Array.from(harness.routeNativeElement!.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Сегодня',
+    );
+    expect(today?.disabled).toBe(true);
+  });
+
+  it('NV-04: «Назад» of the browser returns to the previous week', async () => {
+    click('Следующая неделя');
+    await harness.fixture.whenStable();
+    click('Следующая неделя');
+    await harness.fixture.whenStable();
+    expect(router().url).toBe('/week/2026-11-23');
+
+    await goBack();
+    expect(router().url).toBe('/week/2026-11-16');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe(
+      '16 – 22 ноября 2026',
+    );
+  });
+
+  it('«День» can be chosen; the page keeps the choice across weeks (what it does: WEEK-13)', async () => {
+    const day = () =>
+      Array.from(
+        harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('[role="radio"]'),
+      )[1];
+    day().click();
+    await harness.fixture.whenStable();
+    click('Следующая неделя');
+    await harness.fixture.whenStable();
+    expect(day().getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('a redirected address (not a Monday) leaves no extra history entry', async () => {
+    await harness.navigateByUrl('/week/2026-11-18');
+    await harness.fixture.whenStable();
+    expect(router().url).toBe('/week/2026-11-16');
+    await goBack();
+    expect(router().url).toBe('/week/2026-11-09');
   });
 });

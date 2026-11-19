@@ -160,6 +160,8 @@ describe('WeekStore (WEEK-09)', () => {
     expect(store.panels()).toHaveLength(2);
     expect(store.periodLabel()).toBe('16 – 22 ноября 2026');
     expect(store.isEmpty()).toBe(false);
+    // Templates of the week on screen are not the templates of the requested week.
+    expect(store.appliedTemplates()).toEqual([]);
 
     backend.expectOne(URL(WEEK_16)).flush(emptyWeek(WEEK_16));
     expect(store.data()?.weekStart).toBe(WEEK_16);

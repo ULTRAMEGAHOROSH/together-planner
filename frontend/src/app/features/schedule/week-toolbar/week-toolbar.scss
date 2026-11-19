@@ -1,0 +1,55 @@
+// Values from the prototype toolbar (design/Main.dc.html): one wrapping row above the board.
+@use 'breakpoints' as bp;
+
+:host {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 14px 20px 10px;
+
+  @include bp.narrow {
+    padding: 10px 12px 8px;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.arrow {
+  width: 40px;
+  padding: 0;
+}
+
+.period {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--tp-font-display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  color: var(--tp-color-text-subtle);
+  font-size: 12.5px;
+}
+
+.spacer {
+  flex: 1 1 0;
+}
+
+// Prototype: «Сегодня» is accent-coloured while it leads somewhere, grey on the current week.
+.today:not(:disabled) {
+  color: var(--tp-color-accent);
+}

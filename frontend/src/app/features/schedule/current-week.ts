@@ -1,7 +1,13 @@
 import { inject } from '@angular/core';
 import { SessionStore } from '@core/auth/session-store';
 import { ZoneClock } from '@core/time/zone-clock';
+import type { IsoDate } from '@core/api/models/common.models';
 import { weekStartOf } from '@shared/time';
+
+/** The Monday of the week that holds «today» in `zone` (`null` — UTC) at `instant` (now). */
+export function currentWeekStart(zone: string | null, clock: ZoneClock, instant?: number): IsoDate {
+  return weekStartOf(clock.todayIn(zone ?? 'UTC', instant));
+}
 
 /**
  * `/week/<Monday of the current week>`: «today» is counted in the workspace zone (FD-33),
@@ -9,6 +15,5 @@ import { weekStartOf } from '@shared/time';
  * Without a workspace (it cannot happen inside the shell) — UTC.
  */
 export function currentWeekPath(): string {
-  const zone = inject(SessionStore).timeZone() ?? 'UTC';
-  return `/week/${weekStartOf(inject(ZoneClock).todayIn(zone))}`;
+  return `/week/${currentWeekStart(inject(SessionStore).timeZone(), inject(ZoneClock))}`;
 }
