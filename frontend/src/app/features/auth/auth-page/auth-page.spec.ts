@@ -7,7 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import type { ProblemDetail } from '@core/api/models/common.models';
 import {
   AUTH_RESPONSE,
-  ME_WITHOUT_WORKSPACE,
+  PROBLEM_WORKSPACE_NOT_FOUND,
   PROBLEM_INVALID_CREDENTIALS,
   PROBLEM_VALIDATION,
 } from '@core/api/models/testing/samples';
@@ -161,7 +161,9 @@ describe('AuthPage', () => {
     const login = backend.expectOne('/api/v1/auth/login');
     expect(login.request.body).toEqual({ email: 'a@example.test', password: ' secret-123' });
     login.flush(AUTH_RESPONSE);
-    backend.expectOne('/api/v1/auth/me').flush(ME_WITHOUT_WORKSPACE);
+    backend
+      .expectOne('/api/v1/workspaces/current')
+      .flush(PROBLEM_WORKSPACE_NOT_FOUND, { status: 404, statusText: 'Not Found' });
     await stable();
     expect(url()).toBe('/join?code=K7QM2XPA');
     expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(true);
@@ -182,7 +184,9 @@ describe('AuthPage', () => {
       displayName: 'Даулет',
     });
     register.flush(AUTH_RESPONSE, { status: 201, statusText: 'Created' });
-    backend.expectOne('/api/v1/auth/me').flush(ME_WITHOUT_WORKSPACE);
+    backend
+      .expectOne('/api/v1/workspaces/current')
+      .flush(PROBLEM_WORKSPACE_NOT_FOUND, { status: 404, statusText: 'Not Found' });
     await stable();
     expect(url()).toBe('/week');
   });

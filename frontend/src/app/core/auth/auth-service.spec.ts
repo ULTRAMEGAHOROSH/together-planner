@@ -10,9 +10,10 @@ import { firstValueFrom } from 'rxjs';
 import type { ProblemDetail } from '../api/models/common.models';
 import {
   AUTH_RESPONSE,
-  ME_WITH_WORKSPACE,
-  ME_WITHOUT_WORKSPACE,
   PROBLEM_INVALID_CREDENTIALS,
+  PROBLEM_WORKSPACE_NOT_FOUND,
+  WORKSPACE_CREATED,
+  WORKSPACE_FULL_PAIR,
 } from '../api/models/testing/samples';
 import { errorInterceptor } from '../error/error-interceptor';
 import { ERROR_MESSAGES } from '../error/error-messages';
@@ -22,7 +23,8 @@ import { AuthService } from './auth-service';
 import { SessionStore } from './session-store';
 
 const REFRESH = '/api/v1/auth/refresh';
-const ME = '/api/v1/auth/me';
+const W2 = '/api/v1/workspaces/current';
+const noWorkspace = { status: 404, statusText: 'Not Found' };
 
 const REFRESH_INVALID = {
   detail: 'Missing refresh token cookie',
@@ -61,23 +63,33 @@ describe('AuthService', () => {
     );
 
   describe('restore', () => {
-    it('refresh → me → authenticated with the workspace', async () => {
+    it('refresh → W2 → authenticated with the workspace', async () => {
       const done = firstValueFrom(auth.restore(), { defaultValue: undefined });
       backend.expectOne(REFRESH).flush(AUTH_RESPONSE);
-      const me = backend.expectOne(ME);
-      expect(me.request.headers.get('Authorization')).toBe(`Bearer ${AUTH_RESPONSE.accessToken}`);
-      me.flush(ME_WITH_WORKSPACE);
+      const w2 = backend.expectOne(W2);
+      expect(w2.request.headers.get('Authorization')).toBe(`Bearer ${AUTH_RESPONSE.accessToken}`);
+      w2.flush(WORKSPACE_FULL_PAIR);
       await done;
       expect(session.status()).toBe('authenticated');
       expect(session.user()).toEqual(AUTH_RESPONSE.user);
-      expect(session.workspace()).toEqual(ME_WITH_WORKSPACE.workspace);
+      expect(session.workspace()).toEqual(WORKSPACE_FULL_PAIR);
       expect(toast.current()).toBeNull();
     });
 
-    it('refresh 401 (no cookie) → anonymous, no toast, no /me', async () => {
+    it('refresh → W2 404 (no workspace yet) → authenticated without one, no toast', async () => {
+      const done = firstValueFrom(auth.restore(), { defaultValue: undefined });
+      backend.expectOne(REFRESH).flush(AUTH_RESPONSE);
+      backend.expectOne(W2).flush(PROBLEM_WORKSPACE_NOT_FOUND, noWorkspace);
+      await done;
+      expect(session.status()).toBe('authenticated');
+      expect(session.hasWorkspace()).toBe(false);
+      expect(toast.current()).toBeNull();
+    });
+
+    it('refresh 401 (no cookie) → anonymous, no toast, no W2', async () => {
       const done = firstValueFrom(auth.restore(), { defaultValue: undefined });
       backend.expectOne(REFRESH).flush(REFRESH_INVALID, { status: 401, statusText: 'x' });
-      backend.expectNone(ME);
+      backend.expectNone(W2);
       await done;
       expect(session.status()).toBe('anonymous');
       expect(toast.current()).toBeNull();
@@ -91,11 +103,11 @@ describe('AuthService', () => {
       expect(toast.current()?.text).toBe(ERROR_MESSAGES.NETWORK_ERROR);
     });
 
-    it('me fails after a good refresh → anonymous and a toast, nothing half-done', async () => {
+    it('W2 fails after a good refresh → anonymous and a toast, nothing half-done', async () => {
       const done = firstValueFrom(auth.restore(), { defaultValue: undefined });
       backend.expectOne(REFRESH).flush(AUTH_RESPONSE);
       backend
-        .expectOne(ME)
+        .expectOne(W2)
         .flush(
           { status: 500, title: 'x', code: 'INTERNAL_ERROR' },
           { status: 500, statusText: 'x' },
@@ -110,14 +122,14 @@ describe('AuthService', () => {
   it.each([
     ['login', '/api/v1/auth/login', 200],
     ['register', '/api/v1/auth/register', 201],
-  ] as const)('%s → setAuth + me', async (method, url, status) => {
+  ] as const)('%s → setAuth + W2', async (method, url, status) => {
     const body = { email: 'a@example.test', password: 'secret-123', displayName: 'Даулет' };
     const done = firstValueFrom(auth[method](body), { defaultValue: undefined });
     const req = backend.expectOne(url);
     expect(req.request.body).toEqual(body);
     req.flush(AUTH_RESPONSE, { status, statusText: 'OK' });
     expect(session.status()).toBe('authenticated');
-    backend.expectOne(ME).flush(ME_WITHOUT_WORKSPACE);
+    backend.expectOne(W2).flush(PROBLEM_WORKSPACE_NOT_FOUND, noWorkspace);
     await done;
     expect(session.accessToken()).toBe(AUTH_RESPONSE.accessToken);
     expect(session.hasWorkspace()).toBe(false);
@@ -138,7 +150,7 @@ describe('AuthService', () => {
   describe('logout', () => {
     beforeEach(() => {
       session.setAuth(AUTH_RESPONSE);
-      session.setWorkspace(ME_WITH_WORKSPACE.workspace);
+      session.setWorkspace(WORKSPACE_CREATED);
     });
 
     it('A4 without Bearer → session cleared → /login', async () => {
@@ -178,12 +190,33 @@ describe('AuthService', () => {
     });
   });
 
-  it('reloadWorkspace puts the current workspace (or null) into the session', async () => {
-    session.setAuth(AUTH_RESPONSE);
-    session.setWorkspace(ME_WITH_WORKSPACE.workspace);
-    const done = firstValueFrom(auth.reloadWorkspace(), { defaultValue: undefined });
-    backend.expectOne(ME).flush(ME_WITHOUT_WORKSPACE);
-    await done;
-    expect(session.workspace()).toBeNull();
+  describe('reloadWorkspace (WS-07)', () => {
+    beforeEach(() => {
+      session.setAuth(AUTH_RESPONSE);
+      session.setWorkspace(WORKSPACE_CREATED);
+    });
+
+    it('W2 → the current workspace into the session and to the caller', async () => {
+      const done = firstValueFrom(auth.reloadWorkspace());
+      const req = backend.expectOne(W2);
+      expect(req.request.method).toBe('GET');
+      req.flush(WORKSPACE_FULL_PAIR);
+      expect(await done).toEqual(WORKSPACE_FULL_PAIR);
+      expect(session.partner()?.displayName).toBe(WORKSPACE_FULL_PAIR.members[1].displayName);
+    });
+
+    it('404 WORKSPACE_NOT_FOUND → null in the session, not an error', async () => {
+      const done = firstValueFrom(auth.reloadWorkspace());
+      backend.expectOne(W2).flush(PROBLEM_WORKSPACE_NOT_FOUND, noWorkspace);
+      expect(await done).toBeNull();
+      expect(session.workspace()).toBeNull();
+    });
+
+    it('another error → to the caller; the session keeps its workspace', async () => {
+      const result = settle(firstValueFrom(auth.reloadWorkspace()));
+      backend.expectOne(W2).error(new ProgressEvent('error'));
+      expect(await result).toMatchObject({ code: 'NETWORK_ERROR' });
+      expect(session.workspace()).toEqual(WORKSPACE_CREATED);
+    });
   });
 });

@@ -6,7 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@core/api/api-base-url';
 import {
   AUTH_RESPONSE,
-  ME_WITHOUT_WORKSPACE,
+  PROBLEM_WORKSPACE_NOT_FOUND,
   PROBLEM_UNAUTHORIZED,
 } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
@@ -69,7 +69,7 @@ describe('appConfig interceptors (CORE-04)', () => {
 });
 
 describe('appConfig session restore (AUTH-05)', () => {
-  it('the app starts only after refresh → me', async () => {
+  it('the app starts only after refresh → W2', async () => {
     TestBed.configureTestingModule({
       providers: [...appConfig.providers, provideHttpClientTesting()],
     });
@@ -77,7 +77,9 @@ describe('appConfig session restore (AUTH-05)', () => {
     const backend = TestBed.inject(HttpTestingController);
     expect(init.done).toBe(false);
     backend.expectOne('/api/v1/auth/refresh').flush(AUTH_RESPONSE);
-    backend.expectOne('/api/v1/auth/me').flush(ME_WITHOUT_WORKSPACE);
+    backend
+      .expectOne('/api/v1/workspaces/current')
+      .flush(PROBLEM_WORKSPACE_NOT_FOUND, { status: 404, statusText: 'Not Found' });
     await init.donePromise;
     expect(TestBed.inject(SessionStore).status()).toBe('authenticated');
   });

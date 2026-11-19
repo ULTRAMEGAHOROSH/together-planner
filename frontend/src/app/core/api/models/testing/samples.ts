@@ -69,6 +69,15 @@ export const PROBLEM_INVITE_NOT_FOUND = {
   code: 'INVITE_NOT_FOUND',
 } satisfies ProblemDetail;
 
+/** W2 for a user without a workspace (captured 2026-11-19). */
+export const PROBLEM_WORKSPACE_NOT_FOUND = {
+  detail: 'User has no workspace',
+  instance: '/api/v1/workspaces/current',
+  status: 404,
+  title: 'Not Found',
+  code: 'WORKSPACE_NOT_FOUND',
+} satisfies ProblemDetail;
+
 // --- Auth and workspace (spec §8.3, §8.4) ---
 // Scenario: A registers ("Core02-A-…@Example.TEST" → stored lower-cased), creates the
 // workspace "  Мы " (→ trimmed), creates an invite; B registers and joins with the
@@ -163,6 +172,7 @@ export const PROBLEM_SAMPLES: readonly ProblemDetail[] = [
   PROBLEM_INVALID_CREDENTIALS,
   PROBLEM_UNAUTHORIZED,
   PROBLEM_INVITE_NOT_FOUND,
+  PROBLEM_WORKSPACE_NOT_FOUND,
 ];
 
 // --- Events, week, templates (spec §8.5–8.9) ---

@@ -6,7 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import type { ProblemDetail } from '@core/api/models/common.models';
 import {
   AUTH_RESPONSE,
-  ME_WITH_WORKSPACE,
+  WORKSPACE_FULL_PAIR,
   WORKSPACE_CREATED,
 } from '@core/api/models/testing/samples';
 import { authInterceptor } from '@core/auth/auth-interceptor';
@@ -144,9 +144,9 @@ describe('CreateWorkspaceForm', () => {
     backend
       .expectOne(URL)
       .flush(problem(409, 'ALREADY_IN_WORKSPACE'), { status: 409, statusText: 'Conflict' });
-    backend.expectOne('/api/v1/auth/me').flush(ME_WITH_WORKSPACE);
+    backend.expectOne('/api/v1/workspaces/current').flush(WORKSPACE_FULL_PAIR);
     await stable();
-    expect(session.workspace()).toEqual(ME_WITH_WORKSPACE.workspace);
+    expect(session.workspace()).toEqual(WORKSPACE_FULL_PAIR);
     expect(navigate).toHaveBeenCalledWith('/week');
     expect(fixture.componentInstance.created).toBe(0);
   });
@@ -158,7 +158,7 @@ describe('CreateWorkspaceForm', () => {
     backend
       .expectOne(URL)
       .flush(problem(409, 'ALREADY_IN_WORKSPACE'), { status: 409, statusText: 'Conflict' });
-    backend.expectOne('/api/v1/auth/me').error(new ProgressEvent('error'));
+    backend.expectOne('/api/v1/workspaces/current').error(new ProgressEvent('error'));
     await stable();
     expect(TestBed.inject(ToastService).current()?.text).toBe(ERROR_MESSAGES.NETWORK_ERROR);
     expect(navigate).not.toHaveBeenCalled();

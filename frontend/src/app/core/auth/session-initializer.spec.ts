@@ -4,7 +4,7 @@ import { ApplicationInitStatus } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import type { ProblemDetail } from '../api/models/common.models';
-import { AUTH_RESPONSE, ME_WITH_WORKSPACE } from '../api/models/testing/samples';
+import { AUTH_RESPONSE, WORKSPACE_CREATED } from '../api/models/testing/samples';
 import { errorInterceptor } from '../error/error-interceptor';
 import { ERROR_MESSAGES } from '../error/error-messages';
 import { ToastService } from '../notify/toast-service';
@@ -41,12 +41,12 @@ describe('provideSessionRestore (FD-39)', () => {
 
   afterEach(() => backend.verify());
 
-  it('DoD: the app waits — not done while refresh and me are in flight', async () => {
+  it('DoD: the app waits — not done while refresh and W2 are in flight', async () => {
     expect(init.done).toBe(false);
     expect(session.status()).toBe('unknown');
     backend.expectOne('/api/v1/auth/refresh').flush(AUTH_RESPONSE);
     expect(init.done).toBe(false);
-    backend.expectOne('/api/v1/auth/me').flush(ME_WITH_WORKSPACE);
+    backend.expectOne('/api/v1/workspaces/current').flush(WORKSPACE_CREATED);
     await init.donePromise;
     expect(init.done).toBe(true);
     expect(session.status()).toBe('authenticated');

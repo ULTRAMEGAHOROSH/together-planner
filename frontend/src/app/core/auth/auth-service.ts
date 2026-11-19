@@ -2,9 +2,11 @@
 // Pages call these instead of AuthApi, so SessionStore is always filled the same way.
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, map, type Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, map, type Observable, of, switchMap, tap, throwError } from 'rxjs';
 import { AuthApi } from '../api/auth-api';
 import type { AuthResponse, LoginRequest, RegisterRequest } from '../api/models/auth.models';
+import type { WorkspaceResponse } from '../api/models/workspace.models';
+import { WorkspaceApi } from '../api/workspace-api';
 import { isApiError } from '../error/api-error';
 import { ToastService } from '../notify/toast-service';
 import { SessionStore } from './session-store';
@@ -13,19 +15,21 @@ import { TokenRefresher } from './token-refresher';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(AuthApi);
+  private readonly workspaces = inject(WorkspaceApi);
   private readonly session = inject(SessionStore);
   private readonly refresher = inject(TokenRefresher);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
 
   /**
-   * Start-up (FD-39): A3 by the cookie → A6 → `authenticated` with the workspace.
+   * Start-up (FD-39): A3 by the cookie → W2 → `authenticated` with the workspace.
    * Never fails, so the app always starts: a refused refresh (401, no or old cookie) →
    * `anonymous` silently; any other error (network, 5xx) → `anonymous` and a toast.
    */
   restore(): Observable<void> {
     return this.refresher.refresh().pipe(
       switchMap(() => this.reloadWorkspace()),
+      map(() => undefined),
       catchError((error: unknown) => {
         this.session.clear();
         if (!(isApiError(error) && error.status === 401)) {
@@ -36,12 +40,12 @@ export class AuthService {
     );
   }
 
-  /** A2 → session → A6. Errors go to the form (`applyServerErrors`). */
+  /** A2 → session → W2. Errors go to the form (`applyServerErrors`). */
   login(body: LoginRequest): Observable<void> {
     return this.signIn(this.api.login(body));
   }
 
-  /** A1 → session → A6. Errors go to the form (`applyServerErrors`). */
+  /** A1 → session → W2. Errors go to the form (`applyServerErrors`). */
   register(body: RegisterRequest): Observable<void> {
     return this.signIn(this.api.register(body));
   }
@@ -61,13 +65,18 @@ export class AuthService {
   }
 
   /**
-   * Reads the current workspace into the session (`null` → onboarding). For now through
-   * A6, which returns it; WS-07 moves it to W2 with the `WORKSPACE_NOT_FOUND` handling.
+   * W2 → the session (WS-07). `404 WORKSPACE_NOT_FOUND` means the user has no workspace:
+   * `null` in the session (the guards send them to onboarding), not an error. Other errors
+   * go to the caller, and the session keeps what it had.
    */
-  reloadWorkspace(): Observable<void> {
-    return this.api.me().pipe(
-      tap((me) => this.session.setWorkspace(me.workspace)),
-      map(() => undefined),
+  reloadWorkspace(): Observable<WorkspaceResponse | null> {
+    return this.workspaces.current().pipe(
+      catchError((error: unknown) =>
+        isApiError(error) && error.code === 'WORKSPACE_NOT_FOUND'
+          ? of(null)
+          : throwError(() => error),
+      ),
+      tap((workspace) => this.session.setWorkspace(workspace)),
     );
   }
 
@@ -75,6 +84,7 @@ export class AuthService {
     return request.pipe(
       tap((response) => this.session.setAuth(response)),
       switchMap(() => this.reloadWorkspace()),
+      map(() => undefined),
     );
   }
 }

@@ -236,7 +236,7 @@ frontend/
 | FD-36 | Refresh-токен — HttpOnly-cookie `tp_refresh`. Frontend её не видит: браузер сам прикладывает её к `/api/v1/auth/*` (один origin, `withCredentials` не нужен) |
 | FD-37 | Заголовок **`X-Requested-With: XMLHttpRequest` — на каждый запрос к API.** Spec требует его на `POST /api/v1/auth/**`, включая `logout-all` (§10.5, фильтр). На остальных запросах он безвреден, и не нужен список исключений |
 | FD-38 | **`Authorization` не прикладывается** к `register`, `login`, `refresh`, `logout`. Spec §10.3: невалидный Bearer на permitAll-эндпоинте даёт 401. Без этого просроченный токен ломал бы refresh |
-| FD-39 | Восстановление сессии при старте — `provideAppInitializer`: `A3 refresh` → при успехе `A6 /me` → `SessionStore.status = 'authenticated'`; при 401 → `'anonymous'`. Любая другая ошибка (сеть, 5xx, в том числе у `/me` после удачного refresh) → `'anonymous'` + тост: приложение запускается всегда, полузаполненной сессии не бывает. Guards выполняются уже после инициализатора |
+| FD-39 | Восстановление сессии при старте — `provideAppInitializer`: `A3 refresh` → при успехе `W2 /workspaces/current` (404 `WORKSPACE_NOT_FOUND` → пространства нет, `null`) → `SessionStore.status = 'authenticated'`; при 401 → `'anonymous'`. Любая другая ошибка (сеть, 5xx, в том числе у W2 после удачного refresh) → `'anonymous'` + тост: приложение запускается всегда, полузаполненной сессии не бывает. Guards выполняются уже после инициализатора |
 
 ### 5.2. Обработка 401 и параллельные refresh
 
@@ -391,7 +391,7 @@ flowchart LR
 | `401` на защищённом API | интерцептор | незаметный refresh и повтор; при неудаче — `/login` + тост |
 | `401 INVALID_CREDENTIALS` | `AuthPage` | «Неверный email или пароль» |
 | `403 CSRF_HEADER_MISSING`, `400 MALFORMED_REQUEST`, `400 VERSION_REQUIRED`, `400 REPLACE_CONFIRMATION_REQUIRED` | — | **Ошибка программы**: тост «Что-то пошло не так» + `console.error`. Покрывается тестами, у пользователя не должна возникать |
-| `404 WORKSPACE_NOT_FOUND` на экранах пространства | стор → `AuthService.reloadWorkspace()` | переход в онбординг |
+| `404 WORKSPACE_NOT_FOUND` на экранах пространства | стор → `WorkspaceRefresh.workspaceNotFound()` (W2; ошибка повторной проверки → тост) | переход в онбординг |
 | `404 EVENT_NOT_FOUND`, `TEMPLATE_NOT_FOUND` | диалог / редактор | тост «Уже удалено партнёром», закрытие, `DataChanges` |
 | `409 VERSION_CONFLICT` | диалог / редактор | диалог конфликта (EVT-07, TPL-04) |
 | `409 APPLY_PLAN_OUTDATED`, `TEMPLATE_APPLY_CONFLICT` | диалог применения | новый предпросмотр + плашка «Неделя изменилась, проверьте ещё раз» |
@@ -498,3 +498,5 @@ flowchart LR
 | 2026-11-18 | §5.2 | 401 → refresh; неудача refresh → выход | Refresh только при живой сессии; выход только при отказе refresh (401), сеть и 5xx — ошибка вызывающему; один тост и один переход на все запросы; заголовки — только к `API_BASE_URL` | Без сессии восстанавливать нечего, и тост «Сессия истекла» был бы неправдой. Выход при обрыве сети выкинул бы пользователя без причины. Повтор `clear()` дал бы три тоста и три перехода |
 | 2026-11-18 | FD-39 | 401 → `anonymous`; сеть → `anonymous` + тост | Любая не-401 ошибка refresh или `/me` → `clear()` + тост; инициализатор никогда не падает | Ошибка инициализатора остановила бы запуск приложения. `authenticated` без пространства после упавшего `/me` отправил бы guards в онбординг при живом пространстве |
 | 2026-11-19 | §6 | `join` без guard: страница сама решает, что делать с гостем | `inviteeGuard` — как `authGuard`, но гостя ведёт на `/register?returnUrl=…` (общая функция `signedInOr`) | Редирект в guard не показывает страницу гостю даже на мгновение; ссылку-приглашение чаще открывает человек без аккаунта, поэтому регистрация, а вкладка «Вход» сохраняет `returnUrl` |
+| 2026-11-19 | FD-39 | `A3 refresh` → `A6 /me` | `A3 refresh` → `W2 /workspaces/current`; 404 `WORKSPACE_NOT_FOUND` → пространства нет (`null`), не ошибка | W2 — единый источник пространства (WS-07): им же пользуются `reloadWorkspace()` и вход/регистрация; A6 возвращает пользователя, а он уже есть в ответе A1/A2/A3 |
+| 2026-11-19 | §9 | Стор при `WORKSPACE_NOT_FOUND` вызывает `AuthService.reloadWorkspace()` | Стор вызывает `WorkspaceRefresh.workspaceNotFound()`: W2 → `null` → `/onboarding`; пространство нашлось → остаёмся; ошибка W2 → тост | Переход в онбординг и тост — в одном месте, сторы не повторяют эту логику |
