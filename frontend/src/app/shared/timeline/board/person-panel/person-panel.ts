@@ -1,4 +1,5 @@
 import { Component, input, output } from '@angular/core';
+import type { Uuid } from '@core/api/models/common.models';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import type { BoardPanel, SlotClick } from '../board.models';
 import { DayColumn } from '../day-column/day-column';
@@ -22,4 +23,5 @@ import { DayHeader } from '../day-header/day-header';
 export class PersonPanel {
   readonly panel = input.required<BoardPanel>();
   readonly slotClick = output<SlotClick>();
+  readonly eventClick = output<Uuid>();
 }

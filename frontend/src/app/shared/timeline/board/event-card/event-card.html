@@ -1,0 +1,24 @@
+<button
+  type="button"
+  class="card"
+  [attr.aria-label]="box().ariaLabel"
+  (click)="eventClick.emit(box().eventId)"
+>
+  @if (box().density === 'tall') {
+    <span class="head">
+      <span class="title">{{ box().title }}</span>
+      @if (box().joint) {
+        <svg class="joint" width="16" height="12" viewBox="0 0 20 12" aria-hidden="true">
+          <circle cx="7" cy="6" r="4.5" />
+          <circle cx="13" cy="6" r="4.5" />
+        </svg>
+      }
+    </span>
+    <span class="time">{{ box().timeLabel }}</span>
+  } @else {
+    <span class="line"
+      ><span class="title">{{ box().title }}</span
+      >&ngsp;<span class="time">{{ box().timeLabel }}</span></span
+    >
+  }
+</button>

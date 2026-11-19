@@ -7,6 +7,7 @@ import {
   input,
   output,
 } from '@angular/core';
+import type { Uuid } from '@core/api/models/common.models';
 import { PX_PER_HOUR, SCROLL_START_TOP, WEEK_MIN_WIDTH } from '../../engine/constants';
 import type { BoardPanel, SlotClick } from '../board.models';
 import { PersonPanel } from '../person-panel/person-panel';
@@ -29,6 +30,8 @@ import { TimeGutter } from '../time-gutter/time-gutter';
 export class ScheduleBoard {
   readonly panels = input.required<readonly BoardPanel[]>();
   readonly slotClick = output<SlotClick>();
+  /** A card was clicked or activated: `eventId` to open (FD-59). */
+  readonly eventClick = output<Uuid>();
 
   protected readonly hourHeight = `${PX_PER_HOUR}px`;
   /** «Неделя» keeps its width and scrolls sideways; «День» fits any screen (FD-57). */

@@ -28,6 +28,13 @@ describe('BoardPlayground (/_dev/board, WEEK-05)', () => {
     expect(el().querySelector('tp-day-header.today')?.textContent?.trim()).toBe('Чт 12');
   });
 
+  it('the cards of the fixtures are drawn; a card click is shown', async () => {
+    expect(el().querySelectorAll('tp-event-card').length).toBeGreaterThan(50);
+    el().querySelector<HTMLButtonElement>('tp-event-card button')!.click();
+    await fixture.whenStable();
+    expect(el().querySelector('.last-event')?.textContent?.trim()).toMatch(/^Карточка: usual-/);
+  });
+
   it('«День» shows one day (today by default), the day can be picked', async () => {
     option('Режим', 'День').click();
     await fixture.whenStable();

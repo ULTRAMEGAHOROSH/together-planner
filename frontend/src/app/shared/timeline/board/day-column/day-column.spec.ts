@@ -1,8 +1,9 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { A } from '../../testing/event-builder';
+import { A, ev } from '../../testing/event-builder';
 import { buildPanelLayout } from '../../engine/panel-layout';
 import type { DayColumnLayout } from '../../engine/model';
 import type { SlotClick } from '../board.models';
+import type { Uuid } from '@core/api/models/common.models';
 import { DayColumn } from './day-column';
 
 const WEEK = buildPanelLayout([], { firstDay: '2026-11-09', dayCount: 7 }, A, {
@@ -50,6 +51,38 @@ describe('tp-day-column (WEEK-05)', () => {
     await render(WEEK[0]);
     slot().click();
     expect(clicks).toEqual([{ date: '2026-11-09', minute: 540, personId: A }]);
+  });
+
+  it('the cards of the day stand over the slot button, one per box', async () => {
+    const events = [
+      ev('2026-11-09T09:00', '2026-11-09T11:00', [A], { id: 'a', title: 'Работа' }),
+      ev('2026-11-09T10:00', '2026-11-09T12:00', [A], { id: 'b', title: 'Созвон' }),
+    ];
+    const [monday] = buildPanelLayout(events, { firstDay: '2026-11-09', dayCount: 7 }, A, {
+      today: null,
+    }).days;
+    await render(monday);
+    const cards = Array.from(host().querySelectorAll('tp-event-card'));
+    expect(cards.map((c) => c.querySelector('.title')?.textContent)).toEqual(['Работа', 'Созвон']);
+    // Siblings of the slot, not inside it: a card click is not a slot click.
+    expect(slot().querySelector('tp-event-card')).toBeNull();
+    expect(cards[0].parentElement).toBe(host());
+    expect(host().querySelectorAll('button')).toHaveLength(3);
+  });
+
+  it('a card click → eventClick(eventId), no slotClick', async () => {
+    const [monday] = buildPanelLayout(
+      [ev('2026-11-09T09:00', '2026-11-09T11:00', [A], { id: 'a' })],
+      { firstDay: '2026-11-09', dayCount: 7 },
+      A,
+      { today: null },
+    ).days;
+    await render(monday);
+    const opened: Uuid[] = [];
+    fixture.componentInstance.eventClick.subscribe((id) => opened.push(id));
+    host().querySelector<HTMLButtonElement>('tp-event-card button')!.click();
+    expect(opened).toEqual(['a']);
+    expect(clicks).toEqual([]);
   });
 
   it('today and weekend backgrounds by the layout flags', async () => {

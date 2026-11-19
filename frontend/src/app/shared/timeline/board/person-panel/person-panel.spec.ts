@@ -1,5 +1,5 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { B } from '../../testing/event-builder';
+import { B, ev } from '../../testing/event-builder';
 import { buildPanelLayout } from '../../engine/panel-layout';
 import type { BoardPanel, SlotClick } from '../board.models';
 import { PersonPanel } from './person-panel';
@@ -40,6 +40,27 @@ describe('tp-person-panel (WEEK-05)', () => {
     await fixture.whenStable();
     expect(host().querySelectorAll('tp-day-column')).toHaveLength(1);
     expect(host().style.getPropertyValue('--days')).toBe('1');
+  });
+
+  it('the cards of the member sit in their day columns; a card click comes out', () => {
+    fixture.componentRef.setInput('panel', {
+      ...panel(7),
+      layout: buildPanelLayout(
+        [ev('2026-11-11T10:00', '2026-11-11T12:00', [B], { id: 'wed', title: 'Врач' })],
+        { firstDay: '2026-11-09', dayCount: 7 },
+        B,
+        { today: null },
+      ),
+    });
+    fixture.detectChanges();
+    const columns = Array.from(host().querySelectorAll('tp-day-column'));
+    expect(columns.map((c) => c.querySelectorAll('tp-event-card').length)).toEqual([
+      0, 0, 1, 0, 0, 0, 0,
+    ]);
+    const opened: string[] = [];
+    fixture.componentInstance.eventClick.subscribe((id) => opened.push(id));
+    columns[2].querySelector<HTMLButtonElement>('tp-event-card button')!.click();
+    expect(opened).toEqual(['wed']);
   });
 
   it('a slot click of a column comes out with the member of the panel', () => {

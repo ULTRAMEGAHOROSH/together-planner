@@ -3,6 +3,10 @@
     @if (!first) {
       <tp-time-gutter />
     }
-    <tp-person-panel [panel]="panel" (slotClick)="slotClick.emit($event)" />
+    <tp-person-panel
+      [panel]="panel"
+      (slotClick)="slotClick.emit($event)"
+      (eventClick)="eventClick.emit($event)"
+    />
   }
 </div>

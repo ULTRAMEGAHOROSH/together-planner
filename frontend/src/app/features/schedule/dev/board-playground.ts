@@ -20,7 +20,8 @@ type Mode = 'week' | 'day';
 
 /**
  * /_dev/board (dev builds only, FD §6): the board on fixtures, without backend or sign-in —
- * to check the layout against the prototype (WEEK-05) and the scroll (WEEK-08).
+ * to check the layout and the cards against the prototype (WEEK-05, WEEK-06) and the scroll
+ * (WEEK-08).
  */
 @Component({
   selector: 'tp-board-playground',
@@ -51,6 +52,11 @@ type Mode = 'week' | 'day';
           (valueChange)="day.set($event)"
         />
       }
+      <output class="last-event">
+        @if (lastEvent(); as id) {
+          Карточка: {{ id }}
+        }
+      </output>
       <output class="last-slot">
         @if (lastSlot(); as slot) {
           Клик: {{ slot.personId === members[0].id ? members[0].name : members[1].name }},
@@ -58,7 +64,12 @@ type Mode = 'week' | 'day';
         }
       </output>
     </div>
-    <tp-schedule-board class="board" [panels]="panels()" (slotClick)="lastSlot.set($event)" />
+    <tp-schedule-board
+      class="board"
+      [panels]="panels()"
+      (slotClick)="lastSlot.set($event)"
+      (eventClick)="lastEvent.set($event)"
+    />
   `,
   styles: `
     :host {
@@ -79,6 +90,7 @@ type Mode = 'week' | 'day';
       margin: 0;
       font-size: 18px;
     }
+    .last-event,
     .last-slot {
       color: var(--tp-color-text-subtle);
       font-size: 12.5px;
@@ -108,6 +120,7 @@ export class BoardPlayground {
   protected readonly mode = signal<Mode>('week');
   protected readonly day = signal(FIXTURE_TODAY);
   protected readonly lastSlot = signal<SlotClick | null>(null);
+  protected readonly lastEvent = signal<string | null>(null);
 
   protected readonly panels = computed((): BoardPanel[] => {
     const events = BOARD_SCENARIOS.find((s) => s.id === this.scenario())!.events;

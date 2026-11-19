@@ -1,5 +1,5 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { A, B } from '../../testing/event-builder';
+import { A, B, ev } from '../../testing/event-builder';
 import { buildPanelLayout } from '../../engine/panel-layout';
 import type { BoardPanel, SlotClick } from '../board.models';
 import { ScheduleBoard } from './schedule-board';
@@ -70,6 +70,28 @@ describe('tp-schedule-board (WEEK-05, FD-57…59)', () => {
       { date: '2026-11-09', minute: 540, personId: A },
       { date: '2026-11-15', minute: 540, personId: B },
     ]);
+  });
+
+  it('cards of both panels, a card click reaches the board output', async () => {
+    const range = { firstDay: '2026-11-09', dayCount: 7 } as const;
+    const events = [
+      ev('2026-11-10T09:00', '2026-11-10T10:00', [A], { id: 'a-only' }),
+      ev('2026-11-10T19:00', '2026-11-10T21:00', [A, B], { id: 'both' }),
+    ];
+    fixture.componentRef.setInput('panels', [
+      { name: 'Daulet', seat: 1, layout: buildPanelLayout(events, range, A, { today: null }) },
+      { name: 'Партнёр', seat: 2, layout: buildPanelLayout(events, range, B, { today: null }) },
+    ]);
+    await fixture.whenStable();
+    const [a, b] = Array.from(host().querySelectorAll('tp-person-panel'));
+    expect(a.querySelectorAll('tp-event-card')).toHaveLength(2);
+    expect(b.querySelectorAll('tp-event-card')).toHaveLength(1); // the joint event: a copy per panel
+
+    const opened: string[] = [];
+    fixture.componentInstance.eventClick.subscribe((id) => opened.push(id));
+    a.querySelector<HTMLButtonElement>('tp-event-card button')!.click();
+    b.querySelector<HTMLButtonElement>('tp-event-card button')!.click();
+    expect(opened).toEqual(['a-only', 'both']);
   });
 
   it('DoD: the only data input is `panels` (presentational, FD-59)', () => {
