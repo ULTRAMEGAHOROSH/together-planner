@@ -35,6 +35,20 @@ describe('BoardPlayground (/_dev/board, WEEK-05)', () => {
     expect(el().querySelector('.last-event')?.textContent?.trim()).toMatch(/^Карточка: usual-/);
   });
 
+  it('a frozen clock: the now line stands on Thursday 14:20, whatever the real time is', () => {
+    const lines = Array.from(el().querySelectorAll('tp-now-indicator'));
+    expect(lines).toHaveLength(2);
+    expect(
+      lines.map((l) =>
+        l.closest('tp-day-column')?.querySelector('.slot')?.getAttribute('aria-label'),
+      ),
+    ).toEqual([
+      'Создать событие для Daulet, четверг, 12 ноября',
+      'Создать событие для Партнёр, четверг, 12 ноября',
+    ]);
+    expect(el().querySelector('tp-time-gutter .now')?.textContent).toBe('14:20');
+  });
+
   it('«День» shows one day (today by default), the day can be picked', async () => {
     option('Режим', 'День').click();
     await fixture.whenStable();

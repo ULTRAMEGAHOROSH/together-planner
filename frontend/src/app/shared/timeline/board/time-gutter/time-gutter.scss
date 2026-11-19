@@ -29,6 +29,25 @@
   height: calc(var(--board-hour) * 24);
 }
 
+// The label is 18 px tall and centred on the now line (prototype: `top − 9`).
+.now {
+  position: absolute;
+  right: 6px;
+  left: 6px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-now);
+  color: var(--tp-color-text-inverse);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
 .hour {
   position: absolute;
   right: 0;

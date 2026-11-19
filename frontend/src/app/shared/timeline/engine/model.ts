@@ -92,6 +92,13 @@ export interface EventBox {
   readonly fromTemplate: boolean;
 }
 
+/** The «now» line: the day it is on, px from that day's midnight and the label «14:20». */
+export interface NowMark {
+  readonly date: IsoDate;
+  readonly top: number;
+  readonly label: string;
+}
+
 /** One day column of a panel. */
 export interface DayColumnLayout {
   readonly date: IsoDate;

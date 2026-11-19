@@ -1,8 +1,9 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import type { Uuid } from '@core/api/models/common.models';
 import { EventCard } from '../event-card/event-card';
+import { NowIndicator } from '../now-indicator/now-indicator';
 import { slotMinuteAt } from '../../engine/geometry';
-import type { DayColumnLayout } from '../../engine/model';
+import type { DayColumnLayout, NowMark } from '../../engine/model';
 import type { SlotClick } from '../board.models';
 
 /**
@@ -12,7 +13,7 @@ import type { SlotClick } from '../board.models';
  */
 @Component({
   selector: 'tp-day-column',
-  imports: [EventCard],
+  imports: [EventCard, NowIndicator],
   template: `
     <button
       type="button"
@@ -22,6 +23,9 @@ import type { SlotClick } from '../board.models';
     ></button>
     @for (box of day().boxes; track box.key) {
       <tp-event-card [box]="box" (eventClick)="eventClick.emit($event)" />
+    }
+    @if (nowTop() !== null) {
+      <tp-now-indicator [top]="nowTop()!" />
     }
   `,
   styleUrl: './day-column.scss',
@@ -34,9 +38,16 @@ export class DayColumn {
   readonly day = input.required<DayColumnLayout>();
   readonly personId = input.required<Uuid>();
   readonly personName = input.required<string>();
+  /** The «now» mark of the board; the line is drawn only in the column of its date. */
+  readonly now = input<NowMark | null>(null);
   readonly slotClick = output<SlotClick>();
   /** An event card was clicked: the intent to open the event. */
   readonly eventClick = output<Uuid>();
+
+  protected readonly nowTop = computed(() => {
+    const now = this.now();
+    return now !== null && now.date === this.day().date ? now.top : null;
+  });
 
   protected onSlot(event: MouseEvent): void {
     const slot = event.currentTarget as HTMLElement;

@@ -1,4 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
+import { CLOCK, ZoneClock } from '@core/time/zone-clock';
 import { buildPanelLayout } from '@shared/timeline/engine/panel-layout';
 import type { DayRange } from '@shared/timeline/engine/model';
 import type { BoardPanel, SlotClick } from '@shared/timeline/board/board.models';
@@ -8,6 +9,8 @@ import {
   FIXTURE_MEMBERS,
   FIXTURE_TODAY,
   FIXTURE_WEEK,
+  FIXTURE_ZONE,
+  fixtureClock,
 } from '@shared/timeline/testing/fixtures';
 import { WEEKDAYS_SHORT } from '@shared/time/format-ru';
 import { weekDays } from '@shared/time/week';
@@ -26,6 +29,8 @@ type Mode = 'week' | 'day';
 @Component({
   selector: 'tp-board-playground',
   imports: [ScheduleBoard, SegmentedControl],
+  // A frozen clock: the «now» line stands on Thursday 14:20 whatever the real time is.
+  providers: [{ provide: CLOCK, useValue: fixtureClock }, ZoneClock],
   template: `
     <div class="toolbar">
       <h1>Площадка доски</h1>
@@ -67,6 +72,7 @@ type Mode = 'week' | 'day';
     <tp-schedule-board
       class="board"
       [panels]="panels()"
+      [timeZone]="zone"
       (slotClick)="lastSlot.set($event)"
       (eventClick)="lastEvent.set($event)"
     />
@@ -103,6 +109,7 @@ type Mode = 'week' | 'day';
 })
 export class BoardPlayground {
   protected readonly members = FIXTURE_MEMBERS;
+  protected readonly zone = FIXTURE_ZONE;
   protected readonly scenarios: SegmentOption<string>[] = BOARD_SCENARIOS.map((s) => ({
     value: s.id,
     label: s.label,

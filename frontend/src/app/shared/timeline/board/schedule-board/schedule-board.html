@@ -1,10 +1,11 @@
 <div class="grid" [style.min-width.px]="minWidth()">
   @for (panel of panels(); track panel.layout.personId; let first = $first) {
     @if (!first) {
-      <tp-time-gutter />
+      <tp-time-gutter [now]="now()" />
     }
     <tp-person-panel
       [panel]="panel"
+      [now]="now()"
       (slotClick)="slotClick.emit($event)"
       (eventClick)="eventClick.emit($event)"
     />

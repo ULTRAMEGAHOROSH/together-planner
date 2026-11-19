@@ -63,6 +63,15 @@ describe('tp-person-panel (WEEK-05)', () => {
     expect(opened).toEqual(['wed']);
   });
 
+  it('the now mark reaches the columns; the line is drawn in its day only', async () => {
+    fixture.componentRef.setInput('now', { date: '2026-11-12', top: 573, label: '14:20' });
+    await fixture.whenStable();
+    const columns = Array.from(host().querySelectorAll('tp-day-column'));
+    expect(columns.map((c) => c.querySelectorAll('tp-now-indicator').length)).toEqual([
+      0, 0, 0, 1, 0, 0, 0,
+    ]);
+  });
+
   it('a slot click of a column comes out with the member of the panel', () => {
     const clicks: SlotClick[] = [];
     fixture.componentInstance.slotClick.subscribe((c) => clicks.push(c));

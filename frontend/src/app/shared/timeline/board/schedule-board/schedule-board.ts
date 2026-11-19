@@ -8,7 +8,9 @@ import {
   output,
 } from '@angular/core';
 import type { Uuid } from '@core/api/models/common.models';
+import { ZoneClock } from '@core/time/zone-clock';
 import { PX_PER_HOUR, SCROLL_START_TOP, WEEK_MIN_WIDTH } from '../../engine/constants';
+import { nowMark, sameNowMark } from '../../engine/now-mark';
 import type { BoardPanel, SlotClick } from '../board.models';
 import { PersonPanel } from '../person-panel/person-panel';
 import { TimeGutter } from '../time-gutter/time-gutter';
@@ -29,9 +31,31 @@ import { TimeGutter } from '../time-gutter/time-gutter';
 })
 export class ScheduleBoard {
   readonly panels = input.required<readonly BoardPanel[]>();
+  /**
+   * IANA zone of the workspace: with it the board draws the «now» line (FD-33); `null` — no
+   * line (template preview).
+   */
+  readonly timeZone = input<string | null>(null);
   readonly slotClick = output<SlotClick>();
   /** A card was clicked or activated: `eventId` to open (FD-59). */
   readonly eventClick = output<Uuid>();
+
+  private readonly clock = inject(ZoneClock);
+
+  /**
+   * Where «now» is, once a minute (`minuteTick`); `null` when there is no zone or today is
+   * not among the displayed days. An equal mark is the same value: nothing is redrawn.
+   */
+  protected readonly now = computed(
+    () => {
+      const zone = this.timeZone();
+      if (zone === null) return null;
+      const mark = nowMark(this.clock.nowIn(zone, this.clock.minuteTick()));
+      const shown = this.panels().some((p) => p.layout.days.some((d) => d.date === mark.date));
+      return shown ? mark : null;
+    },
+    { equal: sameNowMark },
+  );
 
   protected readonly hourHeight = `${PX_PER_HOUR}px`;
   /** «Неделя» keeps its width and scrolls sideways; «День» fits any screen (FD-57). */

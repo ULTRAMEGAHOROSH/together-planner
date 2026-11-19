@@ -85,6 +85,20 @@ describe('tp-day-column (WEEK-05)', () => {
     expect(clicks).toEqual([]);
   });
 
+  it('the now line only in the column of its date, at the top of the mark', async () => {
+    const now = { date: '2026-11-12', top: 573, label: '14:20' };
+    await render(WEEK[3]);
+    expect(host().querySelector('tp-now-indicator')).toBeNull(); // no mark: no line
+    fixture.componentRef.setInput('now', now);
+    await fixture.whenStable();
+    expect(host().querySelector<HTMLElement>('tp-now-indicator')?.style.top).toBe('573px');
+    expect(slot().querySelector('tp-now-indicator')).toBeNull();
+
+    fixture.componentRef.setInput('day', WEEK[4]); // Friday: another date
+    await fixture.whenStable();
+    expect(host().querySelector('tp-now-indicator')).toBeNull();
+  });
+
   it('today and weekend backgrounds by the layout flags', async () => {
     await render(WEEK[3]);
     expect([host().classList.contains('today'), host().classList.contains('weekend')]).toEqual([

@@ -13,6 +13,15 @@ export const FIXTURE_WEEK: IsoDate = '2026-11-09';
 /** «Today» of the fixtures: Thursday. */
 export const FIXTURE_TODAY: IsoDate = '2026-11-12';
 
+/** Time zone of the fixture workspace, as in the CLOCK of CORE-06 tests. */
+export const FIXTURE_ZONE = 'Asia/Almaty';
+/** «Now» of the fixtures: Thursday 12.11 14:20 in `FIXTURE_ZONE` (09:20 UTC). */
+export const FIXTURE_NOW = Date.UTC(2026, 10, 12, 9, 20);
+/** A frozen `CLOCK` at `FIXTURE_NOW`. */
+export function fixtureClock(): number {
+  return FIXTURE_NOW;
+}
+
 export interface FixtureMember {
   readonly id: Uuid;
   readonly name: string;

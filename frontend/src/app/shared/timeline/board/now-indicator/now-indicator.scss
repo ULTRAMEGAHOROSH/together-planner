@@ -1,0 +1,20 @@
+// Values from the prototype now line (design/Main.dc.html): 2 px, a 10 px dot at the left.
+:host {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 6;
+  height: 2px;
+  background: var(--tp-color-now);
+  pointer-events: none;
+}
+
+.dot {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tp-color-now);
+}
