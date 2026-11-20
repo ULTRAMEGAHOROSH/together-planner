@@ -1,0 +1,129 @@
+// A column of cards like the calendar side cards (prototype): white, 18 px radius.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 18px 20px 32px;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--tp-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: var(--tp-color-surface);
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: 18px;
+}
+
+h2 {
+  margin: 0;
+  font-family: var(--tp-font-display);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+h3 {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+
+  dt {
+    flex: 0 0 120px;
+    color: var(--tp-color-text-subtle);
+    font-size: 13px;
+  }
+
+  dd {
+    flex: 1 1 0;
+    margin: 0;
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+}
+
+.note {
+  margin: 0;
+  color: var(--tp-color-text-subtle);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+
+  tp-form-field {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+}
+
+.form-error {
+  margin: 0;
+  color: var(--tp-color-danger);
+  font-size: 13px;
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.member-name {
+  font-weight: 700;
+}
+
+.member-meta {
+  color: var(--tp-color-text-subtle);
+  font-size: 12.5px;
+}
+
+@media (max-width: 819.98px) {
+  :host {
+    padding: 12px 12px 24px;
+  }
+}

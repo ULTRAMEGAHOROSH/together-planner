@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth-service';
 import { SessionStore } from '@core/auth/session-store';
 import { Avatar } from '@shared/ui/avatar/avatar';
@@ -8,8 +9,8 @@ import { InviteDialog } from './invite-dialog';
 
 /**
  * The members in the header are the menu button (prototype): the menu shows who is signed
- * in and offers «Пригласить по коду» (only while the partner is missing) and «Выйти».
- * Settings join it in SET-01.
+ * in and offers «Настройки», «Пригласить по коду» (only while the partner is missing) and
+ * «Выйти».
  */
 @Component({
   selector: 'tp-user-menu',
@@ -21,6 +22,7 @@ export class UserMenu {
   private readonly session = inject(SessionStore);
   private readonly auth = inject(AuthService);
   private readonly dialogs = inject(DialogService);
+  private readonly router = inject(Router);
 
   protected readonly user = this.session.user;
   protected readonly members = this.session.members;
@@ -32,6 +34,10 @@ export class UserMenu {
         .map((m) => m.displayName)
         .join(' и ')}`,
   );
+
+  protected openSettings(): void {
+    void this.router.navigateByUrl('/settings');
+  }
 
   protected invite(): void {
     this.dialogs.open(InviteDialog, undefined, { size: 'sm' });

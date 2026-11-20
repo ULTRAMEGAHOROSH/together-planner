@@ -8,6 +8,7 @@ import {
   dateLong,
   dateShort,
   dayMonthTime,
+  dayMonthYear,
   durText,
   monthTitle,
   rangeText,
@@ -75,6 +76,12 @@ describe('format-ru: days', () => {
       expect(dateLong(`2026-${month}-01`)).toMatch(new RegExp(`, 1 ${m}$`));
       expect(dateShort(`2026-${month}-01`)).toMatch(new RegExp(`, 1 ${MONTHS_SHORT[i]}$`));
     });
+  });
+
+  it('dayMonthYear: «24 ноября 2026», the first and the last day of a year', () => {
+    expect(dayMonthYear(parseLocalDateTime('2026-11-24T16:06'))).toBe('24 ноября 2026');
+    expect(dayMonthYear(parseLocalDateTime('2027-01-01T00:00'))).toBe('1 января 2027');
+    expect(dayMonthYear(parseLocalDateTime('2026-12-31T23:59'))).toBe('31 декабря 2026');
   });
 
   it('dayMonthTime: «24 ноября, 16:06»', () => {

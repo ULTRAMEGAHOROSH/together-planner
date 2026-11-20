@@ -147,6 +147,12 @@ export function dayMonthTime(minutes: LocalMinutes): string {
   return `${day} ${MONTHS_GENITIVE[month - 1]}, ${formatTime(minutesOfDay(minutes))}`;
 }
 
+/** «20 ноября 2026» — a local date with its year (when someone registered or joined). */
+export function dayMonthYear(minutes: LocalMinutes): string {
+  const { day, month, year } = fromLocalMinutes(minutes);
+  return `${day} ${MONTHS_GENITIVE[month - 1]} ${year}`;
+}
+
 /** «пн, 9 нояб.». */
 export function dateShort(date: IsoDate): string {
   const { day, month, weekday } = partsOf(date);

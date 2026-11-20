@@ -1,0 +1,68 @@
+<h1>Настройки</h1>
+
+<section class="card" aria-labelledby="settings-profile">
+  <h2 id="settings-profile">Профиль</h2>
+  @if (user(); as user) {
+    <dl class="facts">
+      <div>
+        <dt>Имя</dt>
+        <dd>{{ user.displayName }}</dd>
+      </div>
+      <div>
+        <dt>Email</dt>
+        <dd>{{ user.email }}</dd>
+      </div>
+      <div>
+        <dt>С нами с</dt>
+        <dd>{{ dateOf(user.createdAt) }}</dd>
+      </div>
+    </dl>
+  }
+  <p class="note">Имя и email пока нельзя изменить.</p>
+</section>
+
+@if (workspace(); as workspace) {
+  <section class="card" aria-labelledby="settings-workspace">
+    <h2 id="settings-workspace">Пространство</h2>
+    <form class="rename" [formGroup]="form" (ngSubmit)="rename()">
+      <tp-form-field label="Название" [error]="errors().name">
+        <input tpControl formControlName="name" autocomplete="off" />
+      </tp-form-field>
+      <button tpButton type="submit" [loading]="pending()" [disabled]="!changed()">
+        Сохранить
+      </button>
+    </form>
+    @if (errors().form; as text) {
+      <p class="form-error" role="alert">{{ text }}</p>
+    }
+    <dl class="facts">
+      <div>
+        <dt>Часовой пояс</dt>
+        <dd>{{ workspace.timeZone }}</dd>
+      </div>
+    </dl>
+    <p class="note">
+      Пояс задаётся при создании пространства: время событий и «сегодня» считаются по нему.
+    </p>
+
+    <h3>Участники</h3>
+    <ul class="members">
+      @for (member of members(); track member.userId) {
+        <li class="member">
+          <tp-avatar [name]="member.displayName" [seat]="member.seat" />
+          <span class="who">
+            <span class="member-name">{{ member.displayName }}</span>
+            <span class="member-meta">
+              {{ roleOf(member.role) }} · с {{ dateOf(member.joinedAt) }}
+            </span>
+          </span>
+        </li>
+      }
+    </ul>
+
+    @if (partnerMissing()) {
+      <h3>Приглашение</h3>
+      <tp-invite-card [issueOnStart]="false" />
+    }
+  </section>
+}

@@ -15,6 +15,7 @@
         <div class="email">{{ user.email }}</div>
       </div>
     }
+    <button tpMenuItem (triggered)="openSettings()">Настройки</button>
     @if (partnerMissing()) {
       <button tpMenuItem (triggered)="invite()">Пригласить по коду</button>
     }

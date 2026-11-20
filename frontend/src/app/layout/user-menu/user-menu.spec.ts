@@ -71,12 +71,12 @@ describe('UserMenu (SHELL-02)', () => {
     expect(trigger().getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('the menu: who is signed in (its name), «Пригласить по коду» while alone, «Выйти»', async () => {
+  it('the menu: who is signed in (its name), «Настройки», «Пригласить по коду» while alone, «Выйти»', async () => {
     await open();
     const head = document.getElementById(menu()!.getAttribute('aria-labelledby')!);
     expect(head?.querySelector('.name')?.textContent).toBe(AUTH_RESPONSE.user.displayName);
     expect(head?.querySelector('.email')?.textContent).toBe(AUTH_RESPONSE.user.email);
-    expect(labels()).toEqual(['Пригласить по коду', 'Выйти']);
+    expect(labels()).toEqual(['Настройки', 'Пригласить по коду', 'Выйти']);
     expect(item('Выйти').classList).toContain('danger');
   });
 
@@ -85,7 +85,7 @@ describe('UserMenu (SHELL-02)', () => {
     await stable();
     await open();
     expect(menu()?.querySelector('.head')).toBeNull();
-    expect(labels()).toEqual(['Выйти']);
+    expect(labels()).toEqual(['Настройки', 'Выйти']);
   });
 
   it('with the partner in the workspace there is nothing to invite to', async () => {
@@ -93,13 +93,15 @@ describe('UserMenu (SHELL-02)', () => {
     await stable();
     expect(trigger().getAttribute('aria-label')).toBe('Меню: Даулет и Партнёр');
     await open();
-    expect(labels()).toEqual(['Выйти']);
+    expect(labels()).toEqual(['Настройки', 'Выйти']);
   });
 
   it('keyboard: ↓ opens on the first item, ↓ moves, Enter on «Выйти» → A4 → /login', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     trigger().focus();
     await key(trigger(), 'ArrowDown');
+    expect(document.activeElement).toBe(item('Настройки'));
+    await key(document.activeElement!, 'ArrowDown');
     expect(document.activeElement).toBe(item('Пригласить по коду'));
     await key(document.activeElement!, 'ArrowDown');
     expect(document.activeElement).toBe(item('Выйти'));
@@ -110,6 +112,15 @@ describe('UserMenu (SHELL-02)', () => {
     await stable();
     expect(session.status()).toBe('anonymous');
     expect(navigate).toHaveBeenCalledWith('/login');
+  });
+
+  it('«Настройки» → the settings page, the menu closes', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    await open();
+    item('Настройки').click();
+    await stable();
+    expect(menu()).toBeNull();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith('/settings');
   });
 
   it('Esc closes the menu and gives the focus back to the button', async () => {
