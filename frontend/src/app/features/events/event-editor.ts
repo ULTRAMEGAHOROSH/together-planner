@@ -69,8 +69,12 @@ export class EventEditor {
       templateName: event.source?.templateName ?? null,
       save: (request) =>
         this.api.update(workspace.id, event.id, { ...request, version: event.version }),
+      remove: () => this.api.delete(workspace.id, event.id, event.version),
     }).subscribe((result) => {
-      if (typeof result === 'object') {
+      if (result === 'deleted') {
+        this.changes.eventsChanged();
+        this.toast.show('Событие удалено');
+      } else if (typeof result === 'object') {
         this.saved(result, 'Изменения сохранены');
       }
     });

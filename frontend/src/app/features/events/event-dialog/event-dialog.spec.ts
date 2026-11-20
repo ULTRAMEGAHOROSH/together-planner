@@ -492,6 +492,12 @@ describe('EventDialog', () => {
       } as Partial<EventDialogData>);
 
       await click(button('Удалить'));
+      expect(calls).toBe(0);
+      expect(button('Точно удалить?')).toBeDefined();
+      expect(button('Точно удалить?').classList).toContain('danger');
+      expect(result).toBeNull();
+
+      await click(button('Точно удалить?'));
 
       expect(calls).toBe(1);
       expect(result).toBe('deleted');
@@ -510,13 +516,14 @@ describe('EventDialog', () => {
       await type(title(), 'Ужин');
 
       await click(button('Удалить'));
-      await click(button('Удалить'));
+      await click(button('Точно удалить?'));
+      await click(button('Точно удалить?'));
       await submit();
 
       expect(calls).toBe(1);
       expect(requests).toEqual([]);
       expect(button('Сохранить').disabled).toBe(true);
-      expect(button('Удалить').getAttribute('aria-busy')).toBe('true');
+      expect(button('Точно удалить?').getAttribute('aria-busy')).toBe('true');
       pending.next(null);
       await appRef.whenStable();
       expect(result).toBe('deleted');
@@ -529,10 +536,33 @@ describe('EventDialog', () => {
       } as Partial<EventDialogData>);
 
       await click(button('Удалить'));
+      await click(button('Точно удалить?'));
 
       expect(TestBed.inject(ToastService).current()?.text).toBe(ERROR_MESSAGES.INTERNAL_ERROR);
       expect(dialogElement()).not.toBeNull();
+      // The question is asked again after a failure.
       expect(button('Удалить').getAttribute('aria-busy')).toBeNull();
+    });
+
+    it('the template hint comes with the question, and only for an event from a template', async () => {
+      await open({
+        mode: 'edit',
+        remove: () => of(null),
+        templateName: 'Обычная неделя',
+      } as Partial<EventDialogData>);
+      expect(dialog().textContent).not.toContain('Только в свободные дни');
+
+      await click(button('Удалить'));
+      expect(dialog().textContent).toContain('«Добавить» и «Только в свободные дни» его не вернут');
+      expect(dialog().textContent).toContain('через «Заменить»');
+    });
+
+    it('a manual event gets no template hint', async () => {
+      await open({ mode: 'edit', remove: () => of(null) } as Partial<EventDialogData>);
+
+      await click(button('Удалить'));
+
+      expect(dialog().textContent).not.toContain('Только в свободные дни');
     });
 
     it('saving blocks «Удалить»', async () => {

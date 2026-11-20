@@ -290,7 +290,7 @@ describe('EventEditor (EVT-04)', () => {
       expect(input('Время начала').value).toBe('19:00');
       expect(pressedPeople()).toEqual(['true', 'false']);
       expect(dialog().querySelector('.note')).toBeNull();
-      expect(dialog().textContent).not.toContain('Удалить');
+      expect(dialog().textContent).toContain('Удалить');
       backend.expectNone(() => true);
 
       pressEscape();
@@ -346,6 +346,60 @@ describe('EventEditor (EVT-04)', () => {
       expect(toast()?.text).toBe('Изменения сохранены');
       TestBed.inject(ToastService).runAction();
       expect(navigate).toHaveBeenCalledExactlyOnceWith('/week/2026-11-30');
+    });
+
+    it('«Удалить» asks first; then E6 with the version and «Событие удалено»', async () => {
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      const remove = () =>
+        dialog().querySelector<HTMLButtonElement>('button.remove, button.danger')!;
+
+      remove().click();
+      await appRef.whenStable();
+      backend.expectNone(() => true);
+      expect(remove().textContent).toContain('Точно удалить?');
+
+      remove().click();
+      await appRef.whenStable();
+      const request = backend.expectOne(`${ONE}?version=4`);
+      expect(request.request.method).toBe('DELETE');
+      expect(eventsChanged).toBe(0);
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      await appRef.whenStable();
+
+      expect(dialogElement()).toBeNull();
+      expect(eventsChanged).toBe(1);
+      expect(toast()?.text).toBe('Событие удалено');
+      expect(toast()?.action).toBeNull();
+    });
+
+    it('a failed E6 is a toast: the dialog stays and nothing is announced', async () => {
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      const remove = () =>
+        dialog().querySelector<HTMLButtonElement>('button.remove, button.danger')!;
+      remove().click();
+      await appRef.whenStable();
+      remove().click();
+      await appRef.whenStable();
+
+      backend
+        .expectOne(`${ONE}?version=4`)
+        .flush(
+          {
+            detail: 'x',
+            instance: ONE,
+            status: 500,
+            title: 'Server Error',
+            code: 'INTERNAL_ERROR',
+          },
+          { status: 500, statusText: 'Server Error' },
+        );
+      await appRef.whenStable();
+
+      expect(toast()?.text).toBe(ERROR_MESSAGES.INTERNAL_ERROR);
+      expect(dialogElement()).not.toBeNull();
+      expect(eventsChanged).toBe(0);
     });
 
     it('a server error stays at the field, a cancel sends nothing, no workspace opens nothing', async () => {

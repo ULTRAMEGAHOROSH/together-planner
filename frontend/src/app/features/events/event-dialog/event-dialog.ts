@@ -46,7 +46,7 @@ export type EventDialogData =
   | (EventDialogBase & { mode: 'create' })
   | (EventDialogBase & {
       mode: 'edit';
-      /** Without it there is no «Удалить» (deleting comes with EVT-06). */
+      /** Without it there is no «Удалить». The first click only asks «Точно удалить?». */
       remove?: () => Observable<unknown>;
     });
 
@@ -110,6 +110,8 @@ export class EventDialog {
 
   protected readonly saving = signal(false);
   protected readonly deleting = signal(false);
+  /** «Удалить» was pressed once: the button now asks «Точно удалить?» (prototype `confirmDel`). */
+  protected readonly confirming = signal(false);
   protected readonly busy = computed(() => this.saving() || this.deleting());
   private readonly submitted = signal(false);
 
@@ -210,11 +212,18 @@ export class EventDialog {
   }
 
   protected remove(run: () => Observable<unknown>): void {
+    if (!this.confirming()) {
+      this.confirming.set(true);
+      return;
+    }
     // The button is blocked while deleting (loading) and while saving (disabled).
     this.deleting.set(true);
     run().subscribe({
       next: () => this.ref.close('deleted'),
-      error: (error: unknown) => this.fail(error, this.deleting),
+      error: (error: unknown) => {
+        this.confirming.set(false);
+        this.fail(error, this.deleting);
+      },
     });
   }
 

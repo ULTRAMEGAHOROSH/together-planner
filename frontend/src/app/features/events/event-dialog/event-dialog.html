@@ -158,19 +158,25 @@
       </p>
     }
 
+    @if (confirming() && data.templateName) {
+      <p class="note">
+        «Добавить» и «Только в свободные дни» его не вернут, вернуть можно через «Заменить».
+      </p>
+    }
+
     @if (removable; as run) {
       <button
         tpButton
         tpDialogFooter
-        class="remove"
-        variant="ghost"
+        [class.remove]="!confirming()"
+        [variant]="confirming() ? 'danger' : 'ghost'"
         type="button"
         [loading]="deleting()"
         [disabled]="saving()"
         (click)="remove(run)"
       >
         <tp-icon name="trash" [size]="16" />
-        Удалить
+        {{ confirming() ? 'Точно удалить?' : 'Удалить' }}
       </button>
     }
     <span class="spacer" tpDialogFooter></span>
