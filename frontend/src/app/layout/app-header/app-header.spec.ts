@@ -11,6 +11,7 @@ import {
   WORKSPACE_FULL_PAIR,
 } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
+import { EventEditor } from '@features/events';
 import { dialogElement, provideVisibleElements } from '@shared/ui/dialog/testing';
 import { AppHeader } from './app-header';
 
@@ -64,6 +65,26 @@ describe('AppHeader', () => {
     await TestBed.inject(Router).navigateByUrl(url);
     await fixture.whenStable();
   }
+
+  it('«+ Событие» opens the new event on the day on screen; the name is in aria-label', () => {
+    const open = vi.spyOn(TestBed.inject(EventEditor), 'openCreateDefault').mockReturnValue();
+    const button = el().querySelector<HTMLButtonElement>('button.new-event')!;
+
+    expect(button.type).toBe('button');
+    expect(button.getAttribute('aria-label')).toBe('Новое событие');
+    expect(button.textContent?.trim()).toBe('Событие');
+    expect(button.querySelector('tp-icon')?.getAttribute('aria-hidden')).toBe('true');
+    button.click();
+
+    expect(open).toHaveBeenCalledOnce();
+  });
+
+  it('no «+ Событие» without a workspace', async () => {
+    session.setWorkspace(null);
+    await fixture.whenStable();
+
+    expect(el().querySelector('button.new-event')).toBeNull();
+  });
 
   it('logo and the section tabs of the prototype, as links', () => {
     expect(el().querySelector('.brand')?.textContent?.trim()).toBe('Together');
@@ -154,10 +175,11 @@ describe('AppHeader', () => {
     );
   });
 
-  it('the only button is the members one (user menu); «+ Событие» comes in EVT-04', () => {
+  it('the buttons are «+ Событие» and the members one (user menu), in that order', () => {
     const buttons = Array.from(el().querySelectorAll('button'));
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0].getAttribute('aria-haspopup')).toBe('menu');
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].classList).toContain('new-event');
+    expect(buttons[1].getAttribute('aria-haspopup')).toBe('menu');
   });
 
   it('without a workspace (session cleared on logout) → no workspace block', async () => {

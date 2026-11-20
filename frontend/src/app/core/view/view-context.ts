@@ -7,7 +7,10 @@ import type { IsoDate } from '../api/models/common.models';
 export class ViewContext {
   private readonly focus = signal<IsoDate | null>(null);
 
-  /** The day the screen is about: the selected day or the Monday of the week; `null` — none. */
+  /**
+   * The day the screen is about: the selected day; on a week — today if it is the current
+   * week, else its Monday (prototype `openCreateDefault`). `null` — no schedule on screen.
+   */
   readonly focusDate = this.focus.asReadonly();
 
   setFocusDate(date: IsoDate | null): void {

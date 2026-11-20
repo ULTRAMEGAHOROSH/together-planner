@@ -18,6 +18,13 @@
 
   <div class="spacer"></div>
 
+  @if (workspace()) {
+    <button type="button" class="new-event" aria-label="Новое событие" (click)="newEvent()">
+      <tp-icon name="plus" />
+      <span class="new-event-label">Событие</span>
+    </button>
+  }
+
   @if (workspace(); as workspace) {
     <div class="workspace">
       <span class="workspace-name">{{ workspace.name }}</span>

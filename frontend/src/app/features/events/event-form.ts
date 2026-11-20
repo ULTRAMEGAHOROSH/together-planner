@@ -24,6 +24,7 @@ import {
 import { controlErrorMessage, type ServerErrorMap } from '@shared/forms/server-errors';
 import { notBlank } from '@shared/forms/validators';
 import {
+  DAY_MINUTES,
   formatDate,
   formatLocalDateTime,
   formatTime,
@@ -309,9 +310,13 @@ export interface CreatePrefill {
   personSeat: Seat;
 }
 
-/** The values of a new event: an hour from `minute` of `date`, for the person of that seat. */
+/**
+ * The values of a new event: an hour from `minute` of `date`, for the person of that seat.
+ * A start in the last hour of the day moves back to 23:00: the new event does not run into
+ * the next day on its own (prototype `slotClick`).
+ */
 export function prefillCreate({ date, minute, personSeat }: CreatePrefill): EventFormValue {
-  const start = parseDate(date) + minute;
+  const start = parseDate(date) + Math.min(minute, DAY_MINUTES - NEW_EVENT_MINUTES);
   const end = start + NEW_EVENT_MINUTES;
   return {
     ...EMPTY,

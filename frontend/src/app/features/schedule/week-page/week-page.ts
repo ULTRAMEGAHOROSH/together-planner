@@ -15,8 +15,10 @@ import { map } from 'rxjs';
 import type { IsoDate } from '@core/api/models/common.models';
 import { SessionStore } from '@core/auth/session-store';
 import { messageFor } from '@core/error/error-messages';
+import { EventEditor } from '@features/events';
 import { ZoneClock } from '@core/time/zone-clock';
 import { ViewContext } from '@core/view/view-context';
+import type { SlotClick } from '@shared/timeline/board/board.models';
 import { weekStartOf } from '@shared/time';
 import { NARROW_BREAKPOINT } from '@shared/timeline/engine/constants';
 import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
@@ -83,6 +85,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
           [timeZone]="store.timeZone()"
           [dayNavigation]="!narrow()"
           (dayClick)="toggleDay(weekStart, $event)"
+          (slotClick)="createAt($event)"
         >
           @if (partnerMissing()) {
             <tp-partner-placeholder tpPartnerPlaceholder />
@@ -177,6 +180,7 @@ export class WeekPage {
   private readonly clock = inject(ZoneClock);
   private readonly preference = inject(WeekViewPreference);
   private readonly breakpoints = inject(BreakpointObserver);
+  private readonly editor = inject(EventEditor);
 
   /** Below 820 px: only «День», no switch, the day headers are labels. */
   protected readonly narrow = toSignal(
@@ -250,6 +254,14 @@ export class WeekPage {
     }
   }
 
+  /** A click on an empty place: a new event there, for the person of that column. */
+  protected createAt({ date, minute, personId }: SlotClick): void {
+    const member = this.session.members().find((m) => m.userId === personId);
+    if (member) {
+      this.editor.openCreate({ date, minute, personSeat: member.seat });
+    }
+  }
+
   private remember(view: WeekView): void {
     this.preferred.set(view);
     this.preference.write(view);
@@ -280,7 +292,7 @@ export class WeekPage {
       if (week !== null) {
         untracked(() => {
           this.store.selectDay(day);
-          this.viewContext.setFocusDate(day ?? week);
+          this.viewContext.setFocusDate(day ?? this.defaultDay(week));
         });
       }
     });

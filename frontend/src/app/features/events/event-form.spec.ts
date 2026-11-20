@@ -465,12 +465,23 @@ describe('prefillCreate', () => {
     });
   });
 
-  it('an event started late in the evening ends the next day', () => {
+  it('a start in the last hour of the day moves back to 23:00 (prototype slotClick)', () => {
     const value = prefillCreate({ date: '2026-11-20', minute: 23 * 60 + 30, personSeat: 1 });
 
+    expect(value.startDate).toBe('2026-11-20');
+    expect(value.startTime).toBe('23:00');
     expect(value.endDate).toBe('2026-11-21');
-    expect(value.endTime).toBe('00:30');
+    expect(value.endTime).toBe('00:00');
     expect(value.participants).toEqual({ seat1: true, seat2: false });
+  });
+
+  it('22:30 stays, 23:00 stays', () => {
+    expect(
+      prefillCreate({ date: '2026-11-20', minute: 22 * 60 + 30, personSeat: 1 }).startTime,
+    ).toBe('22:30');
+    expect(prefillCreate({ date: '2026-11-20', minute: 23 * 60, personSeat: 1 }).startTime).toBe(
+      '23:00',
+    );
   });
 
   it('lasts NEW_EVENT_MINUTES and is valid once it has a title', () => {

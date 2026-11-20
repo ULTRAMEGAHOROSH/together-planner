@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { BreakpointObserver, type BreakpointState } from '@angular/cdk/layout';
 import { Location } from '@angular/common';
+import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -18,6 +19,8 @@ import { DataChanges } from '@core/changes/data-changes';
 import { errorInterceptor } from '@core/error/error-interceptor';
 import { ERROR_MESSAGES } from '@core/error/error-messages';
 import { CLOCK } from '@core/time/zone-clock';
+import { EventEditor } from '@features/events';
+import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
 import { ViewContext } from '@core/view/view-context';
 import { WeekPage } from './week-page';
 
@@ -518,6 +521,51 @@ describe('WeekPage day mode (WEEK-13)', () => {
     expect(TestBed.inject(ViewContext).focusDate()).toBe('2026-11-23');
     await harness.navigateByUrl('/week/2026-11-23?day=2026-11-26');
     expect(TestBed.inject(ViewContext).focusDate()).toBe('2026-11-26');
+  });
+
+  it('ViewContext.focusDate on the current week is today, not its Monday (the header starts there)', async () => {
+    await start('/week/2026-11-09');
+    expect(TestBed.inject(ViewContext).focusDate()).toBe('2026-11-12');
+  });
+
+  describe('a click on an empty place (EVT-04)', () => {
+    const [first, second] = WORKSPACE_FULL_PAIR.members;
+    let openCreate: ReturnType<typeof vi.spyOn>;
+
+    async function click(personId: string) {
+      await start('/week/2026-11-23');
+      await loadWeek('2026-11-23');
+      openCreate = vi.spyOn(TestBed.inject(EventEditor), 'openCreate').mockReturnValue();
+      const board = harness.fixture.debugElement.query(By.directive(ScheduleBoard));
+      (board.componentInstance as ScheduleBoard).slotClick.emit({
+        date: '2026-11-25',
+        minute: 570,
+        personId,
+      });
+    }
+
+    it('opens a new event there for the person of that column', async () => {
+      await click(second.userId);
+      expect(openCreate).toHaveBeenCalledExactlyOnceWith({
+        date: '2026-11-25',
+        minute: 570,
+        personSeat: 2,
+      });
+    });
+
+    it('the first person is seat 1', async () => {
+      await click(first.userId);
+      expect(openCreate).toHaveBeenCalledExactlyOnceWith({
+        date: '2026-11-25',
+        minute: 570,
+        personSeat: 1,
+      });
+    });
+
+    it('a column of nobody we know opens nothing', async () => {
+      await click('a-stranger');
+      expect(openCreate).not.toHaveBeenCalled();
+    });
   });
 
   describe('below 820 px', () => {

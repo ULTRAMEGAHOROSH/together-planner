@@ -117,6 +117,46 @@
   min-width: 0;
 }
 
+// «+ Событие» (prototype): an accent pill. Narrow: the plus alone, the name stays in aria-label.
+.new-event {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border: 0;
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-accent);
+  color: var(--tp-color-text-inverse);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:hover {
+    background: var(--tp-color-accent-hover);
+  }
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+
+  @include bp.narrow {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+.new-event-label {
+  @include bp.narrow {
+    display: none;
+  }
+}
+
 .workspace {
   display: flex;
   align-items: center;
