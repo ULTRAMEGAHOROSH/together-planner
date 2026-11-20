@@ -4,6 +4,7 @@ import { SessionStore } from '@core/auth/session-store';
 import { seatColor, seatTint } from '@shared/domain';
 import { weekShort } from '@shared/time';
 import { Button } from '@shared/ui/button/button';
+import { TemplateMiniGrid } from './template-mini-grid';
 import { templateStats } from '../template-stats';
 
 /**
@@ -13,7 +14,7 @@ import { templateStats } from '../template-stats';
  */
 @Component({
   selector: 'tp-template-card',
-  imports: [Button],
+  imports: [Button, TemplateMiniGrid],
   templateUrl: './template-card.html',
   styleUrl: './template-card.scss',
 })

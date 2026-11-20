@@ -61,6 +61,13 @@ describe('tp-template-card (TPL-02)', () => {
     expect(apply).toHaveBeenCalledTimes(1);
   });
 
+  it('has the miniature of the week (TPL-11)', async () => {
+    create();
+    await fixture.whenStable();
+    expect(host().querySelector('tp-template-mini-grid')).not.toBeNull();
+    expect(host().querySelectorAll('tp-template-mini-grid .bar').length).toBeGreaterThan(0);
+  });
+
   it('«Открыть» emits open', async () => {
     create();
     await fixture.whenStable();
