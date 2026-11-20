@@ -25,6 +25,19 @@ describe('tp-day-header (WEEK-05)', () => {
     expect(host.getAttribute('aria-current')).toBe('date');
   });
 
+  it('a conditional week (TPL-09): the weekday only, no number', async () => {
+    const days = buildPanelLayout([], { firstDay: '2001-01-01', dayCount: 7 }, A, {
+      today: null,
+      withDates: false,
+    }).days;
+    const fixture = TestBed.createComponent(DayHeader);
+    fixture.componentRef.setInput('day', days[2]);
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent?.trim()).toBe('Ср');
+    expect(host.querySelector('.number')).toBeNull();
+  });
+
   describe('as a button (WEEK-13)', () => {
     async function render(open: boolean, interactive = true) {
       const fixture = TestBed.createComponent(DayHeader);

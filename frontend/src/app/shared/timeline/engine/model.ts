@@ -104,8 +104,8 @@ export interface DayColumnLayout {
   readonly date: IsoDate;
   /** Day header: «Пн». */
   readonly weekdayShort: string;
-  /** Day header: 9. */
-  readonly dayOfMonth: number;
+  /** Day header: 9; `null` on a conditional week (template preview): weekdays only. */
+  readonly dayOfMonth: number | null;
   /** «понедельник, 9 ноября» — for the name of the day column button (§8.3). */
   readonly dateLabel: string;
   readonly isToday: boolean;

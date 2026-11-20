@@ -34,6 +34,13 @@ describe('tp-day-column (WEEK-05)', () => {
     );
   });
 
+  it('read only (TPL-09): no place to create an event', async () => {
+    await render(WEEK[0]);
+    fixture.componentRef.setInput('readOnly', true);
+    await fixture.whenStable();
+    expect(slot()).toBeNull();
+  });
+
   it('a click at top = 9.5 h → slotClick {date, minute 570, personId}', async () => {
     await render(WEEK[0]);
     // jsdom has no layout: the column top is 0, so clientY is the offset in the column.

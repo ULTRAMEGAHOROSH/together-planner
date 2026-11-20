@@ -125,6 +125,48 @@ describe('TemplateEditorPage (TPL-04)', () => {
     expect(apply().disabled).toBe(true);
   });
 
+  it('TPL-09: «Сетка» shows the form as a week, a card leads back to its row', async () => {
+    await openExisting();
+    const tab = (name: string) =>
+      Array.from(host().querySelectorAll('tp-segmented-control [role="radio"]')).find(
+        (b) => b.textContent?.trim() === name,
+      ) as HTMLElement;
+    expect(host().querySelector('tp-template-preview')).toBeNull();
+
+    tab('Сетка').click();
+    await fixture.whenStable();
+    expect(host().querySelector('tp-template-preview')).not.toBeNull();
+    // The list stays in the page (hidden): the form is whole, the save works.
+    expect(host().querySelectorAll('section.day.hidden')).toHaveLength(7);
+    const cards = host().querySelectorAll('tp-template-preview tp-event-card button');
+    expect(cards.length).toBeGreaterThan(0);
+
+    (cards[0] as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(host().querySelector('tp-template-preview')).toBeNull();
+    expect(host().querySelectorAll('section.day.hidden')).toHaveLength(0);
+  });
+
+  it('TPL-09: the grid follows unsaved edits', async () => {
+    await openExisting();
+    const count = () => host().querySelectorAll('tp-template-preview tp-event-card').length;
+    (
+      Array.from(host().querySelectorAll('tp-segmented-control [role="radio"]')).find(
+        (b) => b.textContent?.trim() === 'Сетка',
+      ) as HTMLElement
+    ).click();
+    await fixture.whenStable();
+    const before = count();
+    // An event of no length is no event for the grid: end = start of the first row.
+    const first = host().querySelector('tp-template-event-row') as HTMLElement;
+    const start = first.querySelector('[aria-label="Время начала"]') as HTMLInputElement;
+    const end = first.querySelector('[aria-label="Время окончания"]') as HTMLInputElement;
+    end.value = start.value;
+    end.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(count()).toBeLessThan(before);
+  });
+
   it('an existing template loads by T3 and its events stand in their days, by start time', async () => {
     await openExisting();
     expect(host().querySelector('h1')?.textContent).toBe('Обычная неделя');

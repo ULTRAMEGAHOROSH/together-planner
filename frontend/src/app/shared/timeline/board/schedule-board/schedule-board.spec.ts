@@ -103,7 +103,7 @@ describe('tp-schedule-board (WEEK-05, FD-57…59)', () => {
     const inputs = Object.keys(
       (ScheduleBoard as unknown as { ɵcmp: { inputs: object } }).ɵcmp.inputs,
     );
-    expect(inputs).toEqual(['panels', 'timeZone', 'dayNavigation']);
+    expect(inputs).toEqual(['panels', 'timeZone', 'dayNavigation', 'readOnly']);
   });
 });
 

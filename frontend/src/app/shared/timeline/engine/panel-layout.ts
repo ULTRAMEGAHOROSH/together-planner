@@ -9,6 +9,8 @@ import type { DayColumnLayout, DayRange, PanelLayout, Segment, TimelineEvent } f
 export interface PanelLayoutOptions {
   /** «Today» in the workspace zone (`ZoneClock`); `null` — no today column (template preview). */
   readonly today: IsoDate | null;
+  /** `false` — the days have no date numbers (a conditional week); default `true`. */
+  readonly withDates?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ export function buildPanelLayout(
   events: readonly TimelineEvent[],
   range: DayRange,
   personId: Uuid,
-  { today }: PanelLayoutOptions,
+  { today, withDates = true }: PanelLayoutOptions,
 ): PanelLayout {
   const byDay: Segment[][] = Array.from({ length: range.dayCount }, () => []);
   for (const segment of splitIntoDaySegments(events, range, personId)) {
@@ -32,7 +34,7 @@ export function buildPanelLayout(
     return {
       date,
       weekdayShort: WEEKDAYS_SHORT[dayOfWeek - 1],
-      dayOfMonth: Number(date.slice(8, 10)),
+      dayOfMonth: withDates ? Number(date.slice(8, 10)) : null,
       dateLabel: dateLong(date),
       isToday: date === today,
       isWeekend: dayOfWeek >= 6,

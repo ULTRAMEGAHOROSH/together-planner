@@ -15,9 +15,10 @@ import type { DayColumnLayout } from '../../engine/model';
   imports: [NgTemplateOutlet],
   template: `
     <ng-template #label>
-      <span class="weekday">{{ day().weekdayShort }}</span>&ngsp;<span class="number">{{
-        day().dayOfMonth
-      }}</span>
+      <span class="weekday">{{ day().weekdayShort }}</span>
+      @if (day().dayOfMonth !== null) {
+        &ngsp;<span class="number">{{ day().dayOfMonth }}</span>
+      }
     </ng-template>
     @if (interactive()) {
       <button

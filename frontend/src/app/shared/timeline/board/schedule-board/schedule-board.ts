@@ -42,6 +42,8 @@ export class ScheduleBoard {
    * preview leaves them plain.
    */
   readonly dayNavigation = input(false);
+  /** Cards can be opened, but no place is a button to create an event (template preview). */
+  readonly readOnly = input(false);
   readonly slotClick = output<SlotClick>();
   /** A day header was chosen: the day to open, or to leave when it is already open. */
   readonly dayClick = output<IsoDate>();

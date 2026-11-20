@@ -26,6 +26,7 @@ export class PersonPanel {
   readonly now = input<NowMark | null>(null);
   /** The day headers are buttons: open the day / back to the week. */
   readonly dayNavigation = input(false);
+  readonly readOnly = input(false);
   readonly slotClick = output<SlotClick>();
   readonly eventClick = output<Uuid>();
   readonly dayClick = output<IsoDate>();

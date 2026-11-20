@@ -22,6 +22,7 @@
       [personId]="panel().layout.personId"
       [personName]="panel().name"
       [now]="now()"
+      [readOnly]="readOnly()"
       (slotClick)="slotClick.emit($event)"
       (eventClick)="eventClick.emit($event)"
     />

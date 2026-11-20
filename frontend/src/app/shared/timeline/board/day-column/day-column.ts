@@ -15,12 +15,14 @@ import type { SlotClick } from '../board.models';
   selector: 'tp-day-column',
   imports: [EventCard, NowIndicator],
   template: `
-    <button
-      type="button"
-      class="slot"
-      [attr.aria-label]="'Создать событие для ' + personName() + ', ' + day().dateLabel"
-      (click)="onSlot($event)"
-    ></button>
+    @if (!readOnly()) {
+      <button
+        type="button"
+        class="slot"
+        [attr.aria-label]="'Создать событие для ' + personName() + ', ' + day().dateLabel"
+        (click)="onSlot($event)"
+      ></button>
+    }
     @for (box of day().boxes; track box.key) {
       <tp-event-card [box]="box" (eventClick)="eventClick.emit($event)" />
     }
@@ -40,6 +42,8 @@ export class DayColumn {
   readonly personName = input.required<string>();
   /** The «now» mark of the board; the line is drawn only in the column of its date. */
   readonly now = input<NowMark | null>(null);
+  /** No empty-place buttons: nothing is created here (template preview). */
+  readonly readOnly = input(false);
   readonly slotClick = output<SlotClick>();
   /** An event card was clicked: the intent to open the event. */
   readonly eventClick = output<Uuid>();

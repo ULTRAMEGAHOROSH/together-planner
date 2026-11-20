@@ -1,5 +1,16 @@
 import { Location } from '@angular/common';
-import { Component, computed, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  ElementRef,
+  Injector,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -29,9 +40,18 @@ import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { FormField, FormFieldControl } from '@shared/ui/form-field/form-field';
 import { Icon } from '@shared/ui/icon/icon';
+import {
+  SegmentedControl,
+  type SegmentOption,
+} from '@shared/ui/segmented-control/segmented-control';
 import { Spinner } from '@shared/ui/spinner/spinner';
 import { ApplyTemplateEntry } from '../apply/apply-entry';
 import { TemplateConflictDialog } from '../template-conflict-dialog/template-conflict-dialog';
+import {
+  previewEventsOfForm,
+  rowOfPreviewId,
+  TemplatePreview,
+} from '../template-preview/template-preview';
 import { TemplateEventRowComponent } from '../template-event-row/template-event-row';
 import {
   addTemplateEvent,
@@ -62,6 +82,12 @@ function byStart(a: TemplateEventRow, b: TemplateEventRow): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
+type TemplateView = 'list' | 'grid';
+const VIEWS: readonly SegmentOption<TemplateView>[] = [
+  { value: 'list', label: 'Список' },
+  { value: 'grid', label: 'Сетка' },
+];
+
 /**
  * `/templates/new` and `/templates/:templateId` (TPL-04): the template form, its events
  * grouped by day. The form logic is in `template-form.ts`. After a save the form is rebuilt
@@ -78,7 +104,9 @@ function byStart(a: TemplateEventRow, b: TemplateEventRow): number {
     FormFieldControl,
     Icon,
     ReactiveFormsModule,
+    SegmentedControl,
     Spinner,
+    TemplatePreview,
     TemplateEventRowComponent,
   ],
   templateUrl: './template-editor-page.html',
@@ -97,6 +125,8 @@ export class TemplateEditorPage implements OnInit, HasUnsavedChanges {
   private readonly toast = inject(ToastService);
   private readonly changes = inject(DataChanges);
   private readonly applier = inject(ApplyTemplateEntry);
+  private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly status = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly loadError = signal<ApiError | null>(null);
@@ -123,6 +153,14 @@ export class TemplateEditorPage implements OnInit, HasUnsavedChanges {
   protected readonly formError = computed(() => {
     this.formEvents();
     return templateFormError(this.form());
+  });
+  /** «Список» (rows by day) or «Сетка» (the template as a week, TPL-09). */
+  protected readonly view = signal<TemplateView>('list');
+  protected readonly views = VIEWS;
+  /** The grid shows the form as it is now, saved or not. */
+  protected readonly previewEvents = computed(() => {
+    this.formEvents();
+    return previewEventsOfForm(this.form(), this.members());
   });
   protected readonly eventCount = computed(() => {
     this.formEvents();
@@ -157,6 +195,27 @@ export class TemplateEditorPage implements OnInit, HasUnsavedChanges {
     if (id !== undefined) {
       this.applier.openForTemplate(id);
     }
+  }
+
+  /** A card of the grid: back to the list, scrolled to its row, which gets the focus. */
+  protected showRow(previewId: string): void {
+    const index = rowOfPreviewId(previewId);
+    if (index === null) {
+      return;
+    }
+    this.view.set('list');
+    afterNextRender(
+      () => {
+        const row = this.host.nativeElement.querySelector<HTMLElement>(`[data-row="${index}"]`);
+        row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        row?.querySelector<HTMLElement>('input, select, textarea')?.focus({ preventScroll: true });
+      },
+      { injector: this.injector },
+    );
+  }
+
+  protected rowIndex(row: TemplateEventRow): number {
+    return this.form().controls.events.controls.indexOf(row);
   }
 
   protected back(): void {
