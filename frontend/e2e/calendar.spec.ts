@@ -109,6 +109,9 @@ test.describe('calendar (CAL-01)', () => {
     await expect(row).toContainText('Дана и Ильяс');
     await expect(row.locator('.rel')).toHaveText(/через \d+ дн/);
 
+    // CAL-04: the legend of the nine categories is under the block.
+    await expect(page.locator('tp-category-legend .chip')).toHaveCount(9);
+
     await row.click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByLabel('Название')).toHaveValue('Отпуск');

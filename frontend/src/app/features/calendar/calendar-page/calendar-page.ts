@@ -15,6 +15,7 @@ import { Button } from '@shared/ui/button/button';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { Icon } from '@shared/ui/icon/icon';
 import { CalendarStore } from '../calendar-store';
+import { CategoryLegend } from '../category-legend/category-legend';
 import { MonthGrid } from '../month-grid/month-grid';
 import { UpcomingList } from '../upcoming-list/upcoming-list';
 import { UpcomingStore } from '../upcoming-store';
@@ -43,7 +44,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
  */
 @Component({
   selector: 'tp-calendar-page',
-  imports: [Button, Icon, MonthGrid, ErrorState, UpcomingList],
+  imports: [Button, Icon, MonthGrid, ErrorState, UpcomingList, CategoryLegend],
   providers: [CalendarStore, UpcomingStore],
   template: `
     @if (refreshing()) {
@@ -116,6 +117,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
             (create)="planFuture()"
             (retry)="upcoming.reload()"
           />
+          <tp-category-legend />
         </aside>
       </div>
     }
@@ -169,7 +171,10 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
       min-width: 0;
     }
     .side {
+      display: flex;
       flex: 1 1 300px;
+      flex-direction: column;
+      gap: 16px;
       min-width: 0;
     }
     .skeleton {

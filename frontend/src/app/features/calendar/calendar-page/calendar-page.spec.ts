@@ -252,6 +252,16 @@ describe('CalendarPage (CAL-01)', () => {
       });
     });
 
+    it('the legend of the categories stands under it', async () => {
+      await openWith([]);
+      const side = host().querySelector('aside');
+      expect(Array.from(side?.children ?? []).map((c) => c.tagName.toLowerCase())).toEqual([
+        'tp-upcoming-list',
+        'tp-category-legend',
+      ]);
+      expect(host().querySelectorAll('tp-category-legend .chip')).toHaveLength(9);
+    });
+
     it('its own error does not take the grid away', async () => {
       await open('2026-11');
       backend.expectOne(NOVEMBER).flush([]);

@@ -1,0 +1,34 @@
+// Values from the prototype «Категории» card (design/Main.dc.html).
+:host {
+  display: block;
+  padding: 16px;
+  background: var(--tp-color-surface);
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: 18px;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-family: var(--tp-font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--tp-radius-pill);
+}
