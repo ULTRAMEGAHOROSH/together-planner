@@ -1,0 +1,92 @@
+<tp-dialog-shell title="Применить шаблон">
+  <section class="group" aria-labelledby="tp-apply-template">
+    <span class="label" id="tp-apply-template">Шаблон</span>
+    @if (loading()) {
+      <tp-spinner label="Загружаем шаблоны…" />
+    } @else if (failed()) {
+      <tp-error-state [text]="errorText()" (retry)="store.load()" />
+    } @else if (noTemplates()) {
+      <p class="empty">Шаблонов пока нет. Сначала создайте шаблон.</p>
+    } @else {
+      <div class="options" role="radiogroup" aria-labelledby="tp-apply-template">
+        @for (option of templateOptions(); track option.id) {
+          <button
+            type="button"
+            class="template"
+            role="radio"
+            [attr.aria-checked]="templateId() === option.id"
+            (click)="pickTemplate(option.id)"
+          >
+            <span class="name">{{ option.name }}</span>
+            <span class="meta">{{ option.meta }}</span>
+          </button>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="group" aria-labelledby="tp-apply-week">
+    <span class="label" id="tp-apply-week">Неделя</span>
+    <div class="week">
+      <button
+        tpButton
+        variant="ghost"
+        size="sm"
+        type="button"
+        aria-label="Предыдущая неделя"
+        (click)="shiftWeek(-1)"
+      >
+        <tp-icon name="chevron-left" [size]="18" />
+      </button>
+      <div class="week-text" aria-live="polite">
+        <b [attr.title]="weekTitle()">{{ weekText() }}</b>
+        <span class="sub">{{ weekRelative() }}</span>
+      </div>
+      <button
+        tpButton
+        variant="ghost"
+        size="sm"
+        type="button"
+        aria-label="Следующая неделя"
+        (click)="shiftWeek(1)"
+      >
+        <tp-icon name="chevron-right" [size]="18" />
+      </button>
+    </div>
+  </section>
+
+  <section class="group" aria-labelledby="tp-apply-mode">
+    <span class="label" id="tp-apply-mode">Если в неделе уже есть события</span>
+    <div class="modes" role="radiogroup" aria-labelledby="tp-apply-mode">
+      @for (option of modes; track option.mode) {
+        <button
+          type="button"
+          class="mode"
+          role="radio"
+          [attr.aria-checked]="mode() === option.mode"
+          (click)="pickMode(option.mode)"
+        >
+          <span class="dot" aria-hidden="true"></span>
+          <span class="text">
+            <span class="name">{{ option.title }}</span>
+            <span class="description">{{ option.description }}</span>
+          </span>
+        </button>
+      }
+    </div>
+    @if (showIncludeManual()) {
+      <label class="manual">
+        <input
+          type="checkbox"
+          [checked]="includeManual()"
+          (change)="toggleIncludeManual($any($event.target).checked)"
+        />
+        <span>Удалить также события, созданные вручную</span>
+      </label>
+    }
+  </section>
+
+  <button tpButton tpDialogFooter variant="ghost" type="button" (click)="ref.close()">
+    Отмена
+  </button>
+</tp-dialog-shell>
