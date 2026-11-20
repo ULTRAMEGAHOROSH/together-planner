@@ -1,0 +1,42 @@
+// Values from the prototype category chips (design/Main.dc.html, «Категория»).
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid transparent;
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-chip-bg, var(--tp-color-surface));
+  color: var(--tp-chip-fg, var(--tp-color-text));
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:not([aria-checked='true']) {
+    border-color: var(--tp-color-border);
+  }
+
+  &[aria-checked='true'] {
+    border-color: var(--tp-chip-fg, var(--tp-color-accent));
+  }
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}

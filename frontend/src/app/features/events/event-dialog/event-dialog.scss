@@ -1,0 +1,188 @@
+// Values from the prototype modal (design/Main.dc.html, «ДИАЛОГ СОБЫТИЯ»). The card and the
+// sticky footer come from tp-dialog-shell; the inputs from `.tp-control`.
+:host {
+  display: block;
+}
+
+.label,
+legend {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+legend {
+  margin-bottom: 6px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error {
+  color: var(--tp-color-danger);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.when {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 12px;
+}
+
+.range {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pair {
+  display: flex;
+  gap: 8px;
+}
+
+.date {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.time {
+  flex: 0 0 108px;
+  width: 108px;
+  padding: 0 10px;
+}
+
+.hint-pill {
+  align-self: flex-start;
+  margin: -6px 0 0;
+  padding: 4px 10px;
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-surface-sunken);
+  color: var(--tp-color-text-2);
+  font-size: 12.5px;
+}
+
+.people,
+.colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.person,
+.both,
+.auto,
+.swatch {
+  cursor: pointer;
+  transition:
+    border-color var(--tp-duration-fast) ease,
+    transform var(--tp-duration-press) ease;
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+}
+
+.person {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px 0 6px;
+  border: 1.5px solid var(--tp-color-border);
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-surface);
+  font-weight: 600;
+
+  &.seat-1[aria-pressed='true'] {
+    border-color: var(--tp-color-seat-1);
+    background: var(--tp-color-seat-1-tint);
+  }
+
+  &.seat-2[aria-pressed='true'] {
+    border-color: var(--tp-color-seat-2);
+    background: var(--tp-color-seat-2-tint);
+  }
+}
+
+.both {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px dashed var(--tp-color-border-dashed);
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-surface);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--tp-color-hover);
+  }
+}
+
+.auto {
+  height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid var(--tp-color-border);
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-surface);
+  font-size: 12.5px;
+  font-weight: 600;
+
+  &[aria-pressed='true'] {
+    border-color: var(--tp-color-accent);
+  }
+}
+
+.swatch {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--tp-swatch);
+  // A white gap between the color and the ring.
+  box-shadow: inset 0 0 0 3px var(--tp-color-surface);
+
+  &[aria-pressed='true'] {
+    border-color: var(--tp-swatch);
+  }
+}
+
+.note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-surface-sunken);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.week {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 12.5px;
+
+  span {
+    color: var(--tp-color-text-muted);
+  }
+}
+
+button.remove {
+  border-color: var(--tp-color-danger-border);
+  background: var(--tp-color-danger-soft);
+  color: var(--tp-color-danger);
+}
+
+.spacer {
+  flex: 1 1 0;
+}

@@ -1,0 +1,182 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <tp-dialog-shell [title]="heading">
+    <tp-form-field label="Название" [error]="errors().title">
+      <input
+        tpControl
+        cdkFocusInitial
+        type="text"
+        formControlName="title"
+        autocomplete="off"
+        placeholder="Например, ужин вместе"
+      />
+    </tp-form-field>
+
+    <div class="when">
+      <fieldset class="range">
+        <legend>Начало</legend>
+        <div class="pair">
+          <input
+            class="tp-control date"
+            type="date"
+            aria-label="Дата начала"
+            formControlName="startDate"
+            [attr.aria-invalid]="errors().start ? 'true' : null"
+            [attr.aria-describedby]="errors().start ? 'tp-event-start-error' : null"
+          />
+          <input
+            class="tp-control time"
+            type="time"
+            step="900"
+            aria-label="Время начала"
+            formControlName="startTime"
+            [attr.aria-invalid]="errors().start ? 'true' : null"
+            [attr.aria-describedby]="errors().start ? 'tp-event-start-error' : null"
+          />
+        </div>
+        @if (errors().start; as text) {
+          <span class="error" id="tp-event-start-error">{{ text }}</span>
+        }
+      </fieldset>
+      <fieldset class="range">
+        <legend>Окончание</legend>
+        <div class="pair">
+          <input
+            class="tp-control date"
+            type="date"
+            aria-label="Дата окончания"
+            formControlName="endDate"
+            [attr.aria-invalid]="errors().end ? 'true' : null"
+            [attr.aria-describedby]="errors().end ? 'tp-event-end-error' : null"
+          />
+          <input
+            class="tp-control time"
+            type="time"
+            step="900"
+            aria-label="Время окончания"
+            formControlName="endTime"
+            [attr.aria-invalid]="errors().end ? 'true' : null"
+            [attr.aria-describedby]="errors().end ? 'tp-event-end-error' : null"
+          />
+        </div>
+        @if (errors().end; as text) {
+          <span class="error" id="tp-event-end-error">{{ text }}</span>
+        }
+      </fieldset>
+    </div>
+    @if (crossesMidnight()) {
+      <p class="hint-pill">Через полночь — будет показано в обоих днях</p>
+    }
+
+    <div class="group" role="group" aria-labelledby="tp-event-who">
+      <span class="label" id="tp-event-who">Участники</span>
+      <div class="people">
+        @for (person of people; track person.seat) {
+          <button
+            type="button"
+            class="person"
+            [class.seat-1]="person.seat === 1"
+            [class.seat-2]="person.seat === 2"
+            [attr.aria-pressed]="person.control.value"
+            (click)="toggle(person)"
+          >
+            <tp-avatar size="sm" [name]="person.name" [seat]="person.seat" />
+            {{ person.name }}
+            @if (person.control.value) {
+              <tp-icon name="check" [size]="16" />
+            }
+          </button>
+        }
+        @if (people.length > 1) {
+          <button
+            type="button"
+            class="both"
+            [attr.aria-pressed]="bothChosen()"
+            (click)="chooseBoth()"
+          >
+            Оба
+          </button>
+        }
+      </div>
+      @if (errors().participants; as text) {
+        <span class="error">{{ text }}</span>
+      }
+    </div>
+
+    <div class="group">
+      <span class="label" id="tp-event-category">Категория</span>
+      <tp-chip-group
+        label="Категория"
+        [options]="categories"
+        [value]="category()"
+        (valueChange)="setCategory($event)"
+      />
+    </div>
+
+    <div class="group" role="group" aria-labelledby="tp-event-color">
+      <span class="label" id="tp-event-color">Цвет</span>
+      <div class="colors">
+        <button
+          type="button"
+          class="auto"
+          [attr.aria-pressed]="color() === null"
+          (click)="setColor(null)"
+        >
+          Как у категории
+        </button>
+        @for (swatch of swatches; track swatch.value) {
+          <button
+            type="button"
+            class="swatch"
+            [attr.aria-label]="'Цвет: ' + swatch.label"
+            [attr.aria-pressed]="color() === swatch.value"
+            [style.--tp-swatch]="swatch.color"
+            (click)="setColor(swatch.value)"
+          ></button>
+        }
+      </div>
+    </div>
+
+    <tp-form-field label="Описание — необязательно" [error]="errors().description">
+      <textarea
+        tpControl
+        rows="2"
+        formControlName="description"
+        placeholder="Заметка, адрес, что взять с собой"
+      ></textarea>
+    </tp-form-field>
+
+    @if (data.templateName; as name) {
+      <p class="note">
+        Создано из шаблона «{{ name }}». Это самостоятельная копия: правки здесь не меняют шаблон, а
+        правки шаблона не изменят это событие.
+      </p>
+    }
+    @if (weekText(); as text) {
+      <p class="week">
+        <span>В расписании:</span>
+        <b>{{ text }}</b>
+      </p>
+    }
+
+    @if (removable; as run) {
+      <button
+        tpButton
+        tpDialogFooter
+        class="remove"
+        variant="ghost"
+        type="button"
+        [loading]="deleting()"
+        [disabled]="saving()"
+        (click)="remove(run)"
+      >
+        <tp-icon name="trash" [size]="16" />
+        Удалить
+      </button>
+    }
+    <span class="spacer" tpDialogFooter></span>
+    <button tpButton tpDialogFooter variant="ghost" type="button" (click)="cancel()">Отмена</button>
+    <button tpButton tpDialogFooter type="submit" [loading]="saving()" [disabled]="deleting()">
+      Сохранить
+    </button>
+  </tp-dialog-shell>
+</form>
