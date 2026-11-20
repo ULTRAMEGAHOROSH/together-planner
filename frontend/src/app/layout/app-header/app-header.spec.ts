@@ -58,7 +58,7 @@ describe('AppHeader', () => {
   const members = () =>
     Array.from(el().querySelectorAll('tp-user-menu .member')).map((li) => ({
       name: li.querySelector('.member-name')?.textContent,
-      avatar: li.querySelector('tp-avatar')?.textContent,
+      avatar: li.querySelector('tp-avatar')?.getAttribute('data-initial'),
       seat1: li.querySelector('tp-avatar')?.classList.contains('seat-1'),
     }));
   const invite = () => el().querySelector<HTMLButtonElement>('button.invite');

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { EventsApi } from '@core/api/events-api';
 import type { Uuid } from '@core/api/models/common.models';
-import type { EventResponse } from '@core/api/models/event.models';
+import type { EventRequest, EventResponse } from '@core/api/models/event.models';
 import { SessionStore } from '@core/auth/session-store';
 import type { ApiError } from '@core/error/api-error';
 import { ERROR_MESSAGES } from '@core/error/error-messages';
@@ -16,6 +16,9 @@ import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { EventConflictDialog } from './event-conflict-dialog/event-conflict-dialog';
 import { type EventDialogControl, openEventDialog } from './event-dialog/event-dialog';
 import { type CreatePrefill, fromEventResponse, prefillCreate } from './event-form';
+
+/** The notice when the server moved a time that does not exist (spring-forward gap, spec §3). */
+export const TIME_ADJUSTED_NOTE = 'Время скорректировано: в этот день часы переводятся';
 
 /** Evening, when a new event is started from the header: the prototype's «19:00». */
 const DEFAULT_START_MINUTE = 19 * 60;
@@ -43,16 +46,20 @@ export class EventEditor {
     if (workspace === null) {
       return;
     }
+    let sent: EventRequest | null = null;
     openEventDialog(this.dialogs, {
       mode: 'create',
       value: prefillCreate(prefill),
       members: this.session.members(),
       templateName: null,
-      save: (request) => this.api.create(workspace.id, request),
+      save: (request) => {
+        sent = request;
+        return this.api.create(workspace.id, request);
+      },
     }).subscribe((result) => {
       // A cancel gives `undefined`; the dialog gives a response only for a save.
       if (typeof result === 'object') {
-        this.saved(result, 'Событие создано');
+        this.saved(result, 'Событие создано', sent);
       }
     });
   }
@@ -68,13 +75,16 @@ export class EventEditor {
     }
     // The version moves on when the user loads a newer one after a conflict.
     let current = event;
+    let sent: EventRequest | null = null;
     openEventDialog(this.dialogs, {
       mode: 'edit',
       value: fromEventResponse(event, this.session.members()),
       members: this.session.members(),
       templateName: event.source?.templateName ?? null,
-      save: (request) =>
-        this.api.update(workspace.id, event.id, { ...request, version: current.version }),
+      save: (request) => {
+        sent = request;
+        return this.api.update(workspace.id, event.id, { ...request, version: current.version });
+      },
       remove: () => this.api.delete(workspace.id, event.id, current.version),
       onFailure: (error, dialog) =>
         this.recover(error, dialog, workspace.id, event.id, (fresh) => (current = fresh)),
@@ -83,7 +93,7 @@ export class EventEditor {
         this.changes.eventsChanged();
         this.toast.show('Событие удалено');
       } else if (typeof result === 'object') {
-        this.saved(result, 'Изменения сохранены');
+        this.saved(result, 'Изменения сохранены', sent);
       }
     });
   }
@@ -146,8 +156,15 @@ export class EventEditor {
     return true;
   }
 
-  private saved(event: EventResponse, text: string): void {
+  /**
+   * `sent` is what E3/E5 got: if the answer has another start or end (to the minute), the
+   * server moved a time that does not exist on that day (EVT-08) and the toast says so.
+   */
+  private saved(event: EventResponse, text: string, sent: EventRequest | null): void {
     this.changes.eventsChanged();
+    if (sent !== null && wasAdjusted(sent, event)) {
+      text = `${text}. ${TIME_ADJUSTED_NOTE}`;
+    }
     const week = weekStartOf(formatDate(parseLocalDateTime(event.start)));
     const shown = this.view.focusDate();
     if (shown !== null && weekStartOf(shown) === week) {
@@ -161,4 +178,10 @@ export class EventEditor {
       },
     });
   }
+}
+
+/** Compares to the minute: the request has no seconds, the answer may have them. */
+function wasAdjusted(sent: EventRequest, answer: EventResponse): boolean {
+  const minute = (value: string) => value.slice(0, 16);
+  return minute(sent.start) !== minute(answer.start) || minute(sent.end) !== minute(answer.end);
 }

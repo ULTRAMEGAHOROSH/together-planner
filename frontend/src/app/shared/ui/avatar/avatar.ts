@@ -9,10 +9,13 @@ import { initialOf } from '@shared/domain/participants';
  */
 @Component({
   selector: 'tp-avatar',
-  template: '{{ initial() }}',
+  // The letter is drawn by CSS (`::before`), not text: it is not part of the visible text of a
+  // button that holds the avatar, so the button's name can match what is read (WCAG 2.5.3).
+  template: '',
   styleUrl: './avatar.scss',
   host: {
     'aria-hidden': 'true',
+    '[attr.data-initial]': 'initial()',
     '[class.seat-1]': 'seat() === 1',
     '[class.seat-2]': 'seat() === 2',
     '[class.sm]': "size() === 'sm'",

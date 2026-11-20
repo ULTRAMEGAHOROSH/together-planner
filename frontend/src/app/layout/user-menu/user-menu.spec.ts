@@ -63,7 +63,7 @@ describe('UserMenu (SHELL-02)', () => {
   }
 
   it('the button shows the members and names them; it opens a menu', async () => {
-    expect(trigger().querySelector('tp-avatar')?.textContent).toBe('Д');
+    expect(trigger().querySelector('tp-avatar')?.getAttribute('data-initial')).toBe('Д');
     expect(trigger().querySelector('.member-name')?.textContent).toBe('Даулет');
     expect(trigger().getAttribute('aria-label')).toBe('Меню: Даулет');
     expect(trigger().getAttribute('aria-haspopup')).toBe('menu');

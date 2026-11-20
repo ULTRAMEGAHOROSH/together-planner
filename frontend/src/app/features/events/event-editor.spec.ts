@@ -131,6 +131,38 @@ describe('EventEditor (EVT-04)', () => {
       expect(eventsChanged).toBe(1);
     });
 
+    it('EVT-08: an answer with another start or end → the toast says the time was adjusted', async () => {
+      editor.openCreate({ date: '2026-11-20', minute: 150, personSeat: 1 });
+      await appRef.whenStable();
+      await type(title(), 'Ранний звонок');
+      await submit();
+      const request = backend.expectOne(EVENTS);
+      // The server moved 02:30 that does not exist to 03:30.
+      request.flush({
+        ...EVENT_CREATED_MANUAL,
+        start: '2026-11-20T03:30:00',
+        end: '2026-11-20T04:30:00',
+      });
+      await appRef.whenStable();
+      expect(toast()?.text).toContain('Событие создано');
+      expect(toast()?.text).toContain('Время скорректировано: в этот день часы переводятся');
+    });
+
+    it('EVT-08: the same time to the minute (seconds in the answer) → no notice', async () => {
+      editor.openCreate({ date: '2026-11-20', minute: 480, personSeat: 1 });
+      await appRef.whenStable();
+      await type(title(), 'Обычный');
+      await type(input('Время окончания'), '20:00');
+      await submit();
+      backend.expectOne(EVENTS).flush({
+        ...EVENT_CREATED_MANUAL,
+        start: '2026-11-20T08:00:00',
+        end: '2026-11-20T20:00:00',
+      });
+      await appRef.whenStable();
+      expect(toast()?.text).toBe('Событие создано');
+    });
+
     it('both people go as participantIds in seat order', async () => {
       editor.openCreate({ date: '2026-11-20', minute: 480, personSeat: 2 });
       await appRef.whenStable();
@@ -152,7 +184,11 @@ describe('EventEditor (EVT-04)', () => {
       await appRef.whenStable();
       await type(title(), 'Работа');
       await submit();
-      backend.expectOne(EVENTS).flush(EVENT_CREATED_MANUAL);
+      backend.expectOne(EVENTS).flush({
+        ...EVENT_CREATED_MANUAL,
+        start: '2026-11-23T08:00:00',
+        end: '2026-11-23T09:00:00',
+      });
       await appRef.whenStable();
 
       expect(toast()?.text).toBe('Событие создано');
@@ -182,7 +218,11 @@ describe('EventEditor (EVT-04)', () => {
       await appRef.whenStable();
       await type(title(), 'Работа');
       await submit();
-      backend.expectOne(EVENTS).flush(EVENT_CREATED_MANUAL);
+      backend.expectOne(EVENTS).flush({
+        ...EVENT_CREATED_MANUAL,
+        start: '2026-11-23T08:00:00',
+        end: '2026-11-23T09:00:00',
+      });
       await appRef.whenStable();
 
       expect(toast()?.text).toBe('Событие создано');
@@ -329,6 +369,24 @@ describe('EventEditor (EVT-04)', () => {
       expect(eventsChanged).toBe(1);
       expect(toast()?.text).toBe('Изменения сохранены');
       expect(toast()?.action).toBeNull();
+    });
+
+    it('EVT-08: a saved edit whose time the server moved says so', async () => {
+      TestBed.inject(ViewContext).setFocusDate('2026-11-23');
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      await type(title(), 'Позже');
+      await submit();
+      backend.expectOne(ONE).flush({
+        ...EVENT,
+        title: 'Позже',
+        start: '2026-11-25T20:00:00',
+        version: 5,
+      });
+      await appRef.whenStable();
+      expect(toast()?.text).toBe(
+        'Изменения сохранены. Время скорректировано: в этот день часы переводятся',
+      );
     });
 
     it('an event moved to a week that is not on screen: «Показать» goes there', async () => {

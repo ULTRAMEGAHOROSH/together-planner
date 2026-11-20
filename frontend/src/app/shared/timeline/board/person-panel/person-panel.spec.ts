@@ -22,7 +22,7 @@ describe('tp-person-panel (WEEK-05)', () => {
 
   it('a header with the member (avatar, name, seat stripe) and the 7 day headers', () => {
     const head = host().querySelector('.head')!;
-    expect(head.querySelector('tp-avatar')?.textContent).toBe('П');
+    expect(head.querySelector('tp-avatar')?.getAttribute('data-initial')).toBe('П');
     expect(head.querySelector('tp-avatar')?.classList).toContain('seat-2');
     expect(head.querySelector('.name')?.textContent).toBe('Партнёр');
     expect(head.classList).toContain('seat-2');
