@@ -28,6 +28,7 @@
           <tp-template-card
             [template]="template"
             [deleting]="store.deletingId() === template.id"
+            (apply)="apply(template.id)"
             (open)="open(template.id)"
             (remove)="store.remove(template)"
           />

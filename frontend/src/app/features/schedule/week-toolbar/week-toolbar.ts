@@ -51,6 +51,8 @@ export class WeekToolbar {
   readonly viewChange = output<WeekView>();
   /** The week (and day) the user asked for. */
   readonly navigate = output<WeekAddress>();
+  /** «Применить шаблон»: the page opens the dialog for the week on screen. */
+  readonly applyTemplate = output();
 
   protected readonly views = VIEWS;
   protected readonly title = computed(() => {

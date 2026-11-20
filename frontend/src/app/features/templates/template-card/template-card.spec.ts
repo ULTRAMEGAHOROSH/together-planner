@@ -52,12 +52,21 @@ describe('tp-template-card (TPL-02)', () => {
     expect(host().querySelector('.applied')?.textContent).toBe('Последний раз: неделя 23–29 нояб.');
   });
 
+  it('«Применить» emits apply (TPL-08)', async () => {
+    create();
+    await fixture.whenStable();
+    const apply = vi.fn();
+    fixture.componentInstance.apply.subscribe(apply);
+    buttons()[0].click();
+    expect(apply).toHaveBeenCalledTimes(1);
+  });
+
   it('«Открыть» emits open', async () => {
     create();
     await fixture.whenStable();
     const open = vi.fn();
     fixture.componentInstance.open.subscribe(open);
-    buttons()[0].click();
+    buttons()[1].click();
     expect(open).toHaveBeenCalledTimes(1);
   });
 
@@ -66,7 +75,7 @@ describe('tp-template-card (TPL-02)', () => {
     await fixture.whenStable();
     const remove = vi.fn();
     fixture.componentInstance.remove.subscribe(remove);
-    const del = () => buttons()[1];
+    const del = () => buttons()[2];
     expect(del().textContent?.trim()).toBe('Удалить');
     del().click();
     await fixture.whenStable();
@@ -83,12 +92,12 @@ describe('tp-template-card (TPL-02)', () => {
     await fixture.whenStable();
     const remove = vi.fn();
     fixture.componentInstance.remove.subscribe(remove);
-    buttons()[1].click();
+    buttons()[2].click();
     await fixture.whenStable();
-    buttons()[1].dispatchEvent(new Event('blur'));
+    buttons()[2].dispatchEvent(new Event('blur'));
     await fixture.whenStable();
-    expect(buttons()[1].textContent?.trim()).toBe('Удалить');
-    buttons()[1].click();
+    expect(buttons()[2].textContent?.trim()).toBe('Удалить');
+    buttons()[2].click();
     expect(remove).not.toHaveBeenCalled();
   });
 

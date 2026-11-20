@@ -5,6 +5,7 @@ import { Button } from '@shared/ui/button/button';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { Spinner } from '@shared/ui/spinner/spinner';
+import { ApplyTemplateEntry } from '../apply/apply-entry';
 import { TemplateCard } from '../template-card/template-card';
 import { TemplatesStore } from '../templates-store';
 
@@ -22,6 +23,7 @@ import { TemplatesStore } from '../templates-store';
 export class TemplatesPage implements OnInit {
   protected readonly store = inject(TemplatesStore);
   private readonly router = inject(Router);
+  private readonly applier = inject(ApplyTemplateEntry);
 
   protected readonly errorText = computed(() => messageFor(this.store.error()));
   /** Nothing to show yet: the first load has not finished. */
@@ -38,6 +40,10 @@ export class TemplatesPage implements OnInit {
 
   protected create(): void {
     void this.router.navigate(['/templates', 'new']);
+  }
+
+  protected apply(id: string): void {
+    this.applier.openForTemplate(id);
   }
 
   protected open(id: string): void {

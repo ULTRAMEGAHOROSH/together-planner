@@ -4,3 +4,4 @@ export {
   ApplyTemplateDialog,
   openApplyTemplate,
 } from './apply/apply-dialog/apply-dialog';
+export { ApplyTemplateEntry } from './apply/apply-entry';

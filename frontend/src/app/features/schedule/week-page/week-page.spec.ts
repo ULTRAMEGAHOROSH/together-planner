@@ -20,6 +20,7 @@ import { errorInterceptor } from '@core/error/error-interceptor';
 import { ERROR_MESSAGES } from '@core/error/error-messages';
 import { CLOCK } from '@core/time/zone-clock';
 import { EventEditor } from '@features/events';
+import { ApplyTemplateEntry } from '@features/templates';
 import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
 import { ViewContext } from '@core/view/view-context';
 import { WeekPage } from './week-page';
@@ -280,6 +281,22 @@ describe('WeekPage states (WEEK-12)', () => {
     await settle();
     expect(q('.skeleton')).toBeNull();
     expect(q('tp-schedule-board')).not.toBeNull();
+  });
+
+  it('TPL-08: «Применить шаблон» of the toolbar and of the empty week open it for the shown week', async () => {
+    const openForWeek = vi
+      .spyOn(TestBed.inject(ApplyTemplateEntry), 'openForWeek')
+      .mockImplementation(() => undefined);
+    backend.expectOne(NOV_23).flush(emptyWeek('2026-11-23'));
+    await settle();
+    const buttons = Array.from(host().querySelectorAll('button')).filter(
+      (b) => b.textContent?.trim() === 'Применить шаблон',
+    );
+    expect(buttons).toHaveLength(2);
+    buttons.forEach((b) => b.click());
+    expect(openForWeek).toHaveBeenCalledTimes(2);
+    expect(openForWeek).toHaveBeenNthCalledWith(1, '2026-11-23');
+    expect(openForWeek).toHaveBeenNthCalledWith(2, '2026-11-23');
   });
 
   it('the next week: the old board stays, a thin strip shows above it, no skeleton', async () => {

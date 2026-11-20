@@ -30,6 +30,7 @@ import { ErrorState } from '@shared/ui/error-state/error-state';
 import { FormField, FormFieldControl } from '@shared/ui/form-field/form-field';
 import { Icon } from '@shared/ui/icon/icon';
 import { Spinner } from '@shared/ui/spinner/spinner';
+import { ApplyTemplateEntry } from '../apply/apply-entry';
 import { TemplateConflictDialog } from '../template-conflict-dialog/template-conflict-dialog';
 import { TemplateEventRowComponent } from '../template-event-row/template-event-row';
 import {
@@ -95,6 +96,7 @@ export class TemplateEditorPage implements OnInit, HasUnsavedChanges {
   private readonly dialogs = inject(DialogService);
   private readonly toast = inject(ToastService);
   private readonly changes = inject(DataChanges);
+  private readonly applier = inject(ApplyTemplateEntry);
 
   protected readonly status = signal<'loading' | 'ready' | 'error'>('loading');
   protected readonly loadError = signal<ApiError | null>(null);
@@ -104,7 +106,7 @@ export class TemplateEditorPage implements OnInit, HasUnsavedChanges {
   protected readonly days = signal<readonly DayGroup[]>([]);
   protected readonly saving = signal(false);
   protected readonly submitted = signal(false);
-  private readonly dirty = signal(false);
+  protected readonly dirty = signal(false);
   private leaving = false;
   private valueSubscription: Subscription | undefined;
 
@@ -146,6 +148,14 @@ export class TemplateEditorPage implements OnInit, HasUnsavedChanges {
     const id = this.templateId();
     if (id !== undefined) {
       this.load(id);
+    }
+  }
+
+  /** «Применить к неделе»: the saved template, next week. */
+  protected applyToWeek(): void {
+    const id = this.template()?.id;
+    if (id !== undefined) {
+      this.applier.openForTemplate(id);
     }
   }
 

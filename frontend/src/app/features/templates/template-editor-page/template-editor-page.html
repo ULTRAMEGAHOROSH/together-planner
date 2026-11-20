@@ -12,6 +12,18 @@
         }
       </p>
     </div>
+    @if (status() === 'ready' && template()) {
+      <button
+        tpButton
+        variant="ghost"
+        type="button"
+        [disabled]="dirty()"
+        [attr.title]="dirty() ? 'Сначала сохраните изменения' : null"
+        (click)="applyToWeek()"
+      >
+        Применить к неделе
+      </button>
+    }
     @if (status() === 'ready') {
       <button tpButton type="submit" form="tp-template-form" [loading]="saving()">Сохранить</button>
     }

@@ -16,12 +16,14 @@ import type { IsoDate } from '@core/api/models/common.models';
 import { SessionStore } from '@core/auth/session-store';
 import { messageFor } from '@core/error/error-messages';
 import { EventEditor } from '@features/events';
+import { ApplyTemplateEntry } from '@features/templates';
 import { ZoneClock } from '@core/time/zone-clock';
 import { ViewContext } from '@core/view/view-context';
 import type { SlotClick } from '@shared/timeline/board/board.models';
 import { weekStartOf } from '@shared/time';
 import { NARROW_BREAKPOINT } from '@shared/timeline/engine/constants';
 import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
+import { Button } from '@shared/ui/button/button';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { DayChips } from '../day-chips/day-chips';
@@ -44,7 +46,15 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
  */
 @Component({
   selector: 'tp-week-page',
-  imports: [ScheduleBoard, PartnerPlaceholder, WeekToolbar, DayChips, EmptyState, ErrorState],
+  imports: [
+    Button,
+    ScheduleBoard,
+    PartnerPlaceholder,
+    WeekToolbar,
+    DayChips,
+    EmptyState,
+    ErrorState,
+  ],
   providers: [WeekStore],
   template: `
     @if (refreshing()) {
@@ -60,6 +70,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
         [view]="mode()"
         (viewChange)="chooseView(weekStart, $event)"
         (navigate)="show($event)"
+        (applyTemplate)="applyTemplate(weekStart)"
       />
       @if (selectedDay(); as day) {
         <tp-day-chips
@@ -76,7 +87,11 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
         <tp-empty-state
           class="notice"
           text="На эту неделю пока ничего нет. Будущие события появятся здесь сами, а типовую неделю можно взять из шаблона."
-        />
+        >
+          <button tpButton size="sm" type="button" (click)="applyTemplate(weekStart)">
+            Применить шаблон
+          </button>
+        </tp-empty-state>
       }
       @if (members().length > 0) {
         <tp-schedule-board
@@ -182,6 +197,7 @@ export class WeekPage {
   private readonly preference = inject(WeekViewPreference);
   private readonly breakpoints = inject(BreakpointObserver);
   private readonly editor = inject(EventEditor);
+  private readonly applier = inject(ApplyTemplateEntry);
 
   /** Below 820 px: only «День», no switch, the day headers are labels. */
   protected readonly narrow = toSignal(
@@ -233,6 +249,11 @@ export class WeekPage {
     () => this.store.status() === 'loading' && this.store.data() !== null,
   );
   protected readonly errorText = computed(() => messageFor(this.store.error()));
+
+  /** «Применить шаблон»: the dialog opens for the week on screen (TPL-08). */
+  protected applyTemplate(weekStart: IsoDate): void {
+    this.applier.openForWeek(weekStart);
+  }
 
   /** Goes to a week (and day): a history entry, so «Назад» returns to where it was. */
   protected show(address: WeekAddress): void {

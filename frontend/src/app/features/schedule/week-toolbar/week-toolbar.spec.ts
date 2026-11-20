@@ -27,6 +27,14 @@ describe('tp-week-toolbar (WEEK-11, WEEK-13)', () => {
     await fixture.whenStable();
   }
 
+  it('«Применить шаблон» asks the page to apply for the week on screen (TPL-08)', async () => {
+    await render('2026-11-09');
+    const asked = vi.fn();
+    fixture.componentInstance.applyTemplate.subscribe(asked);
+    button('Применить шаблон').click();
+    expect(asked).toHaveBeenCalledTimes(1);
+  });
+
   describe('«Неделя»', () => {
     it('NV-01: «›» from 2026-11-09 asks for 2026-11-16', async () => {
       await render('2026-11-09');

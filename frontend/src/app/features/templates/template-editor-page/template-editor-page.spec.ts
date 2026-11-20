@@ -18,6 +18,7 @@ import { errorInterceptor } from '@core/error/error-interceptor';
 import { ERROR_MESSAGES } from '@core/error/error-messages';
 import { ToastService } from '@core/notify/toast-service';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
+import { ApplyTemplateEntry } from '../apply/apply-entry';
 import { TEMPLATE_SAVED_TEXT, TemplateEditorPage } from './template-editor-page';
 
 // The sample templates belong to the members of WEEK, so the workspace takes them.
@@ -101,6 +102,27 @@ describe('TemplateEditorPage (TPL-04)', () => {
     expect(host().querySelector('h1')?.textContent).toBe('Новый шаблон');
     expect(host().querySelectorAll('section.day')).toHaveLength(7);
     expect(rows()).toHaveLength(0);
+  });
+
+  it('TPL-08: «Применить к неделе» opens the dialog for the saved template; off while unsaved changes', async () => {
+    const openForTemplate = vi
+      .spyOn(TestBed.inject(ApplyTemplateEntry), 'openForTemplate')
+      .mockImplementation(() => undefined);
+    await openPage();
+    expect(host().textContent).not.toContain('Применить к неделе');
+
+    await openExisting();
+    const apply = () =>
+      Array.from(host().querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('Применить к неделе'),
+      ) as HTMLButtonElement;
+    expect(apply().disabled).toBe(false);
+    apply().click();
+    expect(openForTemplate).toHaveBeenCalledWith(TEMPLATE_CREATED.id);
+
+    type('input[formcontrolname="name"]', 'Другое имя');
+    await fixture.whenStable();
+    expect(apply().disabled).toBe(true);
   });
 
   it('an existing template loads by T3 and its events stand in their days, by start time', async () => {

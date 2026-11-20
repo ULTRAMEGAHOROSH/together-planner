@@ -10,6 +10,7 @@ import {
 } from '@core/api/models/testing/samples';
 import { SessionStore } from '@core/auth/session-store';
 import { errorInterceptor } from '@core/error/error-interceptor';
+import { ApplyTemplateEntry } from '../apply/apply-entry';
 import { TemplatesPage } from './templates-page';
 
 const LIST = `/api/v1/workspaces/${WORKSPACE_FULL_PAIR.id}/templates`;
@@ -65,8 +66,16 @@ describe('TemplatesPage (TPL-02)', () => {
   it('«Открыть» goes to /templates/:id', async () => {
     backend.expectOne(LIST).flush([TEMPLATE_CREATED]);
     await fixture.whenStable();
-    (host().querySelector('tp-template-card button') as HTMLButtonElement).click();
+    (host().querySelectorAll('tp-template-card button')[1] as HTMLButtonElement).click();
     expect(navigate).toHaveBeenCalledWith(['/templates', TEMPLATE_CREATED.id]);
+  });
+
+  it('«Применить» opens the dialog for this template (TPL-08)', async () => {
+    const openForTemplate = vi.spyOn(TestBed.inject(ApplyTemplateEntry), 'openForTemplate');
+    backend.expectOne(LIST).flush([TEMPLATE_CREATED]);
+    await fixture.whenStable();
+    (host().querySelectorAll('tp-template-card button')[0] as HTMLButtonElement).click();
+    expect(openForTemplate).toHaveBeenCalledWith(TEMPLATE_CREATED.id);
   });
 
   it('a failed load shows the error with «Повторить», which asks again', async () => {
@@ -89,7 +98,7 @@ describe('TemplatesPage (TPL-02)', () => {
   it('deleting a card: two presses, T5 with the version, the card goes after the reload', async () => {
     backend.expectOne(LIST).flush([TEMPLATE_CREATED]);
     await fixture.whenStable();
-    const del = () => host().querySelectorAll('tp-template-card button')[1] as HTMLButtonElement;
+    const del = () => host().querySelectorAll('tp-template-card button')[2] as HTMLButtonElement;
     del().click();
     await fixture.whenStable();
     del().click();

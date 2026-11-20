@@ -21,6 +21,7 @@ export class TemplateCard {
   readonly template = input.required<TemplateResponse>();
   /** T5 of this template is running. */
   readonly deleting = input(false);
+  readonly apply = output();
   readonly open = output();
   readonly remove = output();
 
