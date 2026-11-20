@@ -1,0 +1,29 @@
+<h2>Запланировано</h2>
+<p class="hint">
+  Будущие события хранятся сами по себе и появляются в нужной неделе, даже если для неё ещё ничего
+  не создано.
+</p>
+@if (errorText(); as text) {
+  <tp-error-state [text]="text" (retry)="retry.emit()" />
+} @else if (loading()) {
+  <div class="skeleton" role="status" aria-label="Загружаем события…"></div>
+} @else if (rows().length === 0) {
+  <tp-empty-state text="Пока ничего не запланировано." />
+} @else {
+  <ul class="list">
+    @for (row of rows(); track row.id) {
+      <li>
+        <button type="button" class="row" (click)="open.emit(row.id)">
+          <span class="dot" aria-hidden="true" [style.background]="row.dot"></span>
+          <span class="text">
+            <span class="title">{{ row.title }}</span>
+            <span class="when">{{ row.when }}</span>
+            <span class="meta">{{ row.who }} · {{ row.week }}</span>
+          </span>
+          <span class="rel">{{ row.rel }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+}
+<button type="button" class="future" (click)="create.emit()">+ Запланировать на будущее</button>

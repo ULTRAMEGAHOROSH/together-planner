@@ -302,12 +302,15 @@ export function fromEventResponse(
   };
 }
 
-/** Where the user wants to create an event: a day, a minute of it and whose panel it is. */
+/**
+ * Where the user wants to create an event: a day, a minute of it and whose panel it is
+ * (`'both'` — a joint event, like «+ Запланировать на будущее»).
+ */
 export interface CreatePrefill {
   date: IsoDate;
   /** Minutes since midnight. */
   minute: number;
-  personSeat: Seat;
+  personSeat: Seat | 'both';
 }
 
 /**
@@ -324,6 +327,6 @@ export function prefillCreate({ date, minute, personSeat }: CreatePrefill): Even
     startTime: timeOf(start),
     endDate: formatDate(end),
     endTime: timeOf(end),
-    participants: { seat1: personSeat === 1, seat2: personSeat === 2 },
+    participants: { seat1: personSeat !== 2, seat2: personSeat !== 1 },
   };
 }

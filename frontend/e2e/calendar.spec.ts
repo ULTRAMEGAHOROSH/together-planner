@@ -87,4 +87,40 @@ test.describe('calendar (CAL-01)', () => {
     });
     await expect(first.locator('.pill')).toHaveText(/Новоселье/);
   });
+
+  // CAL-02: «Запланировано» looks from today on, so the event is made relative to the date.
+  test('«Запланировано»: the nearest manual event, its row opens it, the button plans a new one', async ({
+    page,
+    request,
+    couple,
+  }) => {
+    const day = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+    await createEvent(
+      request,
+      couple.a,
+      couple.workspace.id,
+      body('Отпуск', `${day}T10:00:00`, `${day}T11:00:00`, [couple.a.id, couple.b.id]),
+    );
+    await loginViaUi(page, couple.a);
+    await page.goto('/calendar');
+    const list = page.locator('tp-upcoming-list');
+    await expect(list.getByRole('heading', { name: 'Запланировано' })).toBeVisible();
+    const row = list.locator('.row', { hasText: 'Отпуск' });
+    await expect(row).toContainText('Дана и Ильяс');
+    await expect(row.locator('.rel')).toHaveText(/через \d+ дн/);
+
+    await row.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByLabel('Название')).toHaveValue('Отпуск');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    await list.getByRole('button', { name: '+ Запланировать на будущее' }).click();
+    await expect(dialog.getByLabel('Название')).toHaveValue('');
+    await dialog.getByLabel('Название').fill('Поездка к морю');
+    await dialog.getByLabel('Название').press('Enter');
+    await expect(dialog).toBeHidden();
+    // It is three weeks away and made for both: it joins the list.
+    await expect(list.locator('.row', { hasText: 'Поездка к морю' })).toContainText('Дана и Ильяс');
+  });
 });

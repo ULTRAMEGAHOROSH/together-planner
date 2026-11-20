@@ -181,6 +181,11 @@
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  // Three tabs leave it a few pixels, which would show one cut letter.
+  @include bp.narrow {
+    display: none;
+  }
 }
 
 // SHELL-04: an empty dashed seat in place of the partner's avatar, the size of an avatar.

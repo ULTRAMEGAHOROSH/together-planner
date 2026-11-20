@@ -475,6 +475,12 @@ describe('prefillCreate', () => {
     expect(value.participants).toEqual({ seat1: true, seat2: false });
   });
 
+  it('both → a joint event: the two people are chosen', () => {
+    const value = prefillCreate({ date: '2026-12-11', minute: 600, personSeat: 'both' });
+    expect(value.startTime).toBe('10:00');
+    expect(value.participants).toEqual({ seat1: true, seat2: true });
+  });
+
   it('22:30 stays, 23:00 stays', () => {
     expect(
       prefillCreate({ date: '2026-11-20', minute: 22 * 60 + 30, personSeat: 1 }).startTime,

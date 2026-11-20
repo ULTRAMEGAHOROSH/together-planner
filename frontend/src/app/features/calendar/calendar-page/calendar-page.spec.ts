@@ -23,6 +23,8 @@ const URL = (from: string, to: string) =>
   `/api/v1/workspaces/${WORKSPACE_FULL_PAIR.id}/events?from=${from}&to=${to}`;
 const NOVEMBER = URL('2026-10-26', '2026-12-06');
 const DECEMBER = URL('2026-11-30', '2027-01-03');
+// «Запланировано»: from today for 93 days, whatever month is on screen.
+const UPCOMING = URL('2026-11-12', '2027-02-12');
 // Thursday 12.11.2026 14:20 in Almaty: the current month is 2026-11.
 const NOW = Date.UTC(2026, 10, 12, 9, 20);
 
@@ -34,6 +36,7 @@ describe('CalendarPage (CAL-01)', () => {
   const view = () => TestBed.inject(ViewContext);
   const host = () => fixture.nativeElement as HTMLElement;
   const openEdit = vi.fn();
+  const openCreate = vi.fn();
 
   async function open(month?: string) {
     fixture = TestBed.createComponent(CalendarPage);
@@ -45,6 +48,7 @@ describe('CalendarPage (CAL-01)', () => {
 
   beforeEach(() => {
     openEdit.mockClear();
+    openCreate.mockClear();
     narrow = new BehaviorSubject<BreakpointState>({ matches: false, breakpoints: {} });
     TestBed.configureTestingModule({
       providers: [
@@ -52,7 +56,7 @@ describe('CalendarPage (CAL-01)', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: CLOCK, useValue: () => NOW },
-        { provide: EventEditor, useValue: { openEdit } },
+        { provide: EventEditor, useValue: { openEdit, openCreate } },
         {
           provide: BreakpointObserver,
           useValue: { observe: () => narrow, isMatched: () => narrow.value.matches },
@@ -66,7 +70,11 @@ describe('CalendarPage (CAL-01)', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
 
-  afterEach(() => backend.verify());
+  // Every page asks for «Запланировано» too; the tests that look at it flush it themselves.
+  afterEach(() => {
+    backend.match(UPCOMING);
+    backend.verify();
+  });
 
   const flushNovember = async () => {
     backend.expectOne(NOVEMBER).flush([EVENT_CREATED_MANUAL, EVENT_CREATED_JOINT]);
@@ -80,11 +88,11 @@ describe('CalendarPage (CAL-01)', () => {
   it('a month: E1 for the six weeks, then the title and 42 cells', async () => {
     await open('2026-11');
     expect(host().querySelector('tp-month-grid')).toBeNull(); // nothing to draw yet
-    expect(host().querySelector('.skeleton')).not.toBeNull();
+    expect(host().querySelector('.main .skeleton')).not.toBeNull();
     await flushNovember();
     expect(host().querySelector('h1')?.textContent).toBe('Ноябрь 2026');
     expect(host().querySelectorAll('.cell')).toHaveLength(42);
-    expect(host().querySelector('.skeleton')).toBeNull();
+    expect(host().querySelector('.main .skeleton')).toBeNull();
     expect(navigate).not.toHaveBeenCalled();
   });
 
@@ -100,7 +108,7 @@ describe('CalendarPage (CAL-01)', () => {
     expect(navigate).toHaveBeenCalledExactlyOnceWith('/calendar?month=2026-11', {
       replaceUrl: true,
     });
-    backend.expectNone(() => true);
+    backend.expectNone((request) => request.urlWithParams !== UPCOMING);
     expect(view().focusDate()).toBeNull();
   });
 
@@ -185,6 +193,73 @@ describe('CalendarPage (CAL-01)', () => {
     await open('2026-11');
     await flushNovember();
     expect(host().querySelector('.pill')?.textContent?.trim()).toBe('Работа');
+  });
+
+  describe('«Запланировано» (CAL-02)', () => {
+    const rows = () => Array.from(host().querySelectorAll<HTMLElement>('tp-upcoming-list .row'));
+    const openWith = async (events = [EVENT_CREATED_JOINT, EVENT_CREATED_MANUAL]) => {
+      await open('2026-11');
+      backend.expectOne(NOVEMBER).flush([]);
+      backend.expectOne(UPCOMING).flush(events);
+      await fixture.whenStable();
+    };
+
+    it('lists the nearest events next to the grid', async () => {
+      await openWith();
+      expect(host().querySelector('tp-upcoming-list h2')?.textContent).toBe('Запланировано');
+      expect(rows().map((row) => row.querySelector('.title')?.textContent)).toEqual([
+        'Ужин вместе',
+        'Работа',
+      ]);
+    });
+
+    it('is the same on every month: it does not ask again when the month changes', async () => {
+      await openWith();
+      fixture.componentRef.setInput('month', '2026-12');
+      await fixture.whenStable();
+      backend.expectOne(DECEMBER).flush([]);
+      backend.expectNone(UPCOMING);
+      expect(rows()).toHaveLength(2);
+    });
+
+    it('a row opens the editor with the event as it came', async () => {
+      await openWith();
+      rows()[0].click();
+      expect(openEdit).toHaveBeenCalledExactlyOnceWith(EVENT_CREATED_JOINT);
+    });
+
+    it('«+ Запланировать на будущее»: in 21 days at 10:00, for both', async () => {
+      await openWith([]);
+      host().querySelector<HTMLButtonElement>('tp-upcoming-list .future')?.click();
+      expect(openCreate).toHaveBeenCalledExactlyOnceWith({
+        date: '2026-12-03',
+        minute: 600,
+        personSeat: 'both',
+      });
+    });
+
+    it('alone in the workspace the new event is for the person themselves', async () => {
+      TestBed.inject(SessionStore).setWorkspace({
+        ...WORKSPACE_FULL_PAIR,
+        members: [WORKSPACE_FULL_PAIR.members[0]],
+      });
+      await openWith([]);
+      host().querySelector<HTMLButtonElement>('tp-upcoming-list .future')?.click();
+      expect(openCreate).toHaveBeenCalledExactlyOnceWith({
+        date: '2026-12-03',
+        minute: 600,
+        personSeat: 1,
+      });
+    });
+
+    it('its own error does not take the grid away', async () => {
+      await open('2026-11');
+      backend.expectOne(NOVEMBER).flush([]);
+      backend.expectOne(UPCOMING).flush(PROBLEM_MALFORMED, { status: 400, statusText: 'Bad' });
+      await fixture.whenStable();
+      expect(host().querySelector('tp-upcoming-list tp-error-state')).not.toBeNull();
+      expect(host().querySelectorAll('.cell')).toHaveLength(42);
+    });
   });
 
   it('an error: the message with «Повторить», and the retry asks again', async () => {
