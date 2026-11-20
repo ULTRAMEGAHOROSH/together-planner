@@ -18,7 +18,17 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
     depends_on:
       postgres: { condition: service_healthy }
-    ports: ["8080:8080"]      # в продакшене убрать: доступ только через nginx
+    # Порт нужен только для разработки (npm start с прокси, Swagger, E2E на :4200).
+    # В продакшене убрать: backend доступен только через nginx сервиса frontend.
+    ports: ["8080:8080"]
+
+  frontend:
+    profiles: ["app"]
+    build: ./frontend
+    depends_on: [backend]
+    # 8081, а не 80: порт 80 на Windows часто занят IIS. http://localhost:8081 — безопасный
+    # контекст, поэтому cookie с Secure работает и без HTTPS.
+    ports: ["8081:80"]
 
 volumes:
   pgdata:

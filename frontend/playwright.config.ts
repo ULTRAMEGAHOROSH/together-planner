@@ -4,6 +4,14 @@
 // The dev server is reused when it already runs on :4200, otherwise `npm start` is launched.
 import { defineConfig, devices } from '@playwright/test';
 
+// Node's `process` (the project has no @types/node): only the environment is read.
+declare const process: { env: Record<string, string | undefined> };
+
+// `E2E_BASE_URL` points the specs at a running app (the nginx image, http://localhost:8081):
+// then no dev server is started. Without it the dev server on :4200 is used.
+const baseURL = process.env['E2E_BASE_URL'] ?? 'http://localhost:4200';
+const external = process.env['E2E_BASE_URL'] !== undefined;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -11,15 +19,17 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL,
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: 'npm start',
-    url: 'http://localhost:4200',
-    reuseExistingServer: true,
-    timeout: 180_000,
-  },
+  webServer: external
+    ? undefined
+    : {
+        command: 'npm start',
+        url: 'http://localhost:4200',
+        reuseExistingServer: true,
+        timeout: 180_000,
+      },
   projects: [
     {
       name: 'desktop',

@@ -62,6 +62,8 @@ E2E с backend (QA-01 и дальше) требуют запущенных backe
 
 **Как запустить E2E с backend:** (1) backend и база: `docker compose --profile app up -d` в корне проекта (образ уже собран — добавьте `--no-build`; если базу раньше поднимали из `C:private projects`, укажите `-p privateprojects`, чтобы взять тот же том) или backend локально на :8080; (2) `cd frontend && npm start` — dev server на :4200 с прокси `/api` → :8080 (или пусть Playwright запустит его сам); (3) `npm run e2e` (одна спека: `npm run e2e -- e2e/couple-smoke.spec.ts --project=desktop`). Помощники: `e2e/helpers/api.ts` — `registerUser`, `createWorkspace`, `createInvite`, `join`, `createEvent`, `createTemplate` (через API, у каждого пользователя свой Bearer, заголовок `X-Requested-With`; e-mail `e2e-<запуск>-<n>@example.test`, номер запуска у каждого воркера свой (случайный хвост), его можно задать `E2E_RUN_ID`); `e2e/helpers/ui.ts` — `loginViaUi(page, user)`; `e2e/fixtures.ts` — фикстура `couple` (`a` создаёт пространство, `b` входит по коду). Спека сама готовит себе данные и не зависит от других.
 
+**E2E против образа nginx (QA-05):** `docker compose --profile app up -d --build` (сервис `frontend` на `http://localhost:8081`), затем `E2E_BASE_URL=http://localhost:8081 npm run e2e -- e2e/onboarding.spec.ts` (dev server при этом не запускается). nginx ограничивает `/api/v1/auth/` и `/api/v1/workspaces/join` до 20 запросов в минуту с одного адреса (burst 20, ответ 429): одна спека укладывается, весь набор подряд — нет, между прогонами подождите минуту.
+
 ### 3.3. Ручной прогон (2–3 минуты)
 
 После каждой задачи проходите то, что уже сделано:
