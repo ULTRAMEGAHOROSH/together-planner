@@ -10,6 +10,7 @@ import { WorkspaceApi } from '../api/workspace-api';
 import { isApiError } from '../error/api-error';
 import { ToastService } from '../notify/toast-service';
 import { SessionStore } from './session-store';
+import { SessionSync } from './session-sync';
 import { TokenRefresher } from './token-refresher';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,7 @@ export class AuthService {
   private readonly refresher = inject(TokenRefresher);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly sync = inject(SessionSync);
 
   /**
    * Start-up (FD-39): A3 by the cookie → W2 → `authenticated` with the workspace.
@@ -59,6 +61,7 @@ export class AuthService {
       catchError(() => of(undefined)),
       map(() => {
         this.session.clear();
+        this.sync.announceLogout();
         void this.router.navigateByUrl('/login');
       }),
     );
@@ -74,6 +77,7 @@ export class AuthService {
     return this.api.logoutAll().pipe(
       map(() => {
         this.session.clear();
+        this.sync.announceLogout();
         void this.router.navigateByUrl('/login');
       }),
     );

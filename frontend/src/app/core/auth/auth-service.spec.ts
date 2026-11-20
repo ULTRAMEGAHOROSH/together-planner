@@ -21,6 +21,7 @@ import { ToastService } from '../notify/toast-service';
 import { authInterceptor } from './auth-interceptor';
 import { AuthService } from './auth-service';
 import { SessionStore } from './session-store';
+import { SessionSync } from './session-sync';
 
 const REFRESH = '/api/v1/auth/refresh';
 const W2 = '/api/v1/workspaces/current';
@@ -151,6 +152,17 @@ describe('AuthService', () => {
     beforeEach(() => {
       session.setAuth(AUTH_RESPONSE);
       session.setWorkspace(WORKSPACE_CREATED);
+    });
+
+    it('AUTH-09: the other tabs are told once the session is cleared', async () => {
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const announce = vi.spyOn(TestBed.inject(SessionSync), 'announceLogout');
+      const done = firstValueFrom(auth.logout(), { defaultValue: undefined });
+      backend
+        .expectOne('/api/v1/auth/logout')
+        .flush(null, { status: 204, statusText: 'No Content' });
+      await done;
+      expect(announce).toHaveBeenCalledTimes(1);
     });
 
     it('A4 without Bearer → session cleared → /login', async () => {
