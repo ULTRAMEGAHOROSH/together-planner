@@ -1,6 +1,6 @@
-# Together Planner — backend
+# Together Planner
 
-Backend модульного монолита «Together Planner»: Java 21, Spring Boot 4.1.2,
+Приложение для двоих: общая неделя, события, шаблоны. Backend — модульный монолит: Java 21, Spring Boot 4.1.2,
 Spring Security (JWT), Spring Data JPA/Hibernate, PostgreSQL 18, Flyway.
 Полная спецификация — [docs/backend-spec-v2.md](docs/backend-spec-v2.md),
 план реализации по этапам — [docs/backend-implementation-roadmap.md](docs/backend-implementation-roadmap.md).
@@ -78,7 +78,7 @@ curl http://localhost:8080/actuator/health
 Через Swagger UI можно, например, зарегистрироваться (`POST /auth/register`)
 и дальше пройти остальные эндпоинты с полученным `accessToken`.
 
-## Тесты
+## Тесты backend
 
 ```bash
 cd backend
@@ -90,9 +90,51 @@ cd backend
 `docker compose up -d postgres` для тестов не нужно (и не мешает, если он уже
 поднят).
 
+## Frontend
+
+Angular 22 (standalone, signals), Angular CDK, vitest, Playwright. Код — `frontend/`.
+Документы: [решения](docs/frontend-final-decisions.md),
+[план задач и журнал](docs/frontend-final-roadmap.md),
+[руководство по разработке](docs/frontend-development-guide.md).
+
+**Требования:** Node.js 24 (npm 11), поднятый backend на `localhost:8080` (см. выше).
+Для E2E — Chrome (Playwright использует установленный канал Chrome).
+
+```bash
+cd frontend
+npm ci
+npm start            # http://localhost:4200, /api проксируется на :8080 (proxy.conf.json)
+```
+
+Проверки:
+
+```bash
+npm test             # unit-тесты (vitest)
+npm run lint
+npm run format:check
+npm run build        # production-сборка в dist/, бюджеты размера проверяются
+npm run e2e          # Playwright против реального backend на :8080; dev-сервер поднимается сам
+```
+
+E2E создаёт своих пользователей (`e2e-<run>-<n>@example.test`) и ничего не чистит.
+Против собранного образа: `E2E_BASE_URL=http://localhost:8081 npm run e2e` (nginx ограничивает
+запросы к `/api/v1/auth/` — 20 в минуту на адрес, полный набор подряд не пройдёт; подробности —
+в руководстве по разработке).
+
+**Всё в Docker** (PostgreSQL, backend и frontend за nginx — один origin, CSP и кеш-заголовки):
+
+```bash
+docker compose --profile app up --build
+```
+
+Приложение — `http://localhost:8081`. Порт `8080` backend нужен только для разработки,
+в production его не публикуют. За HTTPS оставьте `REFRESH_COOKIE_SECURE=true`;
+`false` — только для локального HTTP.
+
 ## Структура репозитория
 
 - `backend/` — исходный код и тесты (Maven-проект; модульный монолит —
   границы модулей описаны в [docs/backend-spec-v2.md](docs/backend-spec-v2.md), §6).
-- `docs/` — спецификация, аудит и план реализации.
+- `frontend/` — Angular-приложение, тесты и E2E (`frontend/e2e`), nginx-конфиг для образа.
+- `docs/` — спецификация backend, аудит, план реализации и frontend-документы.
 - `docker-compose.yml`, `backend/Dockerfile` — инфраструктура (§12.3 спецификации).
