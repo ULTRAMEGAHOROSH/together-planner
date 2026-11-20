@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -48,8 +48,8 @@ describe('app routes (FND-05 skeleton)', () => {
   it.each([
     ['/join?code=K7QM2XPA', 'Приглашение в пространство', 'Приглашение — Together Planner'],
     ['/templates', 'Шаблоны недель', 'Шаблоны — Together Planner'],
-    ['/templates/new', 'Шаблон', 'Новый шаблон — Together Planner'],
-  ])('%s shows its placeholder', async (path, expectedHeading, expectedTitle) => {
+    ['/templates/new', 'Новый шаблон', 'Новый шаблон — Together Planner'],
+  ])('%s shows its page', async (path, expectedHeading, expectedTitle) => {
     await harness.navigateByUrl(path);
     expect(heading()).toBe(expectedHeading);
     expect(TestBed.inject(Title).getTitle()).toBe(expectedTitle);
@@ -88,10 +88,17 @@ describe('app routes (FND-05 skeleton)', () => {
   });
 
   it('binds :templateId to the editor input, /templates/new has none', async () => {
+    const backend = TestBed.inject(HttpTestingController);
     await harness.navigateByUrl('/templates/3f6c2a10-0000-4000-8000-000000000001');
-    expect(text()).toContain('3f6c2a10-0000-4000-8000-000000000001');
+    // The editor asks for the template of the address (T3).
+    backend
+      .expectOne(
+        `/api/v1/workspaces/${WORKSPACE_CREATED.id}/templates/3f6c2a10-0000-4000-8000-000000000001`,
+      )
+      .flush(null, { status: 404, statusText: 'Not Found' });
     await harness.navigateByUrl('/templates/new');
     expect(text()).toContain('Новый шаблон');
+    backend.expectNone(() => true);
   });
 
   it.each(['/', '/no-such-page'])('%s redirects to the current week', async (path) => {
@@ -109,7 +116,7 @@ describe('app routes × session (AUTH-06)', () => {
     ['no workspace', '/onboarding', 'Общее пространство', 'Общее пространство — Together Planner'],
     // Dev builds only, no sign-in: the board playground (WEEK-05).
     ['anonymous', '/_dev/board', 'Площадка доски', 'Площадка доски — Together Planner'],
-  ] as const)('%s: %s shows its placeholder', async (status, path, content, title) => {
+  ] as const)('%s: %s shows its page', async (status, path, content, title) => {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),

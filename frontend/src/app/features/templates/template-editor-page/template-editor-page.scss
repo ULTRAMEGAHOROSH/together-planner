@@ -1,0 +1,111 @@
+// A centered column like the templates list: the header, the fields, then a section per day.
+:host {
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px 20px 32px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--tp-color-border);
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-surface);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--tp-color-hover);
+  }
+}
+
+.intro {
+  flex: 1 1 260px;
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+    font-family: var(--tp-font-display);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: var(--tp-letter-spacing-display);
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--tp-color-text-subtle);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+}
+
+.loading {
+  align-self: center;
+  margin: 32px 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-2xl);
+  background: var(--tp-color-surface);
+}
+
+.form-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-danger-soft);
+  color: var(--tp-color-danger);
+  font-size: 13px;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+    font-family: var(--tp-font-display);
+    font-size: 15px;
+    font-weight: 800;
+  }
+}

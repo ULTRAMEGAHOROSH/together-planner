@@ -1,0 +1,133 @@
+// One event of a template: two lines of controls, the description and the errors under them.
+:host {
+  display: block;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-xl);
+  background: var(--tp-color-surface);
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.times {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time {
+  width: 108px;
+  padding: 0 10px;
+}
+
+.day {
+  width: 76px;
+  padding: 0 8px;
+}
+
+.offset {
+  width: 92px;
+  padding: 0 8px;
+}
+
+.dash {
+  color: var(--tp-color-text-subtle);
+}
+
+.title {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.pick {
+  flex: 0 1 190px;
+  width: auto;
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.person,
+.both,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  border: 1.5px solid var(--tp-color-border);
+  border-radius: var(--tp-radius-pill);
+  background: var(--tp-color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--tp-duration-press) ease;
+
+  &:active {
+    transform: var(--tp-press-shift);
+  }
+}
+
+.person {
+  padding: 0 12px 0 4px;
+
+  &.seat-1[aria-pressed='true'] {
+    border-color: var(--tp-color-seat-1);
+    background: var(--tp-color-seat-1-tint);
+  }
+
+  &.seat-2[aria-pressed='true'] {
+    border-color: var(--tp-color-seat-2);
+    background: var(--tp-color-seat-2-tint);
+  }
+}
+
+.both {
+  padding: 0 12px;
+  border-style: dashed;
+
+  &[aria-pressed='true'] {
+    border-color: var(--tp-color-accent);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.icon-button {
+  padding: 0 12px;
+
+  &:hover {
+    background: var(--tp-color-hover);
+  }
+
+  &.danger {
+    border-color: var(--tp-color-danger-border);
+    color: var(--tp-color-danger);
+  }
+}
+
+.error {
+  color: var(--tp-color-danger);
+  font-size: 12.5px;
+  line-height: 1.45;
+}

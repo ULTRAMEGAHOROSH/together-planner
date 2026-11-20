@@ -7,6 +7,7 @@ import {
   noWorkspaceGuard,
   workspaceGuard,
 } from '@core/auth/guards';
+import { unsavedChangesGuard } from '@core/navigation/unsaved-changes-guard';
 import { currentWeekPath } from '@features/schedule';
 
 /** Routes that exist only in a dev build (`ng serve`, tests): in production they are absent. */
@@ -82,6 +83,7 @@ export const routes: Routes = [
       {
         path: 'templates/new',
         title: 'Новый шаблон — Together Planner',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('@features/templates/template-editor-page/template-editor-page').then(
             (m) => m.TemplateEditorPage,
@@ -90,6 +92,7 @@ export const routes: Routes = [
       {
         path: 'templates/:templateId',
         title: 'Шаблон — Together Planner',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('@features/templates/template-editor-page/template-editor-page').then(
             (m) => m.TemplateEditorPage,

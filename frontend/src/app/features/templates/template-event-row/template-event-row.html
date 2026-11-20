@@ -1,0 +1,136 @@
+<div class="row" [formGroup]="row()">
+  <div class="line">
+    <select
+      class="tp-control day"
+      aria-label="День"
+      formControlName="dayOfWeek"
+      (change)="commit.emit()"
+    >
+      @for (day of days; track day.value) {
+        <option [ngValue]="day.value">{{ day.label }}</option>
+      }
+    </select>
+    <div class="times" role="group" aria-label="Время">
+      <input
+        class="tp-control time"
+        type="time"
+        step="900"
+        aria-label="Время начала"
+        formControlName="startTime"
+        [attr.aria-invalid]="errors().start ? 'true' : null"
+        (blur)="commit.emit()"
+      />
+      <span class="dash" aria-hidden="true">–</span>
+      <input
+        class="tp-control time"
+        type="time"
+        step="900"
+        aria-label="Время окончания"
+        formControlName="endTime"
+        [attr.aria-invalid]="errors().end ? 'true' : null"
+      />
+      <select
+        class="tp-control offset"
+        aria-label="Окончание через дней"
+        formControlName="endDayOffset"
+        [attr.aria-invalid]="errors().end ? 'true' : null"
+      >
+        @for (offset of offsets(); track offset) {
+          <option [ngValue]="offset">+{{ offset }} дн.</option>
+        }
+      </select>
+    </div>
+    <input
+      class="tp-control title"
+      type="text"
+      aria-label="Название"
+      placeholder="Название"
+      autocomplete="off"
+      formControlName="title"
+      [attr.aria-invalid]="errors().title ? 'true' : null"
+    />
+  </div>
+
+  <div class="line">
+    <div class="people" role="group" aria-label="Участники">
+      @for (person of people(); track person.seat) {
+        <button
+          type="button"
+          class="person"
+          [class.seat-1]="person.seat === 1"
+          [class.seat-2]="person.seat === 2"
+          [attr.aria-pressed]="person.control.value"
+          (click)="toggle(person)"
+        >
+          <tp-avatar size="sm" [name]="person.name" [seat]="person.seat" />
+          {{ person.name }}
+        </button>
+      }
+      @if (people().length > 1) {
+        <button
+          type="button"
+          class="both"
+          [attr.aria-pressed]="bothChosen()"
+          (click)="chooseBoth()"
+        >
+          Оба
+        </button>
+      }
+    </div>
+    <select class="tp-control pick" aria-label="Категория" formControlName="category">
+      @for (category of categories; track category.value) {
+        <option [ngValue]="category.value">{{ category.label }}</option>
+      }
+    </select>
+    <select class="tp-control pick" aria-label="Цвет" formControlName="color">
+      <option [ngValue]="null">Цвет как у категории</option>
+      @for (color of colors; track color.value) {
+        <option [ngValue]="color.value">{{ color.label }}</option>
+      }
+    </select>
+    <div class="actions">
+      <button
+        type="button"
+        class="icon-button"
+        aria-label="Описание"
+        [attr.aria-expanded]="descriptionOpen()"
+        (click)="toggleDescription()"
+      >
+        Описание
+      </button>
+      <button type="button" class="icon-button" aria-label="Дублировать" (click)="duplicate.emit()">
+        Дублировать
+      </button>
+      <button type="button" class="icon-button danger" aria-label="Удалить" (click)="remove.emit()">
+        <tp-icon name="trash" [size]="16" />
+        Удалить
+      </button>
+    </div>
+  </div>
+
+  @if (descriptionOpen()) {
+    <textarea
+      class="tp-control"
+      rows="2"
+      aria-label="Описание события"
+      placeholder="Заметка, адрес, что взять с собой"
+      formControlName="description"
+      [attr.aria-invalid]="errors().description ? 'true' : null"
+    ></textarea>
+  }
+
+  @for (
+    text of [
+      errors().title,
+      errors().start,
+      errors().end,
+      errors().participants,
+      errors().description,
+    ];
+    track $index
+  ) {
+    @if (text) {
+      <span class="error" role="alert">{{ text }}</span>
+    }
+  }
+</div>

@@ -1,0 +1,77 @@
+<div class="page">
+  <header class="head">
+    <button class="back" type="button" aria-label="Назад к списку шаблонов" (click)="back()">
+      <tp-icon name="arrow-left" />
+    </button>
+    <div class="intro">
+      <h1>{{ heading() }}</h1>
+      <p>
+        Правки шаблона не меняют уже заполненные недели.
+        @if (status() === 'ready') {
+          Событий в шаблоне: {{ eventCount() }}.
+        }
+      </p>
+    </div>
+    @if (status() === 'ready') {
+      <button tpButton type="submit" form="tp-template-form" [loading]="saving()">Сохранить</button>
+    }
+  </header>
+
+  @switch (status()) {
+    @case ('loading') {
+      <tp-spinner class="loading" label="Загружаем шаблон…" />
+    }
+    @case ('error') {
+      <tp-error-state [text]="loadErrorText()" (retry)="retry()" />
+    }
+    @default {
+      <form id="tp-template-form" class="form" [formGroup]="form()" (ngSubmit)="save()">
+        <div class="fields">
+          <tp-form-field label="Название" [error]="nameError()">
+            <input
+              tpControl
+              type="text"
+              formControlName="name"
+              autocomplete="off"
+              placeholder="Например, обычная неделя"
+            />
+          </tp-form-field>
+          <tp-form-field label="Описание — необязательно" [error]="descriptionError()">
+            <textarea
+              tpControl
+              rows="2"
+              formControlName="description"
+              placeholder="Для чего этот шаблон"
+            ></textarea>
+          </tp-form-field>
+        </div>
+
+        @if (formError(); as text) {
+          <p class="form-error" role="alert">{{ text }}</p>
+        }
+
+        @for (group of days(); track group.day) {
+          <section class="day" [attr.aria-label]="group.label">
+            <div class="day-head">
+              <h2>{{ group.label }}</h2>
+              <button tpButton variant="ghost" size="sm" type="button" (click)="add(group.day)">
+                <tp-icon name="plus" [size]="16" />
+                Событие
+              </button>
+            </div>
+            @for (row of group.rows; track row) {
+              <tp-template-event-row
+                [row]="row"
+                [members]="members()"
+                [submitted]="submitted()"
+                (duplicate)="duplicate(row)"
+                (remove)="remove(row)"
+                (commit)="regroup()"
+              />
+            }
+          </section>
+        }
+      </form>
+    }
+  }
+</div>
