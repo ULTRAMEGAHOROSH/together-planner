@@ -86,6 +86,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
           [dayNavigation]="!narrow()"
           (dayClick)="toggleDay(weekStart, $event)"
           (slotClick)="createAt($event)"
+          (eventClick)="edit($event)"
         >
           @if (partnerMissing()) {
             <tp-partner-placeholder tpPartnerPlaceholder />
@@ -251,6 +252,14 @@ export class WeekPage {
     } else {
       this.remember('day');
       this.show({ weekStart: week, day });
+    }
+  }
+
+  /** A click on a card: the event of the week on screen, with its version, opens for edit. */
+  protected edit(id: string): void {
+    const event = this.store.data()?.events.find((e) => e.id === id);
+    if (event) {
+      this.editor.openEdit(event);
     }
   }
 

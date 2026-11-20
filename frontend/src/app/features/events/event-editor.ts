@@ -11,7 +11,7 @@ import { weekUrl } from '@features/schedule';
 import { formatDate, parseLocalDateTime, weekStartOf } from '@shared/time';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { openEventDialog } from './event-dialog/event-dialog';
-import { type CreatePrefill, prefillCreate } from './event-form';
+import { type CreatePrefill, fromEventResponse, prefillCreate } from './event-form';
 
 /** Evening, when a new event is started from the header: the prototype's «19:00». */
 const DEFAULT_START_MINUTE = 19 * 60;
@@ -48,7 +48,30 @@ export class EventEditor {
     }).subscribe((result) => {
       // A cancel gives `undefined`; the dialog gives a response only for a save.
       if (typeof result === 'object') {
-        this.created(result);
+        this.saved(result, 'Событие создано');
+      }
+    });
+  }
+
+  /**
+   * Edits an event of the week on screen (it has its `version`): E5 with that version. The
+   * template an event came from stays on it (E5 does not change `source`).
+   */
+  openEdit(event: EventResponse): void {
+    const workspace = this.session.workspace();
+    if (workspace === null) {
+      return;
+    }
+    openEventDialog(this.dialogs, {
+      mode: 'edit',
+      value: fromEventResponse(event, this.session.members()),
+      members: this.session.members(),
+      templateName: event.source?.templateName ?? null,
+      save: (request) =>
+        this.api.update(workspace.id, event.id, { ...request, version: event.version }),
+    }).subscribe((result) => {
+      if (typeof result === 'object') {
+        this.saved(result, 'Изменения сохранены');
       }
     });
   }
@@ -70,15 +93,15 @@ export class EventEditor {
     });
   }
 
-  private created(event: EventResponse): void {
+  private saved(event: EventResponse, text: string): void {
     this.changes.eventsChanged();
     const week = weekStartOf(formatDate(parseLocalDateTime(event.start)));
     const shown = this.view.focusDate();
     if (shown !== null && weekStartOf(shown) === week) {
-      this.toast.show('Событие создано');
+      this.toast.show(text);
       return;
     }
-    this.toast.show('Событие создано', {
+    this.toast.show(text, {
       action: {
         label: 'Показать',
         run: () => void this.router.navigateByUrl(weekUrl({ weekStart: week, day: null })),

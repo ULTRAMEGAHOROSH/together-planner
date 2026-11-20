@@ -10,6 +10,7 @@ import {
   WORKSPACE_FULL_PAIR,
 } from '@core/api/models/testing/samples';
 import type { ProblemDetail } from '@core/api/models/common.models';
+import type { EventResponse } from '@core/api/models/event.models';
 import { SessionStore } from '@core/auth/session-store';
 import { DataChanges } from '@core/changes/data-changes';
 import { errorInterceptor } from '@core/error/error-interceptor';
@@ -263,6 +264,108 @@ describe('EventEditor (EVT-04)', () => {
       editor.openCreate({ date: '2026-11-20', minute: 480, personSeat: 1 });
       await appRef.whenStable();
 
+      expect(dialogElement()).toBeNull();
+    });
+  });
+
+  describe('openEdit (EVT-05)', () => {
+    const EVENT: EventResponse = {
+      ...EVENT_CREATED_MANUAL,
+      title: 'Ужин',
+      description: 'у моря',
+      start: '2026-11-25T19:00:00',
+      end: '2026-11-25T21:00:00',
+      participantIds: [FIRST.userId],
+      category: 'FOOD',
+      version: 4,
+    };
+    const ONE = `${EVENTS}/${EVENT.id}`;
+
+    it('opens the dialog filled from the event; the template note only for a template event', async () => {
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+
+      expect(dialog().querySelector('h2')?.textContent?.trim()).toBe('Изменить событие');
+      expect(title().value).toBe('Ужин');
+      expect(input('Время начала').value).toBe('19:00');
+      expect(pressedPeople()).toEqual(['true', 'false']);
+      expect(dialog().querySelector('.note')).toBeNull();
+      expect(dialog().textContent).not.toContain('Удалить');
+      backend.expectNone(() => true);
+
+      pressEscape();
+      await appRef.whenStable();
+      editor.openEdit({
+        ...EVENT,
+        source: { templateEventId: 't', weekStart: '2026-11-23', templateName: 'Обычная неделя' },
+      });
+      await appRef.whenStable();
+      expect(dialog().querySelector('.note')?.textContent).toContain('«Обычная неделя»');
+    });
+
+    it('«Сохранить» sends E5 with the version of the event and announces the change', async () => {
+      TestBed.inject(ViewContext).setFocusDate('2026-11-23');
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      await type(title(), 'Поздний ужин');
+      await submit();
+
+      const request = backend.expectOne(ONE);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body).toEqual({
+        title: 'Поздний ужин',
+        description: 'у моря',
+        start: '2026-11-25T19:00',
+        end: '2026-11-25T21:00',
+        participantIds: [FIRST.userId],
+        category: 'FOOD',
+        color: null,
+        version: 4,
+      });
+      request.flush({ ...EVENT, title: 'Поздний ужин', version: 5 });
+      await appRef.whenStable();
+
+      expect(dialogElement()).toBeNull();
+      expect(eventsChanged).toBe(1);
+      expect(toast()?.text).toBe('Изменения сохранены');
+      expect(toast()?.action).toBeNull();
+    });
+
+    it('an event moved to a week that is not on screen: «Показать» goes there', async () => {
+      TestBed.inject(ViewContext).setFocusDate('2026-11-23');
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      await type(input('Дата начала'), '2026-12-02');
+      await submit();
+
+      backend
+        .expectOne(ONE)
+        .flush({ ...EVENT, start: '2026-12-02T19:00:00', end: '2026-12-02T21:00:00', version: 5 });
+      await appRef.whenStable();
+
+      expect(toast()?.text).toBe('Изменения сохранены');
+      TestBed.inject(ToastService).runAction();
+      expect(navigate).toHaveBeenCalledExactlyOnceWith('/week/2026-11-30');
+    });
+
+    it('a server error stays at the field, a cancel sends nothing, no workspace opens nothing', async () => {
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      await submit();
+      backend.expectOne(ONE).flush(END_BEFORE_START, { status: 400, statusText: 'Bad Request' });
+      await appRef.whenStable();
+      expect(dialog().querySelector('.error')?.textContent?.trim()).toBe(
+        ERROR_MESSAGES.EVENT_END_NOT_AFTER_START,
+      );
+      expect(eventsChanged).toBe(0);
+
+      pressEscape();
+      await appRef.whenStable();
+      expect(eventsChanged).toBe(0);
+
+      TestBed.inject(SessionStore).setWorkspace(null);
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
       expect(dialogElement()).toBeNull();
     });
   });

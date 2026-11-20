@@ -44,7 +44,11 @@ interface EventDialogBase {
 
 export type EventDialogData =
   | (EventDialogBase & { mode: 'create' })
-  | (EventDialogBase & { mode: 'edit'; remove: () => Observable<unknown> });
+  | (EventDialogBase & {
+      mode: 'edit';
+      /** Without it there is no «Удалить» (deleting comes with EVT-06). */
+      remove?: () => Observable<unknown>;
+    });
 
 /** What the dialog closes with: the saved event, or `deleted`; `undefined` for a cancel. */
 export type EventDialogResult = EventResponse | 'deleted';
@@ -102,7 +106,7 @@ export class EventDialog {
     name: member.displayName,
     control: this.form.controls.participants.controls[member.seat === 1 ? 'seat1' : 'seat2'],
   }));
-  protected readonly removable = this.data.mode === 'edit' ? this.data.remove : null;
+  protected readonly removable = this.data.mode === 'edit' ? (this.data.remove ?? null) : null;
 
   protected readonly saving = signal(false);
   protected readonly deleting = signal(false);

@@ -562,6 +562,45 @@ describe('WeekPage day mode (WEEK-13)', () => {
       });
     });
 
+    describe('a click on a card', () => {
+      let openEdit: ReturnType<typeof vi.spyOn>;
+
+      function board() {
+        const debug = harness.fixture.debugElement.query(By.directive(ScheduleBoard));
+        return debug.componentInstance as ScheduleBoard;
+      }
+
+      it('opens the event of the week, with its version, for edit', async () => {
+        await start('/week/2026-11-23');
+        await loadWeek('2026-11-23');
+        openEdit = vi.spyOn(TestBed.inject(EventEditor), 'openEdit').mockReturnValue();
+
+        board().eventClick.emit(WEEK.events[0].id);
+
+        expect(openEdit).toHaveBeenCalledExactlyOnceWith(WEEK.events[0]);
+      });
+
+      it('an id that is not in the week opens nothing', async () => {
+        await start('/week/2026-11-23');
+        await loadWeek('2026-11-23');
+        openEdit = vi.spyOn(TestBed.inject(EventEditor), 'openEdit').mockReturnValue();
+
+        board().eventClick.emit('gone');
+
+        expect(openEdit).not.toHaveBeenCalled();
+      });
+
+      it('before the week has arrived there is nothing to open', async () => {
+        await start('/week/2026-11-23');
+        openEdit = vi.spyOn(TestBed.inject(EventEditor), 'openEdit').mockReturnValue();
+
+        const page = harness.fixture.debugElement.query(By.directive(WeekPage));
+        (page.componentInstance as unknown as { edit(id: string): void }).edit('x');
+
+        expect(openEdit).not.toHaveBeenCalled();
+      });
+    });
+
     it('a column of nobody we know opens nothing', async () => {
       await click('a-stranger');
       expect(openCreate).not.toHaveBeenCalled();

@@ -152,6 +152,12 @@ describe('EventDialog', () => {
       expect(button('Удалить')).toBeDefined();
     });
 
+    it('an edit without a way to delete has no «Удалить»', async () => {
+      await open({ mode: 'edit' } as Partial<EventDialogData>);
+
+      expect(dialog().textContent).not.toContain('Удалить');
+    });
+
     it('«Оба» and the second person are there only when the workspace has two members', async () => {
       await open({ members: MEMBERS.slice(0, 1) });
 
