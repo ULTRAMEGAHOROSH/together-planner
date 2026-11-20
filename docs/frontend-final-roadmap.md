@@ -209,7 +209,7 @@ flowchart LR
 | EVT-07 | Конфликт версий и удалённое событие | P0 | M | ☑ |
 | EVT-08 | Уведомление о сдвиге времени (DST) | P1 | S | ☐ |
 | **Фаза 8 — Шаблоны** |||||
-| TPL-01 | `TemplatesApi` и `TemplateApplicationsApi` | P0 | S | ☐ |
+| TPL-01 | `TemplatesApi` и `TemplateApplicationsApi` | P0 | S | ☑ |
 | TPL-02 | Страница шаблонов: список и удаление | P0 | M | ☐ |
 | TPL-03 | Модель формы шаблона | P0 | M | ☐ |
 | TPL-04 | Редактор шаблона | P0 | L | ☐ |
