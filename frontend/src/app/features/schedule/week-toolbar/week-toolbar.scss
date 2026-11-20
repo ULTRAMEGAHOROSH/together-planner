@@ -53,3 +53,10 @@ h1 {
 .today:not(:disabled) {
   color: var(--tp-color-accent);
 }
+
+// Pressed: the green of the free time, as in the prototype.
+.free[aria-pressed='true'] {
+  color: var(--tp-color-free-text);
+  background: var(--tp-color-free-bg);
+  border-color: var(--tp-color-free-border);
+}

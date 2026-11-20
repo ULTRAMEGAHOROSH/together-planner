@@ -1,6 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 import type { Uuid } from '@core/api/models/common.models';
 import { EventCard } from '../event-card/event-card';
+import { FreeSlot } from '../free-slot/free-slot';
 import { NowIndicator } from '../now-indicator/now-indicator';
 import { slotMinuteAt } from '../../engine/geometry';
 import type { DayColumnLayout, NowMark } from '../../engine/model';
@@ -13,7 +14,7 @@ import type { EventHover, SlotClick } from '../board.models';
  */
 @Component({
   selector: 'tp-day-column',
-  imports: [EventCard, NowIndicator],
+  imports: [EventCard, FreeSlot, NowIndicator],
   template: `
     @if (!readOnly()) {
       <button
@@ -22,6 +23,9 @@ import type { EventHover, SlotClick } from '../board.models';
         [attr.aria-label]="'Создать событие для ' + personName() + ', ' + day().dateLabel"
         (click)="onSlot($event)"
       ></button>
+    }
+    @for (slot of day().free; track slot.key) {
+      <tp-free-slot [slot]="slot" />
     }
     @for (box of day().boxes; track box.key) {
       <tp-event-card

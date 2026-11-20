@@ -1,0 +1,36 @@
+// Values from the prototype (design/Main.dc.html, free slots).
+:host {
+  position: absolute;
+  right: 3px;
+  left: 3px;
+  z-index: 1;
+  padding: 3px 6px;
+  overflow: hidden;
+  color: var(--tp-color-free-text);
+  border: 1px dashed var(--tp-color-free-border);
+  border-radius: 8px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--tp-color-free-stripe) 0,
+    var(--tp-color-free-stripe) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  pointer-events: none;
+}
+
+.label,
+.time {
+  overflow: hidden;
+  font-size: 10.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+}

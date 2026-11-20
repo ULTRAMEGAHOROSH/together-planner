@@ -74,6 +74,24 @@ describe('WeekStore (WEEK-09)', () => {
     expect(store.highlightedEventId()).toBeNull();
   });
 
+  it('WEEK-15: the free time is on by default, both panels get the same gaps, the switch removes them', () => {
+    expect(store.showFreeTime()).toBe(true);
+    store.setWeek(WEEK_23);
+    backend.expectOne(URL(WEEK_23)).flush(WEEK);
+    const free = () =>
+      store
+        .panels()
+        .map((p) => (p.kind === 'member' ? p.panel.layout.days.map((d) => d.free) : []));
+    const [left, right] = free();
+    expect(left.flat().length).toBeGreaterThan(0);
+    expect(left).toEqual(right); // the same free time for both
+    store.toggleFreeTime();
+    expect(store.showFreeTime()).toBe(false);
+    expect(free().flat(2)).toEqual([]);
+    store.toggleFreeTime();
+    expect(free().flat(2).length).toBeGreaterThan(0);
+  });
+
   it('starts idle: nothing asked, nothing shown', () => {
     expect(store.status()).toBe('idle');
     expect(store.weekStart()).toBeNull();

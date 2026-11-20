@@ -53,6 +53,9 @@ export class WeekToolbar {
   readonly navigate = output<WeekAddress>();
   /** «Применить шаблон»: the page opens the dialog for the week on screen. */
   readonly applyTemplate = output();
+  /** «Общее свободное время» is on (WEEK-15). */
+  readonly showFree = input(true);
+  readonly freeToggle = output();
 
   protected readonly views = VIEWS;
   protected readonly title = computed(() => {

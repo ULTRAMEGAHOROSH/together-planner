@@ -38,6 +38,17 @@
   <span class="sub">{{ subtitle() }}</span>
 </div>
 <div class="spacer"></div>
+<button
+  tpButton
+  class="free"
+  variant="ghost"
+  size="sm"
+  type="button"
+  [attr.aria-pressed]="showFree()"
+  (click)="freeToggle.emit()"
+>
+  Общее свободное время
+</button>
 <button tpButton variant="ghost" size="sm" type="button" (click)="applyTemplate.emit()">
   <tp-icon name="layers" [size]="16" />
   Применить шаблон

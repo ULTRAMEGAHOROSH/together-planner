@@ -99,6 +99,20 @@ export interface NowMark {
   readonly label: string;
 }
 
+/** A gap in which both are free, ready to draw (WEEK-15, prototype `freeSlots`). */
+export interface FreeSlotBox {
+  readonly key: string;
+  /** px from the day's midnight line. */
+  readonly top: number;
+  readonly height: number;
+  /** «09:00–10:30». */
+  readonly timeLabel: string;
+  /** The label «Оба свободны» fits. */
+  readonly showLabel: boolean;
+  /** The time fits under the label. */
+  readonly showTime: boolean;
+}
+
 /** One day column of a panel. */
 export interface DayColumnLayout {
   readonly date: IsoDate;
@@ -111,6 +125,8 @@ export interface DayColumnLayout {
   readonly isToday: boolean;
   readonly isWeekend: boolean;
   readonly boxes: readonly EventBox[];
+  /** The gaps of both members; empty when the free time is off (WEEK-15). */
+  readonly free: readonly FreeSlotBox[];
 }
 
 /** One member's panel: the view model of the board (FD-59). */

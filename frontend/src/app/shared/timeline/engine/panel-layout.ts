@@ -3,6 +3,7 @@ import { dateLong, WEEKDAYS_SHORT } from '@shared/time/format-ru';
 import { addDays, isoDayOfWeek } from '@shared/time/week';
 import { splitIntoDaySegments } from './day-segments';
 import { toBox } from './geometry';
+import { freeSlotBoxes } from './free-slots';
 import { assignLanes } from './lanes';
 import type { DayColumnLayout, DayRange, PanelLayout, Segment, TimelineEvent } from './model';
 
@@ -11,6 +12,8 @@ export interface PanelLayoutOptions {
   readonly today: IsoDate | null;
   /** `false` — the days have no date numbers (a conditional week); default `true`. */
   readonly withDates?: boolean;
+  /** Draw the gaps in which both members are free (WEEK-15); default `false`. */
+  readonly showFree?: boolean;
 }
 
 /**
@@ -22,7 +25,7 @@ export function buildPanelLayout(
   events: readonly TimelineEvent[],
   range: DayRange,
   personId: Uuid,
-  { today, withDates = true }: PanelLayoutOptions,
+  { today, withDates = true, showFree = false }: PanelLayoutOptions,
 ): PanelLayout {
   const byDay: Segment[][] = Array.from({ length: range.dayCount }, () => []);
   for (const segment of splitIntoDaySegments(events, range, personId)) {
@@ -39,6 +42,7 @@ export function buildPanelLayout(
       isToday: date === today,
       isWeekend: dayOfWeek >= 6,
       boxes: assignLanes(segments).map((segment) => toBox(segment)),
+      free: showFree ? freeSlotBoxes(events, date) : [],
     };
   });
   return { personId, days };

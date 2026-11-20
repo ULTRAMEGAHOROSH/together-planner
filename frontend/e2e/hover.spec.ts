@@ -62,3 +62,35 @@ test('hover on a joint event: both copies are ringed, the hover card shows besid
   await expect(copies.first()).not.toHaveClass(/highlighted/);
   await expect(copies.nth(1)).not.toHaveClass(/highlighted/);
 });
+
+// WEEK-15: «Общее свободное время» — gaps in which both are free, on by default.
+test('free time: on by default, the toggle removes the green blocks', async ({
+  page,
+  request,
+  couple,
+}) => {
+  await createEvent(request, couple.a, couple.workspace.id, {
+    title: 'Работа',
+    description: null,
+    start: '2030-03-15T09:00:00',
+    end: '2030-03-15T18:00:00',
+    participantIds: [couple.a.id],
+    category: 'WORK',
+    color: null,
+  });
+  await loginViaUi(page, couple.a);
+  await page.goto('/week/2030-03-11?day=2030-03-15');
+  const toggle = page.getByRole('button', { name: 'Общее свободное время' });
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  // The day of the event: 07:00–09:00 and 18:00–23:00, in both panels.
+  await expect(page.locator('tp-free-slot')).toHaveCount(4);
+  await expect(page.locator('tp-free-slot').first()).toContainText('Оба свободны');
+  // It takes no pointer: a click on a free block still reaches the empty place below.
+  await page.locator('tp-free-slot').first().click({ force: true });
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('tp-free-slot')).toHaveCount(0);
+});

@@ -71,6 +71,8 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
         [view]="mode()"
         (viewChange)="chooseView(weekStart, $event)"
         (navigate)="show($event)"
+        [showFree]="store.showFreeTime()"
+        (freeToggle)="store.toggleFreeTime()"
         (applyTemplate)="applyTemplate(weekStart)"
       />
       @if (selectedDay(); as day) {

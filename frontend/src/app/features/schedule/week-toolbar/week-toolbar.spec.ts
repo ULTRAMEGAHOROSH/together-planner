@@ -35,6 +35,19 @@ describe('tp-week-toolbar (WEEK-11, WEEK-13)', () => {
     expect(asked).toHaveBeenCalledTimes(1);
   });
 
+  it('WEEK-15: «Общее свободное время» shows its state and asks the page to switch it', async () => {
+    await render('2026-11-09');
+    const asked = vi.fn();
+    fixture.componentInstance.freeToggle.subscribe(asked);
+    const free = button('Общее свободное время');
+    expect(free.getAttribute('aria-pressed')).toBe('true'); // on by default, as in the prototype
+    free.click();
+    expect(asked).toHaveBeenCalledTimes(1);
+    fixture.componentRef.setInput('showFree', false);
+    await fixture.whenStable();
+    expect(free.getAttribute('aria-pressed')).toBe('false');
+  });
+
   describe('«Неделя»', () => {
     it('NV-01: «›» from 2026-11-09 asks for 2026-11-16', async () => {
       await render('2026-11-09');

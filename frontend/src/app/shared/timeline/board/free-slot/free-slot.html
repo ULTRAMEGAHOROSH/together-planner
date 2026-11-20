@@ -1,0 +1,6 @@
+@if (slot().showLabel) {
+  <div class="label">Оба свободны</div>
+}
+@if (slot().showTime) {
+  <div class="time">{{ slot().timeLabel }}</div>
+}
