@@ -4,6 +4,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import type { WorkspaceRole } from '@core/api/models/enums';
 import type { IsoInstant } from '@core/api/models/common.models';
 import { WorkspaceApi } from '@core/api/workspace-api';
+import { AuthService } from '@core/auth/auth-service';
 import { SessionStore } from '@core/auth/session-store';
 import { ToastService } from '@core/notify/toast-service';
 import { ZoneClock } from '@core/time/zone-clock';
@@ -14,6 +15,8 @@ import { notBlank } from '@shared/forms/validators';
 import { dayMonthYear, parseInstant } from '@shared/time';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import { Button } from '@shared/ui/button/button';
+import { openConfirm } from '@shared/ui/confirm-dialog/confirm-dialog';
+import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { FormField, FormFieldControl } from '@shared/ui/form-field/form-field';
 
 const ROLE_LABEL: Readonly<Record<WorkspaceRole, string>> = {
@@ -25,7 +28,8 @@ const ROLE_LABEL: Readonly<Record<WorkspaceRole, string>> = {
  * `/settings` (SET-01): only what the backend can do. The profile is read-only (there is no
  * endpoint to change it); the workspace can be renamed (W3 `{name}`); its time zone is shown,
  * not changed (OQ-1); the members come with the workspace (W2/W3 carry them, so W4 is not
- * asked again); the invite card appears while the partner has not joined.
+ * asked again); the invite card appears while the partner has not joined. «Выйти на всех
+ * устройствах» (SET-02) asks first, then A5 and the local sign-out.
  */
 @Component({
   selector: 'tp-settings-page',
@@ -38,6 +42,8 @@ export class SettingsPage {
   private readonly session = inject(SessionStore);
   private readonly toast = inject(ToastService);
   private readonly clock = inject(ZoneClock);
+  private readonly auth = inject(AuthService);
+  private readonly dialogs = inject(DialogService);
 
   protected readonly user = this.session.user;
   protected readonly workspace = this.session.workspace;
@@ -51,6 +57,8 @@ export class SettingsPage {
     ],
   });
   protected readonly pending = signal(false);
+  /** A5 is running: the button waits. */
+  protected readonly leaving = signal(false);
   private readonly submitted = signal(false);
   private readonly formEvent = toSignal(this.form.events);
 
@@ -75,6 +83,36 @@ export class SettingsPage {
 
   protected roleOf(role: WorkspaceRole): string {
     return ROLE_LABEL[role];
+  }
+
+  /**
+   * A5 after a confirmation that says what it does and what it does not: the other devices
+   * are cut off at their next refresh, tokens already issued live up to 15 minutes. If A5
+   * fails the user stays signed in and is told — a silent sign-out would look like success.
+   */
+  protected logoutEverywhere(): void {
+    if (this.leaving()) {
+      return;
+    }
+    openConfirm(this.dialogs, {
+      title: 'Выйти на всех устройствах?',
+      text: 'Вы выйдете здесь и на всех других устройствах. Другим устройствам придётся войти заново. Страницы, которые там уже открыты, могут работать ещё до 15 минут.',
+      confirmLabel: 'Выйти везде',
+    }).subscribe((confirmed) => {
+      if (confirmed !== true) {
+        return;
+      }
+      this.leaving.set(true);
+      this.auth.logoutAll().subscribe({
+        error: (error: unknown) => {
+          this.leaving.set(false);
+          // An expired session already told the user and went to the sign-in page.
+          if (this.session.isAuthenticated()) {
+            this.toast.error(error);
+          }
+        },
+      });
+    });
   }
 
   protected rename(): void {

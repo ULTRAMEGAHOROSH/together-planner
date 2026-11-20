@@ -65,6 +65,21 @@ export class AuthService {
   }
 
   /**
+   * A5 (revokes every refresh token of the user, needs Bearer) → `SessionStore.clear()` →
+   * `/login`. Unlike {@link logout} it can fail, and then the user stays signed in here: the
+   * point is that the other devices are cut off, and a silent local sign-out would hide that
+   * they are not. Access tokens already issued work for up to 15 minutes (spec A5).
+   */
+  logoutAll(): Observable<void> {
+    return this.api.logoutAll().pipe(
+      map(() => {
+        this.session.clear();
+        void this.router.navigateByUrl('/login');
+      }),
+    );
+  }
+
+  /**
    * W2 → the session (WS-07). `404 WORKSPACE_NOT_FOUND` means the user has no workspace:
    * `null` in the session (the guards send them to onboarding), not an error. Other errors
    * go to the caller, and the session keeps what it had.

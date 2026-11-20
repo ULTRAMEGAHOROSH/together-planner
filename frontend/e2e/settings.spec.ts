@@ -53,4 +53,35 @@ test.describe('settings (SET-01)', () => {
     await expect(other.getByLabel('Название')).toHaveValue('Общий дом');
     await context.close();
   });
+
+  // SET-02: A5 on the real backend: the refresh tokens of every device are revoked.
+  test('sign out everywhere: the other device is out after its next refresh', async ({
+    page,
+    couple,
+    browser,
+  }, info) => {
+    const context = await browser.newContext({ baseURL: info.project.use.baseURL });
+    const other = await context.newPage();
+    await loginViaUi(other, couple.a);
+    await expect(other.locator('tp-person-panel')).toHaveCount(2);
+
+    await loginViaUi(page, couple.a);
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'Выйти на всех устройствах' }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toContainText('до 15 минут');
+    // Cancel first: nothing happens.
+    await dialog.getByRole('button', { name: 'Отмена' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/\/settings$/);
+
+    await page.getByRole('button', { name: 'Выйти на всех устройствах' }).click();
+    await dialog.getByRole('button', { name: 'Выйти везде' }).click();
+    await expect(page).toHaveURL(/\/login/);
+
+    // The other device lives on its access token until it needs a new one: a reload does.
+    await other.reload();
+    await expect(other).toHaveURL(/\/login/);
+    await context.close();
+  });
 });

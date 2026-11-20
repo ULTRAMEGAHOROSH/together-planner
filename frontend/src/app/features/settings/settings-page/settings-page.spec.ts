@@ -2,6 +2,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApplicationRef } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import {
   AUTH_RESPONSE,
   PROBLEM_MALFORMED,
@@ -13,6 +14,7 @@ import { SessionStore } from '@core/auth/session-store';
 import { errorInterceptor } from '@core/error/error-interceptor';
 import { ERROR_MESSAGES } from '@core/error/error-messages';
 import { ToastService } from '@core/notify/toast-service';
+import { dialogElement, provideVisibleElements } from '@shared/ui/dialog/testing';
 import { SettingsPage } from './settings-page';
 
 const WORKSPACE = `/api/v1/workspaces/${WORKSPACE_FULL_PAIR.id}`;
@@ -54,6 +56,8 @@ describe('SettingsPage (SET-01)', () => {
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
+        provideRouter([]),
+        provideVisibleElements(),
         { provide: ToastService, useValue: { show: toastShow, error: toastError } },
       ],
     });
@@ -62,7 +66,10 @@ describe('SettingsPage (SET-01)', () => {
     session.setAuth(AUTH_RESPONSE);
   });
 
-  afterEach(() => backend.verify());
+  afterEach(() => {
+    backend.verify();
+    document.querySelector('.cdk-overlay-container')?.remove();
+  });
 
   it('the profile is read-only: name, email and the date since which the user is with us', async () => {
     await open();
@@ -185,6 +192,71 @@ describe('SettingsPage (SET-01)', () => {
     expect(toastError).toHaveBeenCalledOnce();
     expect(input().value).toBe('Дом');
     expect(save().disabled).toBe(false);
+  });
+
+  describe('sign out everywhere (SET-02)', () => {
+    const LOGOUT_ALL = '/api/v1/auth/logout-all';
+    const leave = () =>
+      Array.from(el().querySelectorAll<HTMLButtonElement>('button')).find(
+        (b) => b.textContent?.trim() === 'Выйти на всех устройствах',
+      )!;
+    const dialogButton = (label: string) =>
+      Array.from(dialogElement()!.querySelectorAll('button')).find(
+        (b) => b.textContent?.trim() === label,
+      )!;
+
+    it('the button asks first: what happens, and that tokens already issued live for a while', async () => {
+      await open();
+      leave().click();
+      await stable();
+      const dialog = dialogElement()!;
+      expect(dialog.querySelector('h2')?.textContent).toBe('Выйти на всех устройствах?');
+      expect(dialog.textContent).toContain('до 15 минут');
+      expect(dialog.textContent).toContain('войти заново');
+      backend.expectNone(LOGOUT_ALL);
+    });
+
+    it('«Отмена»: nothing is sent, the user stays', async () => {
+      await open();
+      leave().click();
+      await stable();
+      dialogButton('Отмена').click();
+      await stable();
+      expect(dialogElement()).toBeNull();
+      backend.expectNone(LOGOUT_ALL);
+      expect(session.isAuthenticated()).toBe(true);
+    });
+
+    it('«Выйти везде»: A5, then signed out here and sent to /login', async () => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      await open();
+      leave().click();
+      await stable();
+      dialogButton('Выйти везде').click();
+      await stable();
+      const request = backend.expectOne(LOGOUT_ALL);
+      expect(request.request.method).toBe('POST');
+      expect(leave().getAttribute('aria-busy')).toBe('true'); // waits for the answer
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      await stable();
+      expect(session.status()).toBe('anonymous');
+      expect(navigate).toHaveBeenCalledWith('/login');
+    });
+
+    it('A5 fails: the user is told and stays signed in, the button works again', async () => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      await open();
+      leave().click();
+      await stable();
+      dialogButton('Выйти везде').click();
+      await stable();
+      backend.expectOne(LOGOUT_ALL).flush(PROBLEM_MALFORMED, { status: 400, statusText: 'Bad' });
+      await stable();
+      expect(toastError).toHaveBeenCalledOnce();
+      expect(session.isAuthenticated()).toBe(true);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(leave().getAttribute('aria-busy')).toBeNull();
+    });
   });
 
   it('no workspace in the session: only the profile', async () => {

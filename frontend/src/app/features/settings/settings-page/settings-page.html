@@ -66,3 +66,21 @@
     }
   </section>
 }
+
+<section class="card" aria-labelledby="settings-security">
+  <h2 id="settings-security">Безопасность</h2>
+  <p class="note">
+    Если потеряли устройство или вошли на чужом: выйдите везде, и на каждом устройстве войти
+    придётся заново.
+  </p>
+  <button
+    tpButton
+    class="leave"
+    variant="danger"
+    type="button"
+    [loading]="leaving()"
+    (click)="logoutEverywhere()"
+  >
+    Выйти на всех устройствах
+  </button>
+</section>

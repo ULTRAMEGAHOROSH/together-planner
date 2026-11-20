@@ -190,6 +190,53 @@ describe('AuthService', () => {
     });
   });
 
+  describe('logoutAll (SET-02)', () => {
+    beforeEach(() => {
+      session.setAuth(AUTH_RESPONSE);
+      session.setWorkspace(WORKSPACE_CREATED);
+    });
+
+    it('A5 with Bearer → session cleared → /login', async () => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const done = firstValueFrom(auth.logoutAll(), { defaultValue: undefined });
+      const req = backend.expectOne('/api/v1/auth/logout-all');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe(`Bearer ${AUTH_RESPONSE.accessToken}`);
+      // Still signed in while the server answers.
+      expect(session.isAuthenticated()).toBe(true);
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await done;
+      expect(session.status()).toBe('anonymous');
+      expect(session.workspace()).toBeNull();
+      expect(session.accessToken()).toBeNull();
+      expect(navigate).toHaveBeenCalledWith('/login');
+    });
+
+    it.each([
+      ['network down', (r: TestRequest) => r.error(new ProgressEvent('error'))],
+      [
+        'server error',
+        (r: TestRequest) =>
+          r.flush(
+            { status: 500, title: 'x', code: 'INTERNAL_ERROR' },
+            { status: 500, statusText: 'x' },
+          ),
+      ],
+    ])('%s: the error goes to the caller and the user stays signed in', async (_, fail) => {
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const result = firstValueFrom(auth.logoutAll(), { defaultValue: undefined }).then(
+        () => 'done',
+        (error: unknown) => error,
+      );
+      fail(backend.expectOne('/api/v1/auth/logout-all'));
+      expect(await result).toBeTruthy();
+      expect(await result).not.toBe('done');
+      expect(session.status()).toBe('authenticated');
+      expect(session.workspace()).not.toBeNull();
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('reloadWorkspace (WS-07)', () => {
     beforeEach(() => {
       session.setAuth(AUTH_RESPONSE);

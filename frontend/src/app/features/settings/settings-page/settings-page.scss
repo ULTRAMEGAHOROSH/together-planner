@@ -85,6 +85,11 @@ h3 {
   }
 }
 
+// The danger button keeps its width; it does not stretch over the card.
+.leave {
+  align-self: flex-start;
+}
+
 .form-error {
   margin: 0;
   color: var(--tp-color-danger);
