@@ -1,0 +1,64 @@
+// The card of design/Main.dc.html («ШАБЛОНЫ»): white, 18px radius, name 17px.
+article {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  height: 100%;
+  padding: 16px;
+  background: var(--tp-color-surface);
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-2xl);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--tp-font-display);
+  font-size: 17px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin: 4px 0 0;
+  color: var(--tp-color-text-subtle);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: var(--tp-radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.applied {
+  color: var(--tp-color-text-subtle);
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.spacer {
+  flex: 1 1 0;
+}

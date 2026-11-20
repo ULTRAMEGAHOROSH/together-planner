@@ -1,0 +1,38 @@
+<div class="page">
+  <header class="head">
+    <div class="intro">
+      <h1>Шаблоны недель</h1>
+      <p>
+        Шаблон копируется в неделю. Потом неделю можно менять как угодно, а правки шаблона не
+        трогают уже созданные недели.
+      </p>
+    </div>
+    <button tpButton size="sm" type="button" (click)="create()">+ Новый шаблон</button>
+  </header>
+
+  @if (store.status() === 'error') {
+    <tp-error-state [text]="errorText()" (retry)="store.load()" />
+  }
+  @if (firstLoad()) {
+    <tp-spinner class="loading" label="Загружаем шаблоны…" />
+  } @else if (isEmpty()) {
+    <tp-empty-state
+      text="Шаблонов пока нет. Создайте первый — типовую неделю можно применять в один клик."
+    >
+      <button tpButton size="sm" type="button" (click)="create()">+ Новый шаблон</button>
+    </tp-empty-state>
+  } @else {
+    <ul class="grid">
+      @for (template of store.templates(); track template.id) {
+        <li>
+          <tp-template-card
+            [template]="template"
+            [deleting]="store.deletingId() === template.id"
+            (open)="open(template.id)"
+            (remove)="store.remove(template)"
+          />
+        </li>
+      }
+    </ul>
+  }
+</div>
