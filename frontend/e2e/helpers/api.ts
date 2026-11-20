@@ -7,6 +7,7 @@ import type { APIRequestContext } from '@playwright/test';
 import type { AuthResponse } from '../../src/app/core/api/models/auth.models';
 import type { Uuid } from '../../src/app/core/api/models/common.models';
 import type { EventRequest, EventResponse } from '../../src/app/core/api/models/event.models';
+import type { EventUpdateRequest } from '../../src/app/core/api/events-api';
 import type {
   TemplateRequest,
   TemplateResponse,
@@ -48,7 +49,7 @@ export interface TestUser {
 /** A failed API call says what was asked and what came back, so a spec fails readably. */
 async function send<T>(
   request: APIRequestContext,
-  method: 'get' | 'post',
+  method: 'get' | 'post' | 'put',
   path: string,
   options: { token?: string; data?: unknown } = {},
 ): Promise<T> {
@@ -138,6 +139,20 @@ export function createEvent(
   body: EventRequest,
 ): Promise<EventResponse> {
   return send<EventResponse>(request, 'post', `/workspaces/${workspaceId}/events`, {
+    token: user.accessToken,
+    data: body,
+  });
+}
+
+/** E5: the event is changed (as the partner would); `body.version` is the one the caller saw. */
+export function updateEvent(
+  request: APIRequestContext,
+  user: TestUser,
+  workspaceId: Uuid,
+  eventId: Uuid,
+  body: EventUpdateRequest,
+): Promise<EventResponse> {
+  return send<EventResponse>(request, 'put', `/workspaces/${workspaceId}/events/${eventId}`, {
     token: user.accessToken,
     data: body,
   });
