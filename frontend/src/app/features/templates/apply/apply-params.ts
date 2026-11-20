@@ -2,8 +2,12 @@
 // Only the choice lives here; what the backend will do with it is its plan (FD-84, TPL-06).
 import type { IsoDate, Uuid } from '@core/api/models/common.models';
 import type { ApplyMode } from '@core/api/models/enums';
-import type { ApplyTemplateRequest } from '@core/api/models/template.models';
-import { addDays, daysBetween, weekStartOf } from '@shared/time';
+import type {
+  ApplyPreviewResponse,
+  ApplyTemplateRequest,
+  TemplateApplicationResponse,
+} from '@core/api/models/template.models';
+import { addDays, daysBetween, weekShort, weekStartOf } from '@shared/time';
 
 export interface ApplyParams {
   /** `null` — nothing is chosen (no templates yet). */
@@ -77,4 +81,57 @@ export function toApplyRequest(
     confirmedDeleteIds: null,
     confirmedRestoredIds: null,
   };
+}
+
+export function sameParams(a: ApplyParams | null, b: ApplyParams | null): boolean {
+  return (
+    a !== null &&
+    b !== null &&
+    a.templateId === b.templateId &&
+    a.weekStart === b.weekStart &&
+    a.mode === b.mode &&
+    a.includeManual === b.includeManual
+  );
+}
+
+/**
+ * The T7 body for the plan **on screen**: for «Заменить» the two confirmed sets are exactly
+ * what the preview lists (`toDelete[].id`, `restoredDeleted[].templateEventId`), empty arrays
+ * included — `null` there is `REPLACE_CONFIRMATION_REQUIRED`. The other modes send `null`.
+ */
+export function toConfirmedRequest(
+  params: ApplyParams,
+  preview: Pick<ApplyPreviewResponse, 'toDelete' | 'restoredDeleted'>,
+): ApplyTemplateRequest {
+  const request = toApplyRequest(params);
+  return params.mode === 'REPLACE'
+    ? {
+        ...request,
+        confirmedDeleteIds: preview.toDelete.map((event) => event.id),
+        confirmedRestoredIds: preview.restoredDeleted.map((planned) => planned.templateEventId),
+      }
+    : request;
+}
+
+/**
+ * The toast after an application, in the manner of the prototype: «“Обычная неделя” →
+ * 9–15 нояб.: добавлено 12, удалено 3, пропущено 4». Nothing created is said plainly.
+ */
+export function applyResultText(
+  application: Pick<
+    TemplateApplicationResponse,
+    'templateName' | 'weekStart' | 'createdCount' | 'deletedCount' | 'skippedCount'
+  >,
+): string {
+  const head = `«${application.templateName}» → ${weekShort(application.weekStart)}: `;
+  const deleted = application.deletedCount > 0 ? `удалено ${application.deletedCount}` : null;
+  if (application.createdCount === 0) {
+    return `${head}ничего не добавлено${deleted === null ? ': всё уже применено' : `, ${deleted}`}`;
+  }
+  const parts = [`добавлено ${application.createdCount}`];
+  if (deleted !== null) parts.push(deleted);
+  if (application.skippedCount > 0) {
+    parts.push(`без дублей: пропущено ${application.skippedCount}`);
+  }
+  return head + parts.join(', ');
 }

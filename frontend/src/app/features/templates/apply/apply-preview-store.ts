@@ -27,6 +27,7 @@ export class ApplyPreviewStore {
   private readonly statusState = signal<PreviewStatus>('idle');
   private readonly previewState = signal<ApplyPreviewResponse | null>(null);
   private readonly errorState = signal<ApiError | null>(null);
+  private readonly paramsState = signal<ApplyParams | null>(null);
 
   readonly status = this.statusState.asReadonly();
   /**
@@ -36,6 +37,8 @@ export class ApplyPreviewStore {
    */
   readonly preview = this.previewState.asReadonly();
   readonly error = this.errorState.asReadonly();
+  /** The choice that plan was made for: apply only if it is still the choice on screen. */
+  readonly previewParams = this.paramsState.asReadonly();
 
   constructor() {
     this.requests
@@ -53,6 +56,7 @@ export class ApplyPreviewStore {
     if (params.templateId === null) {
       this.statusState.set('idle');
       this.previewState.set(null);
+      this.paramsState.set(null);
       this.errorState.set(null);
       return;
     }
@@ -73,22 +77,26 @@ export class ApplyPreviewStore {
         ? throwError(() => new ApiError('WORKSPACE_NOT_FOUND', { status: 404 }))
         : this.api.preview(workspace.id, params.templateId, toApplyRequest(params));
     }).pipe(
-      map((preview) => ({ preview }) as const),
+      map((preview) => ({ preview, params }) as const),
       catchError((error: unknown) =>
         of({ error: isApiError(error) ? error : new ApiError('UNKNOWN') } as const),
       ),
     );
   }
 
-  private apply(result: { preview: ApplyPreviewResponse } | { error: ApiError }): void {
+  private apply(
+    result: { preview: ApplyPreviewResponse; params: ApplyParams } | { error: ApiError },
+  ): void {
     if ('preview' in result) {
       this.previewState.set(result.preview);
+      this.paramsState.set(result.params);
       this.errorState.set(null);
       this.statusState.set('ready');
       return;
     }
     // After an error nothing stays that could be mistaken for the plan.
     this.previewState.set(null);
+    this.paramsState.set(null);
     this.errorState.set(result.error);
     this.statusState.set('error');
     if (result.error.code === 'WORKSPACE_NOT_FOUND') {

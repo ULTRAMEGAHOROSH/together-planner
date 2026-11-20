@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Dialog } from '@angular/cdk/dialog';
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import {
   AUTH_RESPONSE,
   TEMPLATE_CREATED,
@@ -12,7 +13,15 @@ import {
 import { SessionStore } from '@core/auth/session-store';
 import { errorInterceptor } from '@core/error/error-interceptor';
 import { CLOCK } from '@core/time/zone-clock';
-import { APPLY_PREVIEW_MERGE } from '@core/api/models/testing/samples';
+import {
+  APPLY_PREVIEW_MERGE,
+  APPLY_PREVIEW_MERGE_AGAIN,
+  APPLY_PREVIEW_REPLACE,
+  APPLY_RESULT_MERGE,
+  APPLY_RESULT_REPLACE,
+} from '@core/api/models/testing/samples';
+import { DataChanges } from '@core/changes/data-changes';
+import { ToastService } from '@core/notify/toast-service';
 import { isMonday } from '@shared/time';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { dialogElement, pressEscape, provideVisibleElements } from '@shared/ui/dialog/testing';
@@ -34,6 +43,7 @@ describe('ApplyTemplateDialog (TPL-05)', () => {
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
         provideVisibleElements(),
+        provideRouter([]),
         { provide: CLOCK, useValue: () => NOW },
       ],
     });
@@ -48,6 +58,8 @@ describe('ApplyTemplateDialog (TPL-05)', () => {
   afterEach(() => {
     // The preview asks after a pause: a test that ends sooner leaves it unanswered.
     backend.match((r) => r.url.endsWith('/apply/preview'));
+    // After an application the open dialog's own list reloads (templatesChanged) once.
+    backend.match((r) => r.method === 'GET' && r.url === LIST);
     backend.verify();
   });
 
@@ -280,6 +292,211 @@ describe('ApplyTemplateDialog (TPL-05)', () => {
       await open({ weekStart: '2026-11-23' }, []);
       await pause();
       backend.expectNone(() => true);
+    });
+  });
+
+  describe('apply (TPL-07)', () => {
+    const PREVIEW = (id: string) => `${LIST}/${id}/apply/preview`;
+    const APPLY = (id: string) => `${LIST}/${id}/apply`;
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 220));
+    const footer = (label: string) =>
+      Array.from(root().querySelectorAll<HTMLButtonElement>('.foot button, footer button')).find(
+        (b) => b.textContent?.trim().startsWith(label),
+      );
+
+    /** Opens, picks the mode and waits until the plan is on screen. */
+    async function ready(preview: object, modeIndex = 0) {
+      await open({ weekStart: '2026-11-23' });
+      await pause();
+      if (modeIndex === 0) {
+        backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(preview);
+      } else {
+        backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(APPLY_PREVIEW_MERGE);
+        radios('.modes')[modeIndex].click();
+        await appRef.whenStable();
+        await pause();
+        backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(preview);
+      }
+      await appRef.whenStable();
+    }
+
+    it('AP-08/AP-10: MERGE sends no confirmed sets; a success toasts, goes to the week, tells everyone and closes', async () => {
+      const toast = vi.spyOn(TestBed.inject(ToastService), 'show');
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const events = vi.fn();
+      const templates = vi.fn();
+      TestBed.inject(DataChanges).events$.subscribe(events);
+      TestBed.inject(DataChanges).templates$.subscribe(templates);
+      await ready(APPLY_PREVIEW_MERGE);
+      expect(footer('Применить')?.textContent?.trim()).toBe('Применить: +3');
+      footer('Применить')!.click();
+      const req = backend.expectOne(APPLY(TEMPLATE_CREATED.id));
+      expect(req.request.body).toEqual({
+        weekStart: '2026-11-23',
+        mode: 'MERGE',
+        includeManual: false,
+        confirmedDeleteIds: null,
+        confirmedRestoredIds: null,
+      });
+      req.flush(APPLY_RESULT_MERGE);
+      await appRef.whenStable();
+      expect(toast).toHaveBeenCalledWith('«Обычная неделя» → 23–29 нояб.: добавлено 3');
+      expect(navigate).toHaveBeenCalledWith('/week/2026-11-23');
+      expect(events).toHaveBeenCalledTimes(1);
+      expect(templates).toHaveBeenCalledTimes(1);
+      expect(dialogElement()).toBeNull();
+    });
+
+    it('nothing to add and nothing to delete: «Применить» is not available', async () => {
+      await ready(APPLY_PREVIEW_MERGE_AGAIN);
+      expect(footer('Применить')!.disabled).toBe(true);
+      footer('Применить')!.click();
+      backend.expectNone(APPLY(TEMPLATE_CREATED.id));
+    });
+
+    it('while the next plan loads there is nothing to apply, not even the old plan', async () => {
+      await ready(APPLY_PREVIEW_MERGE);
+      expect(footer('Применить')!.disabled).toBe(false);
+      radios('.modes')[1].click();
+      await appRef.whenStable();
+      expect(footer('Применить')!.disabled).toBe(true);
+      await pause();
+      backend
+        .expectOne(PREVIEW(TEMPLATE_CREATED.id))
+        .flush({ ...APPLY_PREVIEW_MERGE, mode: 'FILL' });
+    });
+
+    it('AP-03/AP-07: «Заменить» asks first with the lists; the confirmation sends exactly their ids', async () => {
+      await ready(APPLY_PREVIEW_REPLACE, 2);
+      const deletes = APPLY_PREVIEW_REPLACE.toDelete;
+      const restored = APPLY_PREVIEW_REPLACE.restoredDeleted;
+      expect(footer('Заменить')?.textContent?.trim()).toBe(
+        `Заменить: −${deletes.length} / +${APPLY_PREVIEW_REPLACE.toCreate.length}`,
+      );
+      footer('Заменить')!.click();
+      await appRef.whenStable();
+      backend.expectNone(APPLY(TEMPLATE_CREATED.id));
+      const confirm = root().querySelector('.confirm')!;
+      expect(confirm.textContent).toContain(`Будет удалено: ${deletes.length}`);
+      expect(confirm.textContent).toContain(`Будет восстановлено: ${restored.length}`);
+      expect(confirm.querySelectorAll('li')).toHaveLength(deletes.length + restored.length);
+
+      footer('Заменить')!.click();
+      const req = backend.expectOne(APPLY(TEMPLATE_CREATED.id));
+      expect(req.request.body).toEqual({
+        weekStart: '2026-11-23',
+        mode: 'REPLACE',
+        includeManual: false,
+        confirmedDeleteIds: deletes.map((e) => e.id),
+        confirmedRestoredIds: restored.map((e) => e.templateEventId),
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      req.flush(APPLY_RESULT_REPLACE);
+      await appRef.whenStable();
+      expect(dialogElement()).toBeNull();
+    });
+
+    it('«Назад» in the confirmation returns to the choice without sending anything', async () => {
+      await ready(APPLY_PREVIEW_REPLACE, 2);
+      footer('Заменить')!.click();
+      await appRef.whenStable();
+      footer('Назад')!.click();
+      await appRef.whenStable();
+      expect(root().querySelector('.confirm')).toBeNull();
+      expect(footer('Отмена')).toBeDefined();
+      backend.expectNone(APPLY(TEMPLATE_CREATED.id));
+    });
+
+    it('a change of the choice during the confirmation takes the question away', async () => {
+      await ready(APPLY_PREVIEW_REPLACE, 2);
+      footer('Заменить')!.click();
+      await appRef.whenStable();
+      expect(root().querySelector('.confirm')).not.toBeNull();
+      button('Следующая неделя').click();
+      await appRef.whenStable();
+      expect(root().querySelector('.confirm')).toBeNull();
+      await pause();
+      backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(APPLY_PREVIEW_MERGE);
+    });
+
+    it('«Заменить» with nothing to delete or restore needs no question and sends empty arrays', async () => {
+      await ready({ ...APPLY_PREVIEW_REPLACE, toDelete: [], restoredDeleted: [] }, 2);
+      footer('Заменить')!.click();
+      const req = backend.expectOne(APPLY(TEMPLATE_CREATED.id));
+      expect(req.request.body.confirmedDeleteIds).toEqual([]);
+      expect(req.request.body.confirmedRestoredIds).toEqual([]);
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      req.flush(APPLY_RESULT_REPLACE);
+      await appRef.whenStable();
+    });
+
+    it.each(['APPLY_PLAN_OUTDATED', 'TEMPLATE_APPLY_CONFLICT'])(
+      'AP-09: 409 %s asks T6 again and says the week changed; the dialog stays',
+      async (code) => {
+        await ready(APPLY_PREVIEW_MERGE);
+        footer('Применить')!.click();
+        backend
+          .expectOne(APPLY(TEMPLATE_CREATED.id))
+          .flush(
+            { type: 'about:blank', title: code, status: 409, code },
+            { status: 409, statusText: 'Conflict' },
+          );
+        await appRef.whenStable();
+        expect(root().querySelector('.notice')?.textContent).toContain(
+          'Неделя изменилась, проверьте ещё раз.',
+        );
+        await pause();
+        backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(APPLY_PREVIEW_MERGE_AGAIN);
+        await appRef.whenStable();
+        expect(dialogElement()).not.toBeNull();
+        // The new plan is the one on screen now: nothing to add.
+        expect(footer('Применить')!.disabled).toBe(true);
+        expect(root().querySelector('.notice')).not.toBeNull();
+        // Changing the choice is a new question: the notice goes.
+        radios('.modes')[1].click();
+        await appRef.whenStable();
+        expect(root().querySelector('.notice')).toBeNull();
+        await pause();
+        backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(APPLY_PREVIEW_MERGE);
+      },
+    );
+
+    it('a template deleted meanwhile: the new T6 puts the message into the dialog', async () => {
+      await ready(APPLY_PREVIEW_MERGE);
+      footer('Применить')!.click();
+      backend
+        .expectOne(APPLY(TEMPLATE_CREATED.id))
+        .flush(
+          { type: 'about:blank', title: 'x', status: 404, code: 'TEMPLATE_NOT_FOUND' },
+          { status: 404, statusText: 'Not Found' },
+        );
+      backend.expectOne(LIST).flush([]);
+      await pause();
+      backend
+        .expectOne(PREVIEW(TEMPLATE_CREATED.id))
+        .flush(
+          { type: 'about:blank', title: 'x', status: 404, code: 'TEMPLATE_NOT_FOUND' },
+          { status: 404, statusText: 'Not Found' },
+        );
+      await appRef.whenStable();
+      expect(root().querySelector('tp-apply-preview .error')).not.toBeNull();
+      expect(footer('Применить')!.disabled).toBe(true);
+    });
+
+    it('any other error is a toast, and the dialog stays with its plan', async () => {
+      const error = vi.spyOn(TestBed.inject(ToastService), 'error');
+      await ready(APPLY_PREVIEW_MERGE);
+      footer('Применить')!.click();
+      backend
+        .expectOne(APPLY(TEMPLATE_CREATED.id))
+        .flush(
+          { type: 'about:blank', title: 'x', status: 500, code: 'INTERNAL_ERROR' },
+          { status: 500, statusText: 'x' },
+        );
+      await appRef.whenStable();
+      expect(error).toHaveBeenCalled();
+      expect(dialogElement()).not.toBeNull();
+      expect(footer('Применить')!.disabled).toBe(false);
     });
   });
 });

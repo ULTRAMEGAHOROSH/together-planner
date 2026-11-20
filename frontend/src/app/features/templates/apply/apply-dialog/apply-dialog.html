@@ -91,6 +91,10 @@
     }
   </section>
 
+  @if (outdated()) {
+    <p class="notice" role="status">Неделя изменилась, проверьте ещё раз.</p>
+  }
+
   <tp-apply-preview
     [preview]="previewStore.preview()"
     [status]="previewStore.status()"
@@ -98,7 +102,66 @@
     [manualDeleted]="manualDeleted()"
   />
 
-  <button tpButton tpDialogFooter variant="ghost" type="button" (click)="ref.close()">
-    Отмена
-  </button>
+  @if (confirmation(); as confirm) {
+    <section class="confirm" role="alertdialog" aria-labelledby="tp-apply-confirm">
+      <h3 id="tp-apply-confirm">Заменить события недели?</h3>
+      @if (confirm.toDelete.length > 0) {
+        <p>Будет удалено: {{ confirm.toDelete.length }}</p>
+        <ul>
+          @for (line of confirm.toDelete; track $index) {
+            <li>{{ line }}</li>
+          }
+        </ul>
+      }
+      @if (confirm.restored.length > 0) {
+        <p>Будет восстановлено: {{ confirm.restored.length }}</p>
+        <ul>
+          @for (line of confirm.restored; track $index) {
+            <li>{{ line }}</li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  @if (confirmation()) {
+    <button
+      tpButton
+      tpDialogFooter
+      variant="ghost"
+      type="button"
+      cdkFocusInitial
+      [disabled]="applying()"
+      (click)="backFromConfirmation()"
+    >
+      Назад
+    </button>
+  } @else {
+    <button tpButton tpDialogFooter variant="ghost" type="button" (click)="ref.close()">
+      Отмена
+    </button>
+  }
+  @if (confirmation()) {
+    <button
+      tpButton
+      tpDialogFooter
+      variant="danger"
+      type="button"
+      [loading]="applying()"
+      (click)="confirmApply()"
+    >
+      {{ applyLabel() }}
+    </button>
+  } @else {
+    <button
+      tpButton
+      tpDialogFooter
+      type="button"
+      [loading]="applying()"
+      [disabled]="!canApply()"
+      (click)="apply()"
+    >
+      {{ applyLabel() }}
+    </button>
+  }
 </tp-dialog-shell>
