@@ -8,6 +8,7 @@ import type { AuthResponse } from '../../src/app/core/api/models/auth.models';
 import type { Uuid } from '../../src/app/core/api/models/common.models';
 import type { EventRequest, EventResponse } from '../../src/app/core/api/models/event.models';
 import type { EventUpdateRequest } from '../../src/app/core/api/events-api';
+import type { WeekResponse } from '../../src/app/core/api/models/week.models';
 import type {
   TemplateRequest,
   TemplateResponse,
@@ -49,7 +50,7 @@ export interface TestUser {
 /** A failed API call says what was asked and what came back, so a spec fails readably. */
 async function send<T>(
   request: APIRequestContext,
-  method: 'get' | 'post' | 'put',
+  method: 'get' | 'post' | 'put' | 'delete',
   path: string,
   options: { token?: string; data?: unknown } = {},
 ): Promise<T> {
@@ -65,7 +66,8 @@ async function send<T>(
       `${method.toUpperCase()} ${API}${path} → ${response.status()}: ${await response.text()}`,
     );
   }
-  return (await response.json()) as T;
+  // 204 (DELETE) has no body.
+  return (response.status() === 204 ? undefined : await response.json()) as T;
 }
 
 export interface Credentials {
@@ -156,6 +158,50 @@ export function updateEvent(
     token: user.accessToken,
     data: body,
   });
+}
+
+/** S1: the week as the backend gives it (to check what the screen did, not how it looks). */
+export function getWeek(
+  request: APIRequestContext,
+  user: TestUser,
+  workspaceId: Uuid,
+  weekStart: string,
+): Promise<WeekResponse> {
+  return send<WeekResponse>(request, 'get', `/workspaces/${workspaceId}/week?date=${weekStart}`, {
+    token: user.accessToken,
+  });
+}
+
+/** E6: the event is deleted; `version` is the one the caller saw. */
+export function deleteEvent(
+  request: APIRequestContext,
+  user: TestUser,
+  workspaceId: Uuid,
+  eventId: Uuid,
+  version: number,
+): Promise<void> {
+  return send<void>(
+    request,
+    'delete',
+    `/workspaces/${workspaceId}/events/${eventId}?version=${version}`,
+    { token: user.accessToken },
+  );
+}
+
+/** T4: the template is changed; `body.version` is the one the caller saw. */
+export function updateTemplate(
+  request: APIRequestContext,
+  user: TestUser,
+  workspaceId: Uuid,
+  templateId: Uuid,
+  body: TemplateRequest & { version: number },
+): Promise<TemplateResponse> {
+  return send<TemplateResponse>(
+    request,
+    'put',
+    `/workspaces/${workspaceId}/templates/${templateId}`,
+    { token: user.accessToken, data: body },
+  );
 }
 
 /** T2: a template; `body` is the whole request. */

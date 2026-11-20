@@ -7,6 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Parallel workers share one dev server and one backend: a screen can answer slower than 5 s.
+  expect: { timeout: 10_000 },
   reporter: [['list']],
   use: {
     baseURL: 'http://localhost:4200',
