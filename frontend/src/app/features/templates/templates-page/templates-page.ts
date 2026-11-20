@@ -6,6 +6,7 @@ import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { Spinner } from '@shared/ui/spinner/spinner';
 import { ApplyTemplateEntry } from '../apply/apply-entry';
+import { HistoryList } from '../history-list/history-list';
 import { TemplateCard } from '../template-card/template-card';
 import { TemplatesStore } from '../templates-store';
 
@@ -15,7 +16,7 @@ import { TemplatesStore } from '../templates-store';
  */
 @Component({
   selector: 'tp-templates-page',
-  imports: [Button, EmptyState, ErrorState, Spinner, TemplateCard],
+  imports: [Button, EmptyState, ErrorState, HistoryList, Spinner, TemplateCard],
   providers: [TemplatesStore],
   templateUrl: './templates-page.html',
   styleUrl: './templates-page.scss',

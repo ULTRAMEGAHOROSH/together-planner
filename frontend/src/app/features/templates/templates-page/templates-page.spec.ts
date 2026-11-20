@@ -38,13 +38,17 @@ describe('TemplatesPage (TPL-02)', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => backend.verify());
+  // The journal under the cards asks for its own first page (TPL-10).
+  afterEach(() => {
+    backend.match((r) => r.url.endsWith('/template-applications'));
+    backend.verify();
+  });
 
   it('shows a spinner while the first list loads, then the cards', async () => {
-    expect(host().querySelector('tp-spinner')).not.toBeNull();
+    expect(host().querySelector('.page > tp-spinner')).not.toBeNull();
     backend.expectOne(LIST).flush([TEMPLATE_CREATED, TEMPLATE_WITH_LAST_APPLICATION]);
     await fixture.whenStable();
-    expect(host().querySelector('tp-spinner')).toBeNull();
+    expect(host().querySelector('.page > tp-spinner')).toBeNull();
     expect(host().querySelectorAll('tp-template-card')).toHaveLength(2);
     expect(host().querySelector('h1')?.textContent).toBe('Шаблоны недель');
   });
@@ -110,5 +114,28 @@ describe('TemplatesPage (TPL-02)', () => {
     await fixture.whenStable();
     expect(host().querySelectorAll('tp-template-card')).toHaveLength(0);
     expect(host().querySelector('tp-empty-state')).not.toBeNull();
+  });
+});
+
+describe('TemplatesPage journal (TPL-10)', () => {
+  it('the journal stands under the cards and asks T8 with size 20', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+      ],
+    });
+    const session = TestBed.inject(SessionStore);
+    session.setAuth(AUTH_RESPONSE);
+    session.setWorkspace(WORKSPACE_FULL_PAIR);
+    const backend = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(TemplatesPage);
+    fixture.detectChanges();
+    const request = backend.expectOne((r) => r.url.endsWith('/template-applications'));
+    expect(request.request.params.get('size')).toBe('20');
+    expect(request.request.params.get('page')).toBe('0');
+    expect(fixture.nativeElement.querySelector('tp-history-list')).not.toBeNull();
+    backend.expectOne(LIST);
   });
 });
