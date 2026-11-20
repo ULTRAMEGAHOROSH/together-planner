@@ -62,21 +62,29 @@ async function send<T>(
   return (await response.json()) as T;
 }
 
+export interface Credentials {
+  readonly email: string;
+  readonly password: string;
+  readonly displayName: string;
+}
+
+/** A unique e-mail and the common password for a user who is made on the screen, not by A1. */
+export function newCredentials(name?: string): Credentials {
+  counter += 1;
+  return {
+    email: `e2e-${RUN_ID}-${counter}@example.test`,
+    password: E2E_PASSWORD,
+    displayName: name ?? `Тестер ${counter}`,
+  };
+}
+
 /** A1: a new user with a unique e-mail. `name` is the display name (default «Тестер n»). */
 export async function registerUser(request: APIRequestContext, name?: string): Promise<TestUser> {
-  counter += 1;
-  const email = `e2e-${RUN_ID}-${counter}@example.test`;
-  const displayName = name ?? `Тестер ${counter}`;
+  const { email, password, displayName } = newCredentials(name);
   const auth = await send<AuthResponse>(request, 'post', '/auth/register', {
-    data: { email, password: E2E_PASSWORD, displayName },
+    data: { email, password, displayName },
   });
-  return {
-    id: auth.user.id,
-    email,
-    password: E2E_PASSWORD,
-    displayName,
-    accessToken: auth.accessToken,
-  };
+  return { id: auth.user.id, email, password, displayName, accessToken: auth.accessToken };
 }
 
 /** W1: the user's workspace (they become its first member). */
