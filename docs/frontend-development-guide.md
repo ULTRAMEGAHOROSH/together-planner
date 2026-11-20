@@ -60,6 +60,8 @@ cd frontend && npm start
 
 E2E с backend (QA-01 и дальше) требуют запущенных backend и `npm start`. Тесты создают своих пользователей и не чистят БД — локальную базу можно пересоздать командой `docker compose down -v`.
 
+**Как запустить E2E с backend:** (1) backend и база: `docker compose up -d` в корне проекта (или backend локально на :8080); (2) `cd frontend && npm start` — dev server на :4200 с прокси `/api` → :8080 (или пусть Playwright запустит его сам); (3) `npm run e2e` (одна спека: `npm run e2e -- e2e/couple-smoke.spec.ts --project=desktop`). Помощники: `e2e/helpers/api.ts` — `registerUser`, `createWorkspace`, `createInvite`, `join`, `createEvent`, `createTemplate` (через API, у каждого пользователя свой Bearer, заголовок `X-Requested-With`; e-mail `e2e-<запуск>-<n>@example.test`, номер запуска можно задать `E2E_RUN_ID`); `e2e/helpers/ui.ts` — `loginViaUi(page, user)`; `e2e/fixtures.ts` — фикстура `couple` (`a` создаёт пространство, `b` входит по коду). Спека сама готовит себе данные и не зависит от других.
+
 ### 3.3. Ручной прогон (2–3 минуты)
 
 После каждой задачи проходите то, что уже сделано:
