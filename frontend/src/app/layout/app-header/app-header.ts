@@ -14,9 +14,10 @@ interface Tab {
   readonly icon: IconName;
 }
 
-/** «Календарь» joins in CAL-01. A tab stays active on its nested pages (week, template). */
+/** A tab stays active on its nested pages (week, template). */
 const TABS: readonly Tab[] = [
   { path: '/week', label: 'Расписание', icon: 'schedule' },
+  { path: '/calendar', label: 'Календарь', icon: 'calendar' },
   { path: '/templates', label: 'Шаблоны', icon: 'layers' },
 ];
 

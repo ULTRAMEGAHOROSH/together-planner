@@ -30,6 +30,7 @@ describe('AppHeader', () => {
         provideRouter([
           { path: 'week', component: Page },
           { path: 'week/:weekStart', component: Page },
+          { path: 'calendar', component: Page },
           { path: 'templates', component: Page },
           { path: 'templates/:templateId', component: Page },
         ]),
@@ -91,26 +92,36 @@ describe('AppHeader', () => {
     expect(el().querySelector('nav')?.getAttribute('aria-label')).toBe('Разделы');
     expect(tabs().map((a) => [a.textContent?.trim(), a.getAttribute('href')])).toEqual([
       ['Расписание', '/week'],
+      ['Календарь', '/calendar'],
       ['Шаблоны', '/templates'],
     ]);
   });
 
   it('each tab has its icon for the narrow header (SHELL-03) and the label as its name', () => {
     const icon = (a: HTMLAnchorElement) => a.querySelector('tp-icon');
-    // `schedule` is the only icon drawn with a <rect>; `layers` is two paths.
+    // `schedule` is a <rect> and one line; `calendar` a <rect> and one path; `layers` is two paths.
     expect(icon(tabs()[0])?.querySelector('rect')).not.toBeNull();
-    expect(icon(tabs()[1])?.querySelectorAll('path')).toHaveLength(2);
+    expect(icon(tabs()[0])?.querySelectorAll('path')).toHaveLength(1);
+    expect(icon(tabs()[1])?.querySelector('rect')).not.toBeNull();
+    expect(icon(tabs()[1])?.querySelectorAll('path')).toHaveLength(1);
+    expect(icon(tabs()[2])?.querySelectorAll('path')).toHaveLength(2);
     expect(tabs().map((a) => a.querySelector('.tab-label')?.textContent)).toEqual([
       'Расписание',
+      'Календарь',
       'Шаблоны',
     ]);
     // Decorative: the link keeps the label as its accessible name.
-    expect(tabs().map((a) => icon(a)?.getAttribute('aria-hidden'))).toEqual(['true', 'true']);
+    expect(tabs().map((a) => icon(a)?.getAttribute('aria-hidden'))).toEqual([
+      'true',
+      'true',
+      'true',
+    ]);
   });
 
   it.each([
     ['/week', 'Расписание'],
     ['/week/2026-11-16', 'Расписание'],
+    ['/calendar', 'Календарь'],
     ['/templates', 'Шаблоны'],
     ['/templates/new', 'Шаблоны'],
   ])('on %s the active tab is «%s» (aria-current, class)', async (url, label) => {
@@ -186,6 +197,6 @@ describe('AppHeader', () => {
     session.clear();
     await fixture.whenStable();
     expect(el().querySelector('.workspace')).toBeNull();
-    expect(tabs()).toHaveLength(2);
+    expect(tabs()).toHaveLength(3);
   });
 });

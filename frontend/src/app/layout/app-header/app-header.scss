@@ -1,6 +1,7 @@
 // Values from the prototype header (design/Main.dc.html). Below 820 px (SHELL-03, the
-// prototype has no narrow header): one row that fits 375 px — the logo without its name,
-// tabs as an icon over a short label, smaller gaps; the workspace name shrinks first.
+// prototype has no narrow header): one row that fits 375 px — no logo,
+// tabs as an icon over a short label (three of them since CAL-01), smaller gaps; the
+// workspace name shrinks first.
 @use 'breakpoints' as bp;
 
 :host {
@@ -30,6 +31,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
+
+  // Three tabs, «+» and two avatars fill 375 px: the logo gives its place (the tabs name the app).
+  @include bp.narrow {
+    display: none;
+  }
 }
 
 .seat-1 {
@@ -97,7 +103,7 @@
     justify-content: center;
     gap: 2px;
     height: 44px;
-    padding: 0 10px;
+    padding: 0 4px;
     // Inner radius = outer radius minus the track padding.
     border-radius: calc(var(--tp-radius-xl) - 3px);
     font-size: 11px;

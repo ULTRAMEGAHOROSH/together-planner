@@ -16,7 +16,7 @@ export function devOnly(devRoutes: Routes, dev = isDevMode()): Routes {
 }
 
 // Route map: docs/frontend-final-decisions.md §6. Every page is lazy (FD-45).
-// Not wired yet: calendar/settings (P1).
+// Not wired yet: settings (P1).
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'week' },
   {
@@ -73,6 +73,12 @@ export const routes: Routes = [
         title: 'Расписание — Together Planner',
         loadComponent: () =>
           import('@features/schedule/week-page/week-page').then((m) => m.WeekPage),
+      },
+      {
+        path: 'calendar',
+        title: 'Календарь — Together Planner',
+        loadComponent: () =>
+          import('@features/calendar/calendar-page/calendar-page').then((m) => m.CalendarPage),
       },
       {
         path: 'templates',

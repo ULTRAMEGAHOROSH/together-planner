@@ -1,0 +1,36 @@
+<div class="weekdays" aria-hidden="true">
+  @for (name of weekdays; track name) {
+    <span>{{ name }}</span>
+  }
+</div>
+<ol class="grid" [class.narrow]="narrow()">
+  @for (day of days(); track day.date) {
+    <li class="cell" [class.outside]="!day.inMonth" [class.today]="day.isToday">
+      <button
+        type="button"
+        class="open"
+        [attr.aria-label]="dayLabel(day)"
+        [attr.aria-current]="day.isToday ? 'date' : null"
+        (click)="dayClick.emit(day.date)"
+      ></button>
+      <span class="number">{{ day.number }}</span>
+      @for (event of day.manual.slice(0, maxPills); track event.id) {
+        <button
+          type="button"
+          class="pill"
+          [style]="pillStyle(event)"
+          [attr.title]="event.title"
+          (click)="eventClick.emit(event.id)"
+        >
+          {{ pillText(event) }}
+        </button>
+      }
+      @if (day.manual.length > maxPills) {
+        <span class="more">+ ещё {{ day.manual.length - maxPills }}</span>
+      }
+      @if (day.routine > 0) {
+        <span class="routine">{{ routineText(day.routine) }}</span>
+      }
+    </li>
+  }
+</ol>

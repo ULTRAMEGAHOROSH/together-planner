@@ -2,7 +2,7 @@ import { Component, computed, input } from '@angular/core';
 
 /**
  * Line icons drawn in the prototype (design/Main.dc.html), 24×24, stroke = currentColor.
- * `schedule` is ours (the «Расписание» tab on a narrow screen): two columns side by side.
+ * `schedule` and `calendar` are ours (the tabs on a narrow screen): two columns side by side; a month page.
  */
 export const ICON_NAMES = [
   'plus',
@@ -15,6 +15,7 @@ export const ICON_NAMES = [
   'layers',
   'trash',
   'schedule',
+  'calendar',
 ] as const;
 export type IconName = (typeof ICON_NAMES)[number];
 
