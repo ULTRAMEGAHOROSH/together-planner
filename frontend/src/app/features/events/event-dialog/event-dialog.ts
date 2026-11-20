@@ -23,10 +23,19 @@ import {
   EVENT_SERVER_ERRORS,
   eventFieldError,
   type EventField,
+  fromEventResponse,
   type EventFormValue,
   keepDurationOnStartChange,
   toEventRequest,
 } from '../event-form';
+
+/** What the opener may do to an open dialog after a failed request. */
+export interface EventDialogControl {
+  /** Fills the form again from `event` (a newer version); errors and the question go. */
+  reload(event: EventResponse): void;
+  /** Closes the dialog without a result. */
+  close(): void;
+}
 
 interface EventDialogBase {
   /** Starting values: `prefillCreate` for a new event, `fromEventResponse` for an edit. */
@@ -40,6 +49,11 @@ interface EventDialogBase {
    * lands on its field, any other one in a toast. The response closes the dialog.
    */
   save: (request: EventRequest) => Observable<EventResponse>;
+  /**
+   * Asked about an error that is not for a field (after the field codes): `true` — it was
+   * dealt with (conflict, event gone), the dialog shows nothing; otherwise a toast.
+   */
+  onFailure?: (error: unknown, control: EventDialogControl) => boolean;
 }
 
 export type EventDialogData =
@@ -229,9 +243,20 @@ export class EventDialog {
 
   private fail(error: unknown, flag: { set(value: boolean): void }): void {
     flag.set(false);
-    if (!applyServerErrors(this.form, error, EVENT_SERVER_ERRORS)) {
+    if (applyServerErrors(this.form, error, EVENT_SERVER_ERRORS)) return;
+    const control: EventDialogControl = {
+      reload: (event) => this.reload(event),
+      close: () => this.ref.close(),
+    };
+    if (!this.data.onFailure?.(error, control)) {
       this.toast.error(error);
     }
+  }
+
+  private reload(event: EventResponse): void {
+    this.form.reset(fromEventResponse(event, this.data.members));
+    this.submitted.set(false);
+    this.confirming.set(false);
   }
 }
 

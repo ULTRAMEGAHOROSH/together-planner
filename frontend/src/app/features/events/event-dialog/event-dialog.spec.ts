@@ -9,7 +9,12 @@ import { ToastService } from '@core/notify/toast-service';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { dialogElement, pressEscape, provideVisibleElements } from '@shared/ui/dialog/testing';
 import { fromEventResponse, prefillCreate } from '../event-form';
-import { type EventDialogData, type EventDialogResult, openEventDialog } from './event-dialog';
+import {
+  type EventDialogControl,
+  type EventDialogData,
+  type EventDialogResult,
+  openEventDialog,
+} from './event-dialog';
 
 const MEMBERS: MemberResponse[] = [
   { userId: 'u-1', displayName: 'Аня', role: 'OWNER', seat: 1, joinedAt: '2026-11-01T10:00:00Z' },
@@ -432,6 +437,45 @@ describe('EventDialog', () => {
       await submit();
 
       expect(result).toBe(SAVED);
+    });
+
+    it('onFailure that deals with an error: no toast; reload refills the form and clears errors', async () => {
+      let control: EventDialogControl | undefined;
+      save = () => throwError(() => new ApiError('VERSION_CONFLICT', { status: 409 }));
+      await open({
+        onFailure: (_error, c) => {
+          control = c;
+          return true;
+        },
+      });
+      await type(title(), 'Ужин');
+      await submit();
+
+      expect(TestBed.inject(ToastService).current()).toBeNull();
+      expect(dialogElement()).not.toBeNull();
+
+      control!.reload({ ...SAVED, title: 'Новое имя', description: 'заметка' });
+      await appRef.whenStable();
+
+      expect(title().value).toBe('Новое имя');
+      expect(field<HTMLTextAreaElement>('textarea').value).toBe('заметка');
+      expect(input('Время окончания').value).toBe('11:00');
+      expect(errorTexts()).toEqual([]);
+
+      control!.close();
+      await appRef.whenStable();
+      expect(dialogElement()).toBeNull();
+      expect(result).toBeUndefined();
+    });
+
+    it('onFailure that does not know the error: the toast', async () => {
+      save = () => throwError(() => new ApiError('NETWORK_ERROR'));
+      await open({ onFailure: () => false });
+      await type(title(), 'Ужин');
+
+      await submit();
+
+      expect(TestBed.inject(ToastService).current()?.text).toBe(ERROR_MESSAGES.NETWORK_ERROR);
     });
 
     it('a server error of the participants shows under them', async () => {

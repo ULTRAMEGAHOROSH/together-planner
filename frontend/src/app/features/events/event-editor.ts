@@ -1,8 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { EventsApi } from '@core/api/events-api';
+import type { Uuid } from '@core/api/models/common.models';
 import type { EventResponse } from '@core/api/models/event.models';
 import { SessionStore } from '@core/auth/session-store';
+import type { ApiError } from '@core/error/api-error';
+import { ERROR_MESSAGES } from '@core/error/error-messages';
 import { DataChanges } from '@core/changes/data-changes';
 import { ToastService } from '@core/notify/toast-service';
 import { ZoneClock } from '@core/time/zone-clock';
@@ -10,7 +13,8 @@ import { ViewContext } from '@core/view/view-context';
 import { weekUrl } from '@features/schedule';
 import { formatDate, parseLocalDateTime, weekStartOf } from '@shared/time';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
-import { openEventDialog } from './event-dialog/event-dialog';
+import { EventConflictDialog } from './event-conflict-dialog/event-conflict-dialog';
+import { type EventDialogControl, openEventDialog } from './event-dialog/event-dialog';
 import { type CreatePrefill, fromEventResponse, prefillCreate } from './event-form';
 
 /** Evening, when a new event is started from the header: the prototype's «19:00». */
@@ -62,14 +66,18 @@ export class EventEditor {
     if (workspace === null) {
       return;
     }
+    // The version moves on when the user loads a newer one after a conflict.
+    let current = event;
     openEventDialog(this.dialogs, {
       mode: 'edit',
       value: fromEventResponse(event, this.session.members()),
       members: this.session.members(),
       templateName: event.source?.templateName ?? null,
       save: (request) =>
-        this.api.update(workspace.id, event.id, { ...request, version: event.version }),
-      remove: () => this.api.delete(workspace.id, event.id, event.version),
+        this.api.update(workspace.id, event.id, { ...request, version: current.version }),
+      remove: () => this.api.delete(workspace.id, event.id, current.version),
+      onFailure: (error, dialog) =>
+        this.recover(error, dialog, workspace.id, event.id, (fresh) => (current = fresh)),
     }).subscribe((result) => {
       if (result === 'deleted') {
         this.changes.eventsChanged();
@@ -95,6 +103,47 @@ export class EventEditor {
       minute: DEFAULT_START_MINUTE,
       personSeat: me.seat,
     });
+  }
+
+  /**
+   * A failed save or delete of an open edit: someone else changed the event (409) → ask, and
+   * on «load the current one» (E4) refill the dialog, which then saves with the new
+   * version; the event is gone (404) → say so and close. Anything else is not ours: `false`.
+   * Errors here come through `errorInterceptor`, so they are `ApiError`.
+   */
+  private recover(
+    error: unknown,
+    dialog: EventDialogControl,
+    workspaceId: Uuid,
+    eventId: Uuid,
+    take: (fresh: EventResponse) => void,
+  ): boolean {
+    const { code } = error as ApiError;
+    if (code === 'EVENT_NOT_FOUND') {
+      this.changes.eventsChanged();
+      this.toast.show(ERROR_MESSAGES.EVENT_NOT_FOUND);
+      dialog.close();
+      return true;
+    }
+    if (code !== 'VERSION_CONFLICT') {
+      return false;
+    }
+    this.dialogs.open<true>(EventConflictDialog, undefined, { size: 'sm' }).subscribe((load) => {
+      if (load) {
+        this.api.get(workspaceId, eventId).subscribe({
+          next: (fresh) => {
+            take(fresh);
+            dialog.reload(fresh);
+          },
+          error: (failure: unknown) => {
+            if (!this.recover(failure, dialog, workspaceId, eventId, take)) {
+              this.toast.error(failure);
+            }
+          },
+        });
+      }
+    });
+    return true;
   }
 
   private saved(event: EventResponse, text: string): void {

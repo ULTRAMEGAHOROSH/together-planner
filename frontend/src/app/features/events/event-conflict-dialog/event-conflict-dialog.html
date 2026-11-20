@@ -1,0 +1,19 @@
+<tp-dialog-shell title="Партнёр изменил это событие">
+  <p class="text">
+    Пока вы правили, сохранилась другая версия. Если загрузить актуальную, ваши правки в форме
+    заменятся ею.
+  </p>
+  <button
+    tpButton
+    tpDialogFooter
+    variant="ghost"
+    type="button"
+    cdkFocusInitial
+    (click)="ref.close()"
+  >
+    Отмена
+  </button>
+  <button tpButton tpDialogFooter type="button" (click)="ref.close(true)">
+    Загрузить актуальную версию
+  </button>
+</tp-dialog-shell>

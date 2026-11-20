@@ -422,6 +422,153 @@ describe('EventEditor (EVT-04)', () => {
     });
   });
 
+  describe('conflicts and a gone event (EVT-07)', () => {
+    const EVENT: EventResponse = {
+      ...EVENT_CREATED_MANUAL,
+      title: 'Ужин',
+      start: '2026-11-25T19:00:00',
+      end: '2026-11-25T21:00:00',
+      participantIds: [FIRST.userId],
+      version: 4,
+    };
+    const FRESH: EventResponse = { ...EVENT, title: 'Ужин у партнёра', version: 5 };
+    const ONE = `${EVENTS}/${EVENT.id}`;
+    const problem = (status: number, code: string) => ({
+      body: { detail: 'x', instance: ONE, status, title: 'x', code },
+      opts: { status, statusText: 'x' },
+    });
+    const conflict = () =>
+      Array.from(document.querySelectorAll<HTMLElement>('.cdk-dialog-container')).find((d) =>
+        d.textContent?.includes('Партнёр изменил это событие'),
+      );
+    const conflictButton = (text: string) =>
+      Array.from(conflict()!.querySelectorAll('button')).find(
+        (b) => b.textContent?.trim() === text,
+      )!;
+    const removeButton = () =>
+      dialog().querySelector<HTMLButtonElement>('button.remove, button.danger')!;
+
+    async function openAndFailSave(status: number, code: string) {
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      await submit();
+      const { body, opts } = problem(status, code);
+      backend.expectOne(ONE).flush(body, opts);
+      await appRef.whenStable();
+    }
+
+    async function openAndFailDelete(status: number, code: string) {
+      editor.openEdit(EVENT);
+      await appRef.whenStable();
+      removeButton().click();
+      await appRef.whenStable();
+      removeButton().click();
+      await appRef.whenStable();
+      const { body, opts } = problem(status, code);
+      backend.expectOne(`${ONE}?version=4`).flush(body, opts);
+      await appRef.whenStable();
+    }
+
+    it('409 on save: asks; «Загрузить актуальную версию» refills the form and saves with the new version', async () => {
+      await openAndFailSave(409, 'VERSION_CONFLICT');
+
+      expect(conflict()).toBeDefined();
+      expect(toast()).toBeNull();
+      expect(eventsChanged).toBe(0);
+
+      conflictButton('Загрузить актуальную версию').click();
+      await appRef.whenStable();
+      backend.expectOne(ONE).flush(FRESH);
+      await appRef.whenStable();
+
+      expect(conflict()).toBeUndefined();
+      expect(title().value).toBe('Ужин у партнёра');
+      expect(dialogElement()).not.toBeNull();
+
+      await submit();
+      const request = backend.expectOne(ONE);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body.version).toBe(5);
+      request.flush({ ...FRESH, version: 6 });
+      await appRef.whenStable();
+      expect(dialogElement()).toBeNull();
+      expect(toast()?.text).toBe('Изменения сохранены');
+    });
+
+    it('«Отмена» of the question keeps the form as it is and asks nobody', async () => {
+      await openAndFailSave(409, 'VERSION_CONFLICT');
+
+      conflictButton('Отмена').click();
+      await appRef.whenStable();
+
+      expect(conflict()).toBeUndefined();
+      expect(title().value).toBe('Ужин');
+      backend.expectNone(() => true);
+    });
+
+    it('409 on delete: after loading the current version, the next delete uses its version', async () => {
+      await openAndFailDelete(409, 'VERSION_CONFLICT');
+      conflictButton('Загрузить актуальную версию').click();
+      await appRef.whenStable();
+      backend.expectOne(ONE).flush(FRESH);
+      await appRef.whenStable();
+      expect(title().value).toBe('Ужин у партнёра');
+
+      removeButton().click();
+      await appRef.whenStable();
+      removeButton().click();
+      await appRef.whenStable();
+
+      backend.expectOne(`${ONE}?version=5`).flush(null, { status: 204, statusText: 'No Content' });
+      await appRef.whenStable();
+      expect(toast()?.text).toBe('Событие удалено');
+    });
+
+    it('404 on save: «Уже удалено партнёром.», the dialog closes, the week is re-read', async () => {
+      await openAndFailSave(404, 'EVENT_NOT_FOUND');
+
+      expect(toast()?.text).toBe(ERROR_MESSAGES.EVENT_NOT_FOUND);
+      expect(dialogElement()).toBeNull();
+      expect(eventsChanged).toBe(1);
+    });
+
+    it('404 on delete is the same', async () => {
+      await openAndFailDelete(404, 'EVENT_NOT_FOUND');
+
+      expect(toast()?.text).toBe(ERROR_MESSAGES.EVENT_NOT_FOUND);
+      expect(dialogElement()).toBeNull();
+      expect(eventsChanged).toBe(1);
+    });
+
+    it('the event is gone by the time the current version is asked for: same as 404', async () => {
+      await openAndFailSave(409, 'VERSION_CONFLICT');
+      conflictButton('Загрузить актуальную версию').click();
+      await appRef.whenStable();
+
+      const { body, opts } = problem(404, 'EVENT_NOT_FOUND');
+      backend.expectOne(ONE).flush(body, opts);
+      await appRef.whenStable();
+
+      expect(toast()?.text).toBe(ERROR_MESSAGES.EVENT_NOT_FOUND);
+      expect(dialogElement()).toBeNull();
+      expect(eventsChanged).toBe(1);
+    });
+
+    it('another failure of the current version is a toast, the dialog stays', async () => {
+      await openAndFailSave(409, 'VERSION_CONFLICT');
+      conflictButton('Загрузить актуальную версию').click();
+      await appRef.whenStable();
+
+      const { body, opts } = problem(500, 'INTERNAL_ERROR');
+      backend.expectOne(ONE).flush(body, opts);
+      await appRef.whenStable();
+
+      expect(toast()?.text).toBe(ERROR_MESSAGES.INTERNAL_ERROR);
+      expect(dialogElement()).not.toBeNull();
+      expect(title().value).toBe('Ужин');
+    });
+  });
+
   describe('openCreateDefault (the header)', () => {
     it('the day on screen, 19:00, the person who clicked (seat 1)', async () => {
       TestBed.inject(ViewContext).setFocusDate('2026-11-26');
