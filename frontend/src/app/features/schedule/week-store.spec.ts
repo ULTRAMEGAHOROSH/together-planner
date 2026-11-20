@@ -66,6 +66,14 @@ describe('WeekStore (WEEK-09)', () => {
     return panel.panel;
   };
 
+  it('WEEK-14: the highlighted event is set and cleared, with no request', () => {
+    expect(store.highlightedEventId()).toBeNull();
+    store.highlight('e1');
+    expect(store.highlightedEventId()).toBe('e1');
+    store.highlight(null);
+    expect(store.highlightedEventId()).toBeNull();
+  });
+
   it('starts idle: nothing asked, nothing shown', () => {
     expect(store.status()).toBe('idle');
     expect(store.weekStart()).toBeNull();

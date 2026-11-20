@@ -103,7 +103,13 @@ describe('tp-schedule-board (WEEK-05, FD-57…59)', () => {
     const inputs = Object.keys(
       (ScheduleBoard as unknown as { ɵcmp: { inputs: object } }).ɵcmp.inputs,
     );
-    expect(inputs).toEqual(['panels', 'timeZone', 'dayNavigation', 'readOnly']);
+    expect(inputs).toEqual([
+      'panels',
+      'timeZone',
+      'dayNavigation',
+      'readOnly',
+      'highlightedEventId',
+    ]);
   });
 });
 
@@ -304,5 +310,49 @@ describe('tp-schedule-board with one panel (WEEK-10)', () => {
     const fixture = TestBed.createComponent(Pair);
     await fixture.whenStable();
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('скрыто');
+  });
+});
+
+describe('tp-schedule-board: one event in two panels (WEEK-14)', () => {
+  const joint = ev('2026-11-12T19:00', '2026-11-12T21:00', [A, B], { id: 'both', title: 'Вместе' });
+  const solo = ev('2026-11-12T10:00', '2026-11-12T11:00', [A], { id: 'solo', title: 'Один' });
+  const range = { firstDay: '2026-11-12', dayCount: 1 } as const;
+  let fixture: ComponentFixture<ScheduleBoard>;
+  const cards = () =>
+    Array.from(fixture.nativeElement.querySelectorAll('tp-event-card')) as HTMLElement[];
+
+  beforeEach(async () => {
+    fixture = TestBed.createComponent(ScheduleBoard);
+    fixture.componentRef.setInput('panels', [
+      {
+        name: 'Daulet',
+        seat: 1,
+        layout: buildPanelLayout([joint, solo], range, A, { today: null }),
+      },
+      {
+        name: 'Партнёр',
+        seat: 2,
+        layout: buildPanelLayout([joint, solo], range, B, { today: null }),
+      },
+    ]);
+    await fixture.whenStable();
+  });
+
+  it('hover on the copy in panel A is reported; the highlighted id rings the copy in panel B too', async () => {
+    const heard: unknown[] = [];
+    fixture.componentInstance.eventHover.subscribe((h) => heard.push(h));
+    expect(cards()).toHaveLength(3); // two copies of the joint event and the solo one
+    const copyInA = cards()[1];
+    copyInA.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(heard).toEqual([{ eventId: 'both', anchor: copyInA }]);
+
+    fixture.componentRef.setInput('highlightedEventId', 'both');
+    await fixture.whenStable();
+    const ringed = cards().map((c) => c.classList.contains('highlighted'));
+    expect(ringed.filter(Boolean)).toHaveLength(2); // both copies, not the solo event
+    const titles = cards()
+      .filter((c) => c.classList.contains('highlighted'))
+      .map((c) => c.textContent);
+    expect(titles.every((t) => t?.includes('Вместе'))).toBe(true);
   });
 });

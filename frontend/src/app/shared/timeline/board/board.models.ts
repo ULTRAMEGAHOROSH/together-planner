@@ -16,3 +16,12 @@ export interface SlotClick {
   readonly minute: number;
   readonly personId: Uuid;
 }
+
+/**
+ * The pointer entered (`anchor` is the card) or left (`null`) an event card (FD-59, WEEK-14).
+ * The board only reports it; what to show is the page's business.
+ */
+export interface EventHover {
+  readonly eventId: Uuid;
+  readonly anchor: HTMLElement;
+}

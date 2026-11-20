@@ -47,3 +47,9 @@
     }
   }
 }
+
+// The hover card of an event (WEEK-14): never takes the pointer, so it cannot cover the cursor
+// or make the card under it flicker.
+.cdk-overlay-pane.tp-hovercard-panel {
+  pointer-events: none;
+}

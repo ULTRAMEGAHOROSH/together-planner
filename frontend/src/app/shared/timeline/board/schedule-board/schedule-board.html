@@ -10,7 +10,9 @@
       [readOnly]="readOnly()"
       (dayClick)="dayClick.emit($event)"
       (slotClick)="slotClick.emit($event)"
+      [highlightedEventId]="highlightedEventId()"
       (eventClick)="eventClick.emit($event)"
+      (hover)="eventHover.emit($event)"
     />
   }
   @if (panels().length === 1) {

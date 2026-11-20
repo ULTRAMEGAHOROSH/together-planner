@@ -19,9 +19,10 @@ import { EventEditor } from '@features/events';
 import { ApplyTemplateEntry } from '@features/templates';
 import { ZoneClock } from '@core/time/zone-clock';
 import { ViewContext } from '@core/view/view-context';
-import type { SlotClick } from '@shared/timeline/board/board.models';
+import type { EventHover, SlotClick } from '@shared/timeline/board/board.models';
 import { weekStartOf } from '@shared/time';
 import { NARROW_BREAKPOINT } from '@shared/timeline/engine/constants';
+import { EventHovercardService } from '../event-hovercard-service';
 import { ScheduleBoard } from '@shared/timeline/board/schedule-board/schedule-board';
 import { Button } from '@shared/ui/button/button';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
@@ -55,7 +56,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
     EmptyState,
     ErrorState,
   ],
-  providers: [WeekStore],
+  providers: [WeekStore, EventHovercardService],
   template: `
     @if (refreshing()) {
       <div class="progress" role="progressbar" aria-label="Загружаем неделю…"></div>
@@ -101,7 +102,9 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
           [dayNavigation]="!narrow()"
           (dayClick)="toggleDay(weekStart, $event)"
           (slotClick)="createAt($event)"
+          [highlightedEventId]="store.highlightedEventId()"
           (eventClick)="edit($event)"
+          (eventHover)="hover($event)"
         >
           @if (partnerMissing()) {
             <tp-partner-placeholder tpPartnerPlaceholder />
@@ -197,6 +200,7 @@ export class WeekPage {
   private readonly preference = inject(WeekViewPreference);
   private readonly breakpoints = inject(BreakpointObserver);
   private readonly editor = inject(EventEditor);
+  private readonly hovercard = inject(EventHovercardService);
   private readonly applier = inject(ApplyTemplateEntry);
 
   /** Below 820 px: only «День», no switch, the day headers are labels. */
@@ -273,6 +277,21 @@ export class WeekPage {
     } else {
       this.remember('day');
       this.show({ weekStart: week, day });
+    }
+  }
+
+  /**
+   * The pointer is on a card or left it (WEEK-14): the event's cards in both panels get the
+   * ring at once, and after a short delay the hover card shows beside the card.
+   */
+  protected hover(target: EventHover | null): void {
+    this.store.highlight(target?.eventId ?? null);
+    const event =
+      target === null ? undefined : this.store.data()?.events.find((e) => e.id === target.eventId);
+    if (target === null || event === undefined) {
+      this.hovercard.hide();
+    } else {
+      this.hovercard.show(event, this.session.members(), target.anchor);
     }
   }
 

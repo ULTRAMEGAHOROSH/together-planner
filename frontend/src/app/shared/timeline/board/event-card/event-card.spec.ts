@@ -129,8 +129,33 @@ describe('tp-event-card (WEEK-06)', () => {
     expect(text('.title')).toBe(title);
   });
 
-  it('DoD: no computation — the only input is the box', () => {
+  it('DoD: no computation — the box, and whether it is highlighted (WEEK-14)', () => {
     const inputs = Object.keys((EventCard as unknown as { ɵcmp: { inputs: object } }).ɵcmp.inputs);
-    expect(inputs).toEqual(['box']);
+    expect(inputs).toEqual(['box', 'highlighted']);
+  });
+});
+
+describe('tp-event-card: hover and highlight (WEEK-14)', () => {
+  async function render(highlighted = false) {
+    const [box] = boxes([monday('09:00', '11:00', { id: 'e1' })]);
+    const fixture = TestBed.createComponent(EventCard);
+    fixture.componentRef.setInput('box', box);
+    fixture.componentRef.setInput('highlighted', highlighted);
+    const events: unknown[] = [];
+    fixture.componentInstance.hover.subscribe((e) => events.push(e));
+    await fixture.whenStable();
+    return { host: fixture.nativeElement as HTMLElement, events };
+  }
+
+  it('the pointer on the card reports the event and the card to anchor to; leaving reports null', async () => {
+    const { host, events } = await render();
+    host.dispatchEvent(new MouseEvent('mouseenter'));
+    host.dispatchEvent(new MouseEvent('mouseleave'));
+    expect(events).toEqual([{ eventId: 'e1', anchor: host }, null]);
+  });
+
+  it('highlighted puts the ring class on the card', async () => {
+    expect((await render(false)).host.classList.contains('highlighted')).toBe(false);
+    expect((await render(true)).host.classList.contains('highlighted')).toBe(true);
   });
 });

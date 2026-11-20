@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 14px;
+  border: 1px solid var(--tp-color-border-card);
+  border-radius: var(--tp-radius-xl);
+  background: var(--tp-color-surface);
+  box-shadow: var(--tp-shadow-popover);
+  font-size: 13px;
+  line-height: 1.4;
+  animation: tpFade var(--tp-duration-fade) ease-out;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.when,
+.who {
+  color: var(--tp-color-text-body);
+}
+
+.description {
+  margin: 6px 0 0;
+  color: var(--tp-color-text-body);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.template {
+  margin-top: 6px;
+  color: var(--tp-color-text-subtle);
+  font-size: 12px;
+}
+
+.hint {
+  margin-top: 8px;
+  color: var(--tp-color-text-subtle);
+  font-size: 12px;
+}

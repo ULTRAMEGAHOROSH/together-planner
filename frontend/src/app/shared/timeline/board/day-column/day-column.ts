@@ -4,7 +4,7 @@ import { EventCard } from '../event-card/event-card';
 import { NowIndicator } from '../now-indicator/now-indicator';
 import { slotMinuteAt } from '../../engine/geometry';
 import type { DayColumnLayout, NowMark } from '../../engine/model';
-import type { SlotClick } from '../board.models';
+import type { EventHover, SlotClick } from '../board.models';
 
 /**
  * One day of a panel (prototype): hour grid, today / weekend background, and the whole
@@ -24,7 +24,12 @@ import type { SlotClick } from '../board.models';
       ></button>
     }
     @for (box of day().boxes; track box.key) {
-      <tp-event-card [box]="box" (eventClick)="eventClick.emit($event)" />
+      <tp-event-card
+        [box]="box"
+        [highlighted]="box.eventId === highlightedEventId()"
+        (eventClick)="eventClick.emit($event)"
+        (hover)="hover.emit($event)"
+      />
     }
     @if (nowTop() !== null) {
       <tp-now-indicator [top]="nowTop()!" />
@@ -47,6 +52,9 @@ export class DayColumn {
   readonly slotClick = output<SlotClick>();
   /** An event card was clicked: the intent to open the event. */
   readonly eventClick = output<Uuid>();
+  /** The event whose cards (all copies) carry the ring; `null` — none. */
+  readonly highlightedEventId = input<Uuid | null>(null);
+  readonly hover = output<EventHover | null>();
 
   protected readonly nowTop = computed(() => {
     const now = this.now();

@@ -1,0 +1,12 @@
+<div class="title">{{ event().title }}</div>
+<div class="when">{{ when() }}</div>
+@if (who()) {
+  <div class="who">{{ who() }}</div>
+}
+@if (event().description; as text) {
+  <p class="description">{{ text }}</p>
+}
+@if (template(); as name) {
+  <div class="template">из шаблона «{{ name }}»</div>
+}
+<div class="hint">Нажмите, чтобы изменить</div>

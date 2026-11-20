@@ -24,7 +24,9 @@
       [now]="now()"
       [readOnly]="readOnly()"
       (slotClick)="slotClick.emit($event)"
+      [highlightedEventId]="highlightedEventId()"
       (eventClick)="eventClick.emit($event)"
+      (hover)="hover.emit($event)"
     />
   }
 </div>

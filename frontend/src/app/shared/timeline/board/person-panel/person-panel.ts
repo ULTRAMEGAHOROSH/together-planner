@@ -2,7 +2,7 @@ import { Component, input, output } from '@angular/core';
 import type { IsoDate, Uuid } from '@core/api/models/common.models';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import type { NowMark } from '../../engine/model';
-import type { BoardPanel, SlotClick } from '../board.models';
+import type { BoardPanel, EventHover, SlotClick } from '../board.models';
 import { DayColumn } from '../day-column/day-column';
 import { DayHeader } from '../day-header/day-header';
 
@@ -29,5 +29,7 @@ export class PersonPanel {
   readonly readOnly = input(false);
   readonly slotClick = output<SlotClick>();
   readonly eventClick = output<Uuid>();
+  readonly highlightedEventId = input<Uuid | null>(null);
+  readonly hover = output<EventHover | null>();
   readonly dayClick = output<IsoDate>();
 }

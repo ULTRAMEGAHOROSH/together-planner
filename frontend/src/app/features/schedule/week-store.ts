@@ -52,6 +52,7 @@ export class WeekStore {
   private readonly dataState = signal<WeekResponse | null>(null);
   private readonly errorState = signal<ApiError | null>(null);
   private readonly selectedDayState = signal<IsoDate | null>(null);
+  private readonly highlightedState = signal<string | null>(null);
 
   /** The week that was asked for (it may be ahead of `data` while loading). */
   readonly weekStart = this.weekStartState.asReadonly();
@@ -61,6 +62,8 @@ export class WeekStore {
   readonly error = this.errorState.asReadonly();
   /** The day asked for in the «День» mode; `null` — the whole week. */
   readonly selectedDay = this.selectedDayState.asReadonly();
+  /** The event under the pointer: all its cards, in both panels, carry the ring (WEEK-14). */
+  readonly highlightedEventId = this.highlightedState.asReadonly();
 
   /** «9 – 15 ноября 2026» of the requested week; empty before the first request. */
   readonly periodLabel = computed(() => {
@@ -156,6 +159,11 @@ export class WeekStore {
   /** Shows one day (`«День»`) or, with `null`, the whole week. No request: S1 holds the week. */
   selectDay(day: IsoDate | null): void {
     this.selectedDayState.set(day);
+  }
+
+  /** The pointer is on a card of this event, or (`null`) left it. No request. */
+  highlight(eventId: string | null): void {
+    this.highlightedState.set(eventId);
   }
 
   /** Asks the server again for the current week (after a change, or «Повторить»). */

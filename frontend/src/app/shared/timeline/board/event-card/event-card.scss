@@ -9,7 +9,8 @@
 
   // Lifted: the ring in the category dot color and the raised shadow.
   &:hover,
-  &:focus-within {
+  &:focus-within,
+  &.highlighted {
     z-index: 5;
     box-shadow:
       0 0 0 2px var(--ev-dot),

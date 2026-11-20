@@ -11,7 +11,7 @@ import type { IsoDate, Uuid } from '@core/api/models/common.models';
 import { ZoneClock } from '@core/time/zone-clock';
 import { PX_PER_HOUR, SCROLL_START_TOP, WEEK_MIN_WIDTH } from '../../engine/constants';
 import { nowMark, sameNowMark } from '../../engine/now-mark';
-import type { BoardPanel, SlotClick } from '../board.models';
+import type { BoardPanel, EventHover, SlotClick } from '../board.models';
 import { PersonPanel } from '../person-panel/person-panel';
 import { TimeGutter } from '../time-gutter/time-gutter';
 
@@ -49,6 +49,10 @@ export class ScheduleBoard {
   readonly dayClick = output<IsoDate>();
   /** A card was clicked or activated: `eventId` to open (FD-59). */
   readonly eventClick = output<Uuid>();
+  /** The event whose cards in every panel carry the ring (WEEK-14); `null` — none. */
+  readonly highlightedEventId = input<Uuid | null>(null);
+  /** The pointer is on a card (the card to anchor to) or left it (`null`). */
+  readonly eventHover = output<EventHover | null>();
 
   private readonly clock = inject(ZoneClock);
 
