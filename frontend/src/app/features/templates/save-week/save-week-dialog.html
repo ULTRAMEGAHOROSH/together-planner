@@ -1,0 +1,97 @@
+<tp-dialog-shell title="Сохранить неделю как шаблон">
+  <section class="group" aria-labelledby="tp-save-week">
+    <span class="label" id="tp-save-week">Неделя</span>
+    <div class="week">
+      <button
+        tpButton
+        variant="ghost"
+        size="sm"
+        type="button"
+        aria-label="Предыдущая неделя"
+        (click)="shiftWeek(-1)"
+      >
+        <tp-icon name="chevron-left" [size]="18" />
+      </button>
+      <div class="week-text" aria-live="polite">
+        <b [attr.title]="weekTitle()">{{ weekText() }}</b>
+        <span class="sub">{{ weekRelative() }}</span>
+      </div>
+      <button
+        tpButton
+        variant="ghost"
+        size="sm"
+        type="button"
+        aria-label="Следующая неделя"
+        (click)="shiftWeek(1)"
+      >
+        <tp-icon name="chevron-right" [size]="18" />
+      </button>
+    </div>
+  </section>
+
+  @switch (status()) {
+    @case ('loading') {
+      <tp-spinner label="Загружаем неделю…" />
+    }
+    @case ('error') {
+      <tp-error-state [text]="loadErrorText()" (retry)="load()" />
+    }
+    @default {
+      @if (draft(); as draft) {
+        @if (draft.tooMany) {
+          <p class="problem" role="alert">
+            В этой неделе {{ draft.count }} событий, а в шаблоне может быть не больше
+            {{ eventsMax }}. Выберите другую неделю.
+          </p>
+        } @else if (summary(); as text) {
+          <p class="summary">{{ text }}</p>
+        }
+        @if (skipped().length > 0) {
+          <section class="note" aria-label="Не попадут в шаблон">
+            <h3>Не попадут в шаблон: {{ skipped().length }}</h3>
+            <ul>
+              @for (line of skipped(); track $index) {
+                <li>{{ line }}</li>
+              }
+            </ul>
+          </section>
+        }
+        @if (clamped().length > 0) {
+          <section class="note" aria-label="Сокращены до недели">
+            <h3>Сокращены до одной недели: {{ clamped().length }}</h3>
+            <ul>
+              @for (line of clamped(); track $index) {
+                <li>{{ line }}</li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    }
+  }
+
+  <tp-form-field label="Название шаблона" [error]="nameError()">
+    <input
+      tpControl
+      type="text"
+      autocomplete="off"
+      [maxLength]="nameMax"
+      [value]="name()"
+      (input)="typeName($any($event.target).value)"
+    />
+  </tp-form-field>
+
+  <button tpButton tpDialogFooter variant="ghost" type="button" (click)="ref.close()">
+    Отмена
+  </button>
+  <button
+    tpButton
+    tpDialogFooter
+    type="button"
+    [loading]="saving()"
+    [disabled]="!canSave()"
+    (click)="save()"
+  >
+    Сохранить
+  </button>
+</tp-dialog-shell>

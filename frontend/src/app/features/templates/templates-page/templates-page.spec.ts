@@ -1,6 +1,7 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Dialog } from '@angular/cdk/dialog';
 import { provideRouter, Router } from '@angular/router';
 import {
   AUTH_RESPONSE,
@@ -63,7 +64,7 @@ describe('TemplatesPage (TPL-02)', () => {
   it('«+ Новый шаблон» goes to /templates/new', async () => {
     backend.expectOne(LIST).flush([]);
     await fixture.whenStable();
-    (host().querySelector('.head button') as HTMLButtonElement).click();
+    (host().querySelector('.head button:last-of-type') as HTMLButtonElement).click();
     expect(navigate).toHaveBeenCalledWith(['/templates', 'new']);
   });
 
@@ -80,6 +81,20 @@ describe('TemplatesPage (TPL-02)', () => {
     await fixture.whenStable();
     (host().querySelectorAll('tp-template-card button')[0] as HTMLButtonElement).click();
     expect(openForTemplate).toHaveBeenCalledWith(TEMPLATE_CREATED.id);
+  });
+
+  it('«Сохранить неделю как шаблон» opens the dialog and asks S1 for the current week (TPL-12)', async () => {
+    backend.expectOne(LIST).flush([TEMPLATE_CREATED]);
+    await fixture.whenStable();
+    const save = Array.from(host().querySelectorAll('.head button')).find((b) =>
+      b.textContent?.includes('Сохранить неделю как шаблон'),
+    ) as HTMLButtonElement;
+    save.click();
+    await fixture.whenStable();
+    const week = backend.expectOne((r) => r.url.endsWith('/week'));
+    expect(week.request.params.get('date')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(TestBed.inject(Dialog).openDialogs).toHaveLength(1);
+    TestBed.inject(Dialog).closeAll();
   });
 
   it('a failed load shows the error with «Повторить», which asks again', async () => {
