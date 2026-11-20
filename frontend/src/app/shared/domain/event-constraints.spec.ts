@@ -12,6 +12,7 @@ import {
   TEMPLATE_EVENTS_MAX,
   TEMPLATE_DURATION_MIN,
   TEMPLATE_DURATION_MAX,
+  TEMPLATE_END_DAY_OFFSET_MAX,
   WORKSPACE_NAME_MAX,
   TIME_ZONE_MAX,
   INVITE_CODE_MAX,
@@ -39,6 +40,7 @@ describe('event constraints (FD-82)', () => {
     expect(TEMPLATE_EVENTS_MAX).toBe(300);
     expect(TEMPLATE_DURATION_MIN).toBe(1);
     expect(TEMPLATE_DURATION_MAX).toBe(10080);
+    expect(TEMPLATE_END_DAY_OFFSET_MAX).toBe(7);
     expect(WORKSPACE_NAME_MAX).toBe(60);
     expect(TIME_ZONE_MAX).toBe(64);
     expect(INVITE_CODE_MAX).toBe(20);

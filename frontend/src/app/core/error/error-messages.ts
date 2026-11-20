@@ -67,4 +67,7 @@ export const FIELD_ERROR_MESSAGES = {
   tooLong: 'Слишком длинный текст.',
   invalid: 'Проверьте это поле.',
   noParticipants: 'Выберите хотя бы одного участника.',
+  templateEventsMax: (max: number) =>
+    `В шаблоне не больше ${max} ${plural(max, 'события', 'событий', 'событий')}.`,
+  templateEventTooLong: 'Событие шаблона не может длиться дольше недели.',
 } as const;

@@ -30,6 +30,11 @@ export const TEMPLATE_EVENTS_MAX = 300;
 /** Template event `durationMinutes`: 1..10080 (one week). Title and description as for events. */
 export const TEMPLATE_DURATION_MIN = 1;
 export const TEMPLATE_DURATION_MAX = 10080;
+/**
+ * «+N days» of the end of a template event: 0..7. The editor offers 0..6; 7 exists only for
+ * a full week (00:00 → 00:00 = 10080), which the backend allows and the form must round-trip.
+ */
+export const TEMPLATE_END_DAY_OFFSET_MAX = 7;
 
 // --- Workspace (spec §8.4) ---
 
