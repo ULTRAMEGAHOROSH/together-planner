@@ -1,0 +1,15 @@
+<ul class="list">
+  @for (row of rows(); track row.id) {
+    <li>
+      <button type="button" class="row" (click)="open.emit(row.id)">
+        <span class="dot" aria-hidden="true" [style.background]="row.dot"></span>
+        <span class="text">
+          <span class="title">{{ row.title }}</span>
+          <span class="when">{{ row.when }}</span>
+          <span class="meta">{{ row.who }} · {{ row.week }}</span>
+        </span>
+        <span class="rel">{{ row.rel }}</span>
+      </button>
+    </li>
+  }
+</ul>

@@ -127,3 +127,31 @@ test.describe('calendar (CAL-01)', () => {
     await expect(list.locator('.row', { hasText: 'Поездка к морю' })).toContainText('Дана и Ильяс');
   });
 });
+
+// CAL-03: «Показать все» — every upcoming event by E2, 20 at a time.
+test('«Показать все»: 20 events, «Показать ещё» brings the rest, a row opens the event', async ({
+  page,
+  request,
+  couple,
+}) => {
+  for (let i = 1; i <= 22; i++) {
+    const day = `2031-04-${String(i).padStart(2, '0')}`;
+    await createEvent(
+      request,
+      couple.a,
+      couple.workspace.id,
+      body(`Дело ${i}`, `${day}T10:00:00`, `${day}T11:00:00`, [couple.a.id]),
+    );
+  }
+  await loginViaUi(page, couple.a);
+  await page.goto('/calendar');
+  await page.getByRole('button', { name: 'Показать все' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.locator('.row')).toHaveCount(20);
+  await dialog.getByRole('button', { name: 'Показать ещё' }).click();
+  await expect(dialog.locator('.row')).toHaveCount(22);
+  await expect(dialog.getByRole('button', { name: 'Показать ещё' })).toHaveCount(0);
+
+  await dialog.locator('.row', { hasText: 'Дело 22' }).click();
+  await expect(page.getByRole('dialog').getByLabel('Название')).toHaveValue('Дело 22');
+});

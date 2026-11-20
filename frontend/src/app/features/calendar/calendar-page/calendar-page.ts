@@ -6,17 +6,20 @@ import { map } from 'rxjs';
 import type { IsoDate } from '@core/api/models/common.models';
 import { SessionStore } from '@core/auth/session-store';
 import { messageFor } from '@core/error/error-messages';
+import type { EventResponse } from '@core/api/models/event.models';
 import { ViewContext } from '@core/view/view-context';
 import { EventEditor } from '@features/events';
 import { weekUrl } from '@features/schedule';
 import { addDays, weekStartOf } from '@shared/time';
 import { NARROW_BREAKPOINT } from '@shared/timeline/engine/constants';
 import { Button } from '@shared/ui/button/button';
+import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { Icon } from '@shared/ui/icon/icon';
 import { CalendarStore } from '../calendar-store';
 import { CategoryLegend } from '../category-legend/category-legend';
 import { MonthGrid } from '../month-grid/month-grid';
+import { UpcomingAllDialog } from '../upcoming-all/upcoming-all-dialog';
 import { UpcomingList } from '../upcoming-list/upcoming-list';
 import { UpcomingStore } from '../upcoming-store';
 import {
@@ -115,6 +118,7 @@ const NARROW_QUERY = `(max-width: ${NARROW_BREAKPOINT - 0.02}px)`;
             [errorText]="upcomingError()"
             (open)="editUpcoming($event)"
             (create)="planFuture()"
+            (showAll)="showAllUpcoming()"
             (retry)="upcoming.reload()"
           />
           <tp-category-legend />
@@ -238,6 +242,7 @@ export class CalendarPage {
   private readonly router = inject(Router);
   private readonly viewContext = inject(ViewContext);
   private readonly editor = inject(EventEditor);
+  private readonly dialogs = inject(DialogService);
   private readonly breakpoints = inject(BreakpointObserver);
 
   protected readonly narrow = toSignal(
@@ -288,6 +293,15 @@ export class CalendarPage {
     if (event) {
       this.editor.openEdit(event);
     }
+  }
+
+  /** «Показать все»: every upcoming event by pages; the one picked opens for edit. */
+  protected showAllUpcoming(): void {
+    this.dialogs.open<EventResponse>(UpcomingAllDialog).subscribe((event) => {
+      if (event) {
+        this.editor.openEdit(event);
+      }
+    });
   }
 
   /** A row of «Запланировано»: the event, with its version, opens for edit. */

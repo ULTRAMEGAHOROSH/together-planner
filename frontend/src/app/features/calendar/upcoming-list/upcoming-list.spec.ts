@@ -15,6 +15,7 @@ import { UpcomingList } from './upcoming-list';
     [errorText]="error()"
     (open)="opened.push($event)"
     (create)="created = created + 1"
+    (showAll)="shownAll = shownAll + 1"
     (retry)="retried = retried + 1"
   />`,
 })
@@ -26,6 +27,7 @@ class Host {
   readonly members = WEEK.members;
   readonly opened: string[] = [];
   created = 0;
+  shownAll = 0;
   retried = 0;
 }
 
@@ -42,6 +44,15 @@ describe('UpcomingList (CAL-02)', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(Host);
     host = fixture.componentInstance;
+  });
+
+  it('CAL-03: «Показать все» is always there and says it was pressed', async () => {
+    await render();
+    const button = Array.from(el().querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Показать все',
+    )!;
+    button.click();
+    expect(host.shownAll).toBe(1);
   });
 
   it('the header, the hint and the button for the future are always there', async () => {

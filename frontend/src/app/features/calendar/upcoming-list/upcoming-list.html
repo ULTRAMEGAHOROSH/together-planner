@@ -7,23 +7,15 @@
   <tp-error-state [text]="text" (retry)="retry.emit()" />
 } @else if (loading()) {
   <div class="skeleton" role="status" aria-label="Загружаем события…"></div>
-} @else if (rows().length === 0) {
+} @else if (events().length === 0) {
   <tp-empty-state text="Пока ничего не запланировано." />
 } @else {
-  <ul class="list">
-    @for (row of rows(); track row.id) {
-      <li>
-        <button type="button" class="row" (click)="open.emit(row.id)">
-          <span class="dot" aria-hidden="true" [style.background]="row.dot"></span>
-          <span class="text">
-            <span class="title">{{ row.title }}</span>
-            <span class="when">{{ row.when }}</span>
-            <span class="meta">{{ row.who }} · {{ row.week }}</span>
-          </span>
-          <span class="rel">{{ row.rel }}</span>
-        </button>
-      </li>
-    }
-  </ul>
+  <tp-upcoming-rows
+    [events]="events()"
+    [members]="members()"
+    [today]="today()"
+    (open)="open.emit($event)"
+  />
 }
+<button type="button" class="all" (click)="showAll.emit()">Показать все</button>
 <button type="button" class="future" (click)="create.emit()">+ Запланировать на будущее</button>

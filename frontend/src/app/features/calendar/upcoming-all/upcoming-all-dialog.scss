@@ -1,0 +1,17 @@
+.skeleton {
+  height: 120px;
+  background: var(--tp-color-surface-soft);
+  border-radius: var(--tp-radius-lg);
+  animation: upcomingAllPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes upcomingAllPulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.more {
+  display: block;
+  margin: 8px auto 0;
+}
