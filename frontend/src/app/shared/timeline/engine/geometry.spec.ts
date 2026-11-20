@@ -64,9 +64,11 @@ describe('toBox (WEEK-04, FD-56)', () => {
 
   it('GM-07: the name of a joint card: title, rangeText and «вместе»', () => {
     const joint = ev('2026-11-11T19:00', '2026-11-11T21:00', [A, B], { title: 'Ужин' });
-    expect(toBox(seg(joint)).ariaLabel).toBe('Ужин, Ср, 11 нояб. · 19:00–21:00, вместе');
+    expect(toBox(seg(joint)).ariaLabel).toBe(
+      'Ужин 19:00–21:00. Ср, 11 нояб. · 19:00–21:00, вместе',
+    );
     const alone = ev('2026-11-11T19:00', '2026-11-11T21:00', [A], { title: 'Ужин' });
-    expect(toBox(seg(alone)).ariaLabel).toBe('Ужин, Ср, 11 нояб. · 19:00–21:00');
+    expect(toBox(seg(alone)).ariaLabel).toBe('Ужин 19:00–21:00. Ср, 11 нояб. · 19:00–21:00');
   });
 
   it('time and name are of the whole event on every day it touches', () => {
@@ -74,7 +76,7 @@ describe('toBox (WEEK-04, FD-56)', () => {
     const [friday, saturday] = [toBox(seg(night, 0, 1, 0)), toBox(seg(night, 0, 1, 1))];
     for (const box of [friday, saturday]) {
       expect(box.timeLabel).toBe('23:00–07:00');
-      expect(box.ariaLabel).toBe('Сон, Пт, 13 нояб. 23:00 → сб, 14 нояб. 07:00');
+      expect(box.ariaLabel).toBe('Сон 23:00–07:00. Пт, 13 нояб. 23:00 → сб, 14 нояб. 07:00');
       expect(box.eventId).toBe('n1');
     }
     expect([friday.key, saturday.key]).toEqual(['n1@2026-11-13', 'n1@2026-11-14']);

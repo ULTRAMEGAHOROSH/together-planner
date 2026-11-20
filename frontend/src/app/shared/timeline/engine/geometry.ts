@@ -29,6 +29,7 @@ export function toBox(segment: LaidOutSegment, pxPerMin = PX_PER_MIN): EventBox 
   const height = Math.max((segment.end - segment.start) * pxPerMin - CARD_GAP, MIN_CARD_HEIGHT);
   const start = formatLocalDateTime(event.startMin);
   const end = formatLocalDateTime(event.endMin);
+  const timeLabel = `${formatTime(minutesOfDay(event.startMin))}–${formatTime(minutesOfDay(event.endMin))}`;
   return {
     key: `${event.id}@${segment.date}`,
     eventId: event.id,
@@ -42,7 +43,8 @@ export function toBox(segment: LaidOutSegment, pxPerMin = PX_PER_MIN): EventBox 
     density: densityOf(height),
     fontSize: height < TINY_CARD_MAX_HEIGHT ? CARD_FONT_SIZE_TINY : CARD_FONT_SIZE,
     timeLabel: `${formatTime(minutesOfDay(event.startMin))}–${formatTime(minutesOfDay(event.endMin))}`,
-    ariaLabel: `${event.title}, ${rangeText(start, end)}${event.joint ? ', вместе' : ''}`,
+    // Starts with the visible text (WCAG 2.5.3), then the whole range with its date.
+    ariaLabel: `${event.title} ${timeLabel}. ${rangeText(start, end)}${event.joint ? ', вместе' : ''}`,
     colors: CATEGORY_PALETTE[event.color],
     joint: event.joint,
     fromTemplate: event.fromTemplate,

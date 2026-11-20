@@ -111,9 +111,11 @@ describe('tp-event-card (WEEK-06)', () => {
     const [joint] = boxes([monday('19:00', '21:00', { title: 'Ужин' }, [A, B])]);
     await render(joint);
     expect(button().type).toBe('button');
-    expect(button().getAttribute('aria-label')).toBe('Ужин, Пн, 9 нояб. · 19:00–21:00, вместе');
+    expect(button().getAttribute('aria-label')).toBe(
+      'Ужин 19:00–21:00. Пн, 9 нояб. · 19:00–21:00, вместе',
+    );
     await render(boxes([monday('19:00', '21:00', { title: 'Ужин' })])[0]);
-    expect(button().getAttribute('aria-label')).toBe('Ужин, Пн, 9 нояб. · 19:00–21:00');
+    expect(button().getAttribute('aria-label')).toBe('Ужин 19:00–21:00. Пн, 9 нояб. · 19:00–21:00');
   });
 
   it('a click → eventClick(eventId); a long title is cut by the layout, not rewritten', async () => {

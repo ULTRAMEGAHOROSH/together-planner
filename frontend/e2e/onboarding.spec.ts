@@ -37,7 +37,7 @@ test('registration, workspace, joining by the link, reload and sign-out', async 
 
     // 3. B sees both members in the header.
     await expect(
-      pageB.getByRole('button', { name: menuOf(`${a.displayName} и ${b.displayName}`) }),
+      pageB.getByRole('button', { name: menuOf(`${a.displayName} ${b.displayName}`) }),
     ).toBeVisible();
 
     // 4. A reloads (F5): still signed in, and now sees both.
@@ -46,11 +46,11 @@ test('registration, workspace, joining by the link, reload and sign-out', async 
     await page.reload();
     await expect(page).toHaveURL(/\/week\//);
     await expect(
-      page.getByRole('button', { name: menuOf(`${a.displayName} и ${b.displayName}`) }),
+      page.getByRole('button', { name: menuOf(`${a.displayName} ${b.displayName}`) }),
     ).toBeVisible();
 
     // 5. A signs out and lands on the login.
-    await page.getByRole('button', { name: menuOf(`${a.displayName} и ${b.displayName}`) }).click();
+    await page.getByRole('button', { name: menuOf(`${a.displayName} ${b.displayName}`) }).click();
     await page.getByRole('menuitem', { name: 'Выйти' }).click();
     await expect(page).toHaveURL(/\/login/);
   } finally {

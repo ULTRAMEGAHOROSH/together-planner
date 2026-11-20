@@ -91,7 +91,7 @@ describe('UserMenu (SHELL-02)', () => {
   it('with the partner in the workspace there is nothing to invite to', async () => {
     session.setWorkspace(WORKSPACE_FULL_PAIR);
     await stable();
-    expect(trigger().getAttribute('aria-label')).toBe('Меню: Даулет и Партнёр');
+    expect(trigger().getAttribute('aria-label')).toBe('Меню: Даулет Партнёр');
     await open();
     expect(labels()).toEqual(['Настройки', 'Выйти']);
   });

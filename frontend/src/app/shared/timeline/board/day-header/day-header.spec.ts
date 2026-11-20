@@ -53,7 +53,7 @@ describe('tp-day-header (WEEK-05)', () => {
     it('on a week it opens the day: the name says which, the click gives the date', async () => {
       const { host, picked } = await render(false);
       const button = host.querySelector('button')!;
-      expect(button.getAttribute('aria-label')).toBe('Открыть день: понедельник, 9 ноября');
+      expect(button.getAttribute('aria-label')).toBe('Пн 9 — открыть день: понедельник, 9 ноября');
       expect(host.textContent?.replace(/\s+/g, ' ').trim()).toBe('Пн 9');
       button.click();
       expect(picked).toEqual(['2026-11-09']);
@@ -61,7 +61,9 @@ describe('tp-day-header (WEEK-05)', () => {
 
     it('on an open day it leads back to the week', async () => {
       const { host } = await render(true);
-      expect(host.querySelector('button')?.getAttribute('aria-label')).toBe('Вернуться к неделе');
+      expect(host.querySelector('button')?.getAttribute('aria-label')).toBe(
+        'Пн 9 — вернуться к неделе',
+      );
     });
 
     it('without interactive it is a plain label', async () => {

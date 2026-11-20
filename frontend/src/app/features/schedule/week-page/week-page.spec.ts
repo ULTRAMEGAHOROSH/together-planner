@@ -510,7 +510,7 @@ describe('WeekPage day mode (WEEK-13)', () => {
   it('a day header opens the day, the same header leads back to the week', async () => {
     await start('/week/2026-11-23');
     await loadWeek('2026-11-23');
-    byName('Открыть день: среда, 25 ноября').click();
+    byName('Ср 25 — открыть день: среда, 25 ноября').click();
     await settle();
     expect(url()).toBe('/week/2026-11-23?day=2026-11-25');
     expect(localStorage.getItem('tp.week.view')).toBe('day');

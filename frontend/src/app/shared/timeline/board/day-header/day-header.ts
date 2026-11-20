@@ -24,7 +24,7 @@ import type { DayColumnLayout } from '../../engine/model';
       <button
         type="button"
         class="hit"
-        [attr.aria-label]="open() ? 'Вернуться к неделе' : 'Открыть день: ' + day().dateLabel"
+        [attr.aria-label]="accessibleName()"
         (click)="pick.emit(day().date)"
       >
         <ng-container *ngTemplateOutlet="label" />
@@ -41,6 +41,12 @@ import type { DayColumnLayout } from '../../engine/model';
 })
 export class DayHeader {
   readonly day = input.required<DayColumnLayout>();
+  /** Starts with the visible text «Пн 9» (WCAG 2.5.3: the name contains what is shown). */
+  protected accessibleName(): string {
+    const d = this.day();
+    const shown = d.dayOfMonth === null ? d.weekdayShort : d.weekdayShort + ' ' + d.dayOfMonth;
+    return shown + ' — ' + (this.open() ? 'вернуться к неделе' : 'открыть день: ' + d.dateLabel);
+  }
   readonly interactive = input(false);
   /** The board shows this one day: the header leads back to the week. */
   readonly open = input(false);

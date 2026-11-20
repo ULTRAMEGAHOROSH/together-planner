@@ -262,7 +262,7 @@ describe('tp-schedule-board day headers (WEEK-13)', () => {
     const labels = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('tp-day-header button'),
     ).map((b) => b.getAttribute('aria-label'));
-    expect(labels).toEqual(['Вернуться к неделе', 'Вернуться к неделе']);
+    expect(labels).toEqual(['Чт 12 — вернуться к неделе', 'Чт 12 — вернуться к неделе']);
   });
 });
 

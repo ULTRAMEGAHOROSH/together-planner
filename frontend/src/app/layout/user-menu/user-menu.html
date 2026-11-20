@@ -1,6 +1,6 @@
 <button type="button" class="trigger" [attr.aria-label]="label()" [tpMenuTriggerFor]="menu">
   @for (member of members(); track member.userId) {
-    <span class="member">
+    &ngsp;<span class="member">
       <tp-avatar [name]="member.displayName" [seat]="member.seat" />
       <span class="member-name">{{ member.displayName }}</span>
     </span>

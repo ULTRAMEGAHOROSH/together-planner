@@ -138,7 +138,7 @@ describe('AppHeader', () => {
     await fixture.whenStable();
     const trigger = el().querySelector('tp-user-menu button');
     expect(trigger?.getAttribute('aria-label')).toBe(
-      `Меню: ${first.displayName} и ${second.displayName}`,
+      `Меню: ${first.displayName} ${second.displayName}`,
     );
     expect(members()).toEqual([
       { name: first.displayName, avatar: first.displayName[0], seat1: true },

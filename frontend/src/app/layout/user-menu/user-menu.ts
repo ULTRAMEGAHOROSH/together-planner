@@ -32,7 +32,7 @@ export class UserMenu {
     () =>
       `Меню: ${this.members()
         .map((m) => m.displayName)
-        .join(' и ')}`,
+        .join(' ')}`,
   );
 
   protected openSettings(): void {
