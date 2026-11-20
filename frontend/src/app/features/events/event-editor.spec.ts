@@ -383,18 +383,16 @@ describe('EventEditor (EVT-04)', () => {
       remove().click();
       await appRef.whenStable();
 
-      backend
-        .expectOne(`${ONE}?version=4`)
-        .flush(
-          {
-            detail: 'x',
-            instance: ONE,
-            status: 500,
-            title: 'Server Error',
-            code: 'INTERNAL_ERROR',
-          },
-          { status: 500, statusText: 'Server Error' },
-        );
+      backend.expectOne(`${ONE}?version=4`).flush(
+        {
+          detail: 'x',
+          instance: ONE,
+          status: 500,
+          title: 'Server Error',
+          code: 'INTERNAL_ERROR',
+        },
+        { status: 500, statusText: 'Server Error' },
+      );
       await appRef.whenStable();
 
       expect(toast()?.text).toBe(ERROR_MESSAGES.INTERNAL_ERROR);
