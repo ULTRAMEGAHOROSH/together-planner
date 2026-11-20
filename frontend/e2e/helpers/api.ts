@@ -23,8 +23,13 @@ const API = '/api/v1';
 /** The backend refuses a state-changing request without it (CSRF guard, spec §10). */
 const HEADERS = { 'X-Requested-With': 'XMLHttpRequest' };
 
-/** One run of the whole suite: part of every e-mail, so reruns on the same DB do not clash. */
-export const RUN_ID = process.env['E2E_RUN_ID'] ?? Date.now().toString(36);
+/**
+ * Part of every e-mail, so reruns on the same DB do not clash. Every Playwright worker loads
+ * this file on its own, so a random tail keeps parallel workers apart; `E2E_RUN_ID` pins it.
+ */
+export const RUN_ID =
+  process.env['E2E_RUN_ID'] ??
+  `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 /** A password of a made-up user: long enough for the rules (8+), the same for all. */
 export const E2E_PASSWORD = 'E2e-password-1';
 export const DEFAULT_TIME_ZONE = 'Asia/Almaty';
