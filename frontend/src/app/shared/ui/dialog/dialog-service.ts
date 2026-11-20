@@ -18,6 +18,11 @@ export class DialogService {
   private readonly dialog = inject(Dialog);
   private nextId = 1;
 
+  /** Is any dialog open now (a background refresh must not rebuild the board under it). */
+  hasOpen(): boolean {
+    return this.dialog.openDialogs.length > 0;
+  }
+
   /**
    * Opens `component` at once. The component reads `data` with `inject(DIALOG_DATA)` and
    * closes itself with `inject(DialogRef).close(result)`. The observable emits the result

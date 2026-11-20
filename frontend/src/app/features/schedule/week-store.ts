@@ -1,6 +1,7 @@
 // The week on screen (FD-25…28, decisions §4): loads S1, keeps the previous week while the
 // next one loads, and turns the answer into the two panels of the board. Knows neither the
 // DOM nor the router: the page tells it which week to show.
+import { DOCUMENT } from '@angular/common';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, defer, map, of, Subject, switchMap, throwError } from 'rxjs';
@@ -12,7 +13,8 @@ import { WorkspaceRefresh } from '@core/auth/workspace-refresh';
 import { SessionStore } from '@core/auth/session-store';
 import { DataChanges } from '@core/changes/data-changes';
 import { ApiError, isApiError } from '@core/error/api-error';
-import { ZoneClock } from '@core/time/zone-clock';
+import { CLOCK, ZoneClock } from '@core/time/zone-clock';
+import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { addDays, daysBetween, weekLabel } from '@shared/time';
 import type { DayRange } from '@shared/timeline/engine/model';
 import type { BoardPanel } from '@shared/timeline/board/board.models';
@@ -29,6 +31,9 @@ export type WeekPanel =
 
 const SEATS: readonly Seat[] = [1, 2];
 
+/** WEEK-16: the tab coming back reloads the week at most this often. */
+export const RETURN_REFRESH_MIN_MS = 30_000;
+
 @Injectable()
 export class WeekStore {
   private readonly api = inject(WeekApi);
@@ -36,6 +41,11 @@ export class WeekStore {
   private readonly workspaceRefresh = inject(WorkspaceRefresh);
   private readonly zoneClock = inject(ZoneClock);
   private readonly requests = new Subject<IsoDate>();
+  private readonly document = inject(DOCUMENT);
+  private readonly dialogs = inject(DialogService);
+  private readonly now = inject(CLOCK);
+  /** When the last week arrived (epoch ms); `null` before the first one. */
+  private loadedAt: number | null = null;
 
   private readonly weekStartState = signal<IsoDate | null>(null);
   private readonly statusState = signal<WeekStatus>('idle');
@@ -127,6 +137,13 @@ export class WeekStore {
     inject(DataChanges)
       .events$.pipe(takeUntilDestroyed(inject(DestroyRef)))
       .subscribe(() => this.reload());
+
+    // WEEK-16: what the partner changed while this tab was hidden appears without F5.
+    const onVisible = () => this.refreshOnReturn();
+    this.document.addEventListener('visibilitychange', onVisible);
+    inject(DestroyRef).onDestroy(() =>
+      this.document.removeEventListener('visibilitychange', onVisible),
+    );
   }
 
   /** Shows the week that starts on `weekStart` (a Monday). */
@@ -149,6 +166,24 @@ export class WeekStore {
     }
   }
 
+  /**
+   * The tab became visible: reload the week, unless it is not showing a loaded week, a dialog
+   * is open (an edit in progress), or the week is younger than {@link RETURN_REFRESH_MIN_MS}.
+   * A failed background reload keeps the old board and says so like any other failed load.
+   */
+  private refreshOnReturn(): void {
+    if (
+      this.document.visibilityState !== 'visible' ||
+      this.status() !== 'ready' ||
+      this.loadedAt === null ||
+      this.now() - this.loadedAt < RETURN_REFRESH_MIN_MS ||
+      this.dialogs.hasOpen()
+    ) {
+      return;
+    }
+    this.reload();
+  }
+
   private load(date: IsoDate) {
     return defer(() => {
       const workspace = this.session.workspace();
@@ -168,6 +203,7 @@ export class WeekStore {
     result: { date: IsoDate; data: WeekResponse } | { date: IsoDate; error: ApiError },
   ) {
     if ('data' in result) {
+      this.loadedAt = this.now();
       this.dataState.set(result.data);
       this.errorState.set(null);
       this.statusState.set('ready');
