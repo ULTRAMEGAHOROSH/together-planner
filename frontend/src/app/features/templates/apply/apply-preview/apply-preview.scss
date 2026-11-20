@@ -1,0 +1,168 @@
+// The preview box of the prototype: a sunken panel with a small caps banner and stat tiles.
+:host {
+  display: block;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--tp-color-border-subtle);
+  border-radius: var(--tp-radius-board);
+  background: var(--tp-color-surface-soft);
+}
+
+.banner {
+  color: var(--tp-color-text-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--tp-radius-md);
+  background: var(--tp-color-danger-soft);
+  color: var(--tp-color-danger);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity var(--tp-duration-fast) ease;
+
+  // The next plan is on its way: this one is only kept so the dialog does not jump.
+  &.stale {
+    opacity: 0.5;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 8px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--tp-color-border-subtle);
+  border-radius: var(--tp-radius-lg);
+  background: var(--tp-color-surface);
+}
+
+.value {
+  font-family: var(--tp-font-display);
+  font-size: 22px;
+  font-weight: 800;
+
+  &.good {
+    color: var(--tp-color-positive);
+  }
+
+  &.bad {
+    color: var(--tp-color-danger);
+  }
+
+  &.plain {
+    color: var(--tp-color-text-2);
+  }
+}
+
+.label {
+  color: var(--tp-color-text-body);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.nothing {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--tp-radius-md);
+  background: var(--tp-color-free-bg);
+  color: var(--tp-color-free-text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--tp-color-border-subtle);
+  border-radius: var(--tp-radius-md);
+  background: var(--tp-color-surface);
+  font-size: 12.5px;
+
+  h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &.warn {
+    border-color: #f2d7a6;
+    background: #fff6e6;
+    color: #6b4300;
+  }
+
+  &.warn-delete {
+    border-color: var(--tp-color-danger-border);
+    background: var(--tp-color-danger-soft);
+    color: var(--tp-color-danger);
+  }
+
+  &.muted {
+    color: var(--tp-color-text-muted);
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    line-height: 1.4;
+  }
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day-title {
+  font-weight: 700;
+}
+
+.when {
+  font-variant-numeric: tabular-nums;
+}
+
+.who {
+  color: var(--tp-color-text-subtle);
+}
+
+.note {
+  margin: 0;
+  color: var(--tp-color-text-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}

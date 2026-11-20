@@ -12,6 +12,7 @@ import {
 import { SessionStore } from '@core/auth/session-store';
 import { errorInterceptor } from '@core/error/error-interceptor';
 import { CLOCK } from '@core/time/zone-clock';
+import { APPLY_PREVIEW_MERGE } from '@core/api/models/testing/samples';
 import { isMonday } from '@shared/time';
 import { DialogService } from '@shared/ui/dialog/dialog-service';
 import { dialogElement, pressEscape, provideVisibleElements } from '@shared/ui/dialog/testing';
@@ -44,7 +45,11 @@ describe('ApplyTemplateDialog (TPL-05)', () => {
     closed = [];
   });
 
-  afterEach(() => backend.verify());
+  afterEach(() => {
+    // The preview asks after a pause: a test that ends sooner leaves it unanswered.
+    backend.match((r) => r.url.endsWith('/apply/preview'));
+    backend.verify();
+  });
 
   const root = () => dialogElement() as HTMLElement;
   const radios = (group: string) =>
@@ -200,5 +205,81 @@ describe('ApplyTemplateDialog (TPL-05)', () => {
     backend.expectOne(LIST).flush([TEMPLATE_CREATED]);
     await appRef.whenStable();
     expect(radios('.options')).toHaveLength(1);
+  });
+
+  describe('preview (TPL-06)', () => {
+    const PREVIEW = (id: string) => `${LIST}/${id}/apply/preview`;
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 220));
+
+    it('asks T6 for the choice on screen and shows the plan in the dialog', async () => {
+      await open({ weekStart: '2026-11-25' });
+      await pause();
+      const req = backend.expectOne(PREVIEW(TEMPLATE_CREATED.id));
+      expect(req.request.body).toEqual({
+        weekStart: '2026-11-23',
+        mode: 'MERGE',
+        includeManual: false,
+        confirmedDeleteIds: null,
+        confirmedRestoredIds: null,
+      });
+      req.flush(APPLY_PREVIEW_MERGE);
+      await appRef.whenStable();
+      expect(root().querySelector('.banner')?.textContent).toContain('ничего ещё не сохранено');
+      expect(root().querySelector('.stat .value')?.textContent).toBe('+3');
+    });
+
+    it('a change of mode, week or template asks again; a burst makes one request', async () => {
+      await open({ weekStart: '2026-11-23' });
+      await pause();
+      backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(APPLY_PREVIEW_MERGE);
+      radios('.modes')[1].click();
+      button('Следующая неделя').click();
+      radios('.options')[1].click();
+      await appRef.whenStable();
+      await pause();
+      const req = backend.expectOne(PREVIEW('second-id'));
+      expect(req.request.body).toMatchObject({ weekStart: '2026-11-30', mode: 'FILL' });
+      req.flush({ ...APPLY_PREVIEW_MERGE, mode: 'FILL' });
+    });
+
+    it('«Заменить» with the tick asks with includeManual, and the tick shows the count of the plan', async () => {
+      await open({ weekStart: '2026-11-23' });
+      await pause();
+      backend.expectOne(PREVIEW(TEMPLATE_CREATED.id)).flush(APPLY_PREVIEW_MERGE);
+      await appRef.whenStable();
+      radios('.modes')[2].click();
+      await appRef.whenStable();
+      manual()!.click();
+      await appRef.whenStable();
+      await pause();
+      const req = backend.expectOne(PREVIEW(TEMPLATE_CREATED.id));
+      expect(req.request.body).toMatchObject({ mode: 'REPLACE', includeManual: true });
+      req.flush({ ...APPLY_PREVIEW_MERGE, mode: 'REPLACE' });
+      await appRef.whenStable();
+      expect(root().querySelector('.manual span')?.textContent?.replace(/\s+/g, ' ')).toContain(
+        '(4)',
+      );
+    });
+
+    it('AP-06: a failed T6 shows its message inside the dialog', async () => {
+      await open({ weekStart: '2026-11-23' });
+      await pause();
+      backend
+        .expectOne(PREVIEW(TEMPLATE_CREATED.id))
+        .flush(
+          { type: 'about:blank', title: 'x', status: 404, code: 'TEMPLATE_NOT_FOUND' },
+          { status: 404, statusText: 'Not Found' },
+        );
+      await appRef.whenStable();
+      expect(root().querySelector('tp-apply-preview .error')?.textContent).toBe(
+        'Уже удалено партнёром.',
+      );
+    });
+
+    it('no templates: no request', async () => {
+      await open({ weekStart: '2026-11-23' }, []);
+      await pause();
+      backend.expectNone(() => true);
+    });
   });
 });

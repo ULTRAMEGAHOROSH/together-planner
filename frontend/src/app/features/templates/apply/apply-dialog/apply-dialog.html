@@ -81,10 +81,22 @@
           [checked]="includeManual()"
           (change)="toggleIncludeManual($any($event.target).checked)"
         />
-        <span>Удалить также события, созданные вручную</span>
+        <span>
+          Удалить также события, созданные вручную
+          @if (manualCount() !== null) {
+            ({{ manualCount() }})
+          }
+        </span>
       </label>
     }
   </section>
+
+  <tp-apply-preview
+    [preview]="previewStore.preview()"
+    [status]="previewStore.status()"
+    [errorText]="previewError()"
+    [manualDeleted]="manualDeleted()"
+  />
 
   <button tpButton tpDialogFooter variant="ghost" type="button" (click)="ref.close()">
     Отмена

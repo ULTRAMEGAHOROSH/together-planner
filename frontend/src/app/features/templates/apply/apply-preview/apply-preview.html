@@ -1,0 +1,143 @@
+<section class="box" aria-labelledby="tp-preview-title" [attr.aria-busy]="loading()">
+  <span class="banner" id="tp-preview-title">Предпросмотр — ничего ещё не сохранено</span>
+
+  @if (errorText(); as text) {
+    <p class="error" role="alert">{{ text }}</p>
+  } @else if (preview() === null) {
+    @if (loading()) {
+      <tp-spinner label="Считаем предпросмотр…" />
+    }
+  } @else {
+    <div class="plan" [class.stale]="loading()">
+      <div class="stats">
+        @for (stat of stats(); track stat.key) {
+          <div class="stat">
+            <span class="value" [class]="stat.tone">{{ stat.value }}</span>
+            <span class="label">{{ stat.label }}</span>
+          </div>
+        }
+      </div>
+
+      @if (nothing()) {
+        <p class="nothing">{{ nothingText() }}</p>
+      }
+
+      @if (days().length > 0) {
+        <div class="block">
+          <h3>Будет добавлено: {{ preview()!.toCreate.length }}</h3>
+          @for (day of days(); track day.key) {
+            <div class="day">
+              <span class="day-title">{{ day.label }}</span>
+              <ul>
+                @for (line of day.lines; track line.key) {
+                  <li>
+                    <span class="when">{{ line.when }}</span>
+                    <span class="title">«{{ line.title }}»</span>
+                    <span class="who">{{ line.who }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
+
+      @if (toDelete().length > 0) {
+        <div class="block warn-delete">
+          <h3>Будет удалено: {{ toDelete().length }}</h3>
+          <ul>
+            @for (line of toDelete(); track line.key) {
+              <li>
+                <span class="when">{{ line.when }}</span>
+                <span class="title">«{{ line.title }}»</span>
+                <span class="who">{{ line.who }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (restored().length > 0) {
+        <div class="block">
+          <h3>Будет восстановлено: {{ restored().length }}</h3>
+          <p class="note">Вы удаляли эти события раньше, «Заменить» вернёт их.</p>
+          <ul>
+            @for (line of restored(); track line.key) {
+              <li>
+                <span class="when">{{ line.when }}</span>
+                <span class="title">«{{ line.title }}»</span>
+                <span class="who">{{ line.who }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (conflicts().length > 0) {
+        <div class="block warn">
+          <h3>Пересечения (блоки встанут рядом)</h3>
+          <ul>
+            @for (conflict of conflicts(); track conflict.key) {
+              <li>
+                <span class="when">{{ conflict.planned.when }}</span>
+                <span class="title">«{{ conflict.planned.title }}»</span>
+                <span class="who">({{ conflict.planned.who }})</span>
+                <span class="cross" aria-label="пересекается с">↔</span>
+                <span class="title">«{{ conflict.existing }}»</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (applied().length > 0) {
+        <div class="block muted">
+          <h3>Уже применено: {{ applied().length }}</h3>
+          <ul>
+            @for (line of applied(); track line.key) {
+              <li>
+                <span class="when">{{ line.when }}</span>
+                <span class="title">«{{ line.title }}»</span>
+                <span class="who">{{ line.who }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (deleted().length > 0) {
+        <div class="block muted">
+          <h3>Вы удаляли — не вернём: {{ deleted().length }}</h3>
+          <ul>
+            @for (line of deleted(); track line.key) {
+              <li>
+                <span class="when">{{ line.when }}</span>
+                <span class="title">«{{ line.title }}»</span>
+                <span class="who">{{ line.who }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (busy().length > 0) {
+        <div class="block muted">
+          <h3>День занят: {{ busy().length }}</h3>
+          <ul>
+            @for (line of busy(); track line.key) {
+              <li>
+                <span class="when">{{ line.when }}</span>
+                <span class="title">«{{ line.title }}»</span>
+                <span class="who">{{ line.who }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (manualHint(); as text) {
+        <p class="note">{{ text }}</p>
+      }
+    </div>
+  }
+</section>

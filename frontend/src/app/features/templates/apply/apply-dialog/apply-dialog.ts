@@ -1,5 +1,5 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal, untracked } from '@angular/core';
 import { DialogRef } from '@angular/cdk/dialog';
 import type { Observable } from 'rxjs';
 import type { IsoDate, Uuid } from '@core/api/models/common.models';
@@ -15,6 +15,8 @@ import { ErrorState } from '@shared/ui/error-state/error-state';
 import { Icon } from '@shared/ui/icon/icon';
 import { Spinner } from '@shared/ui/spinner/spinner';
 import { TemplatesStore } from '../../templates-store';
+import { ApplyPreviewStore } from '../apply-preview-store';
+import { ApplyPreviewView } from '../apply-preview/apply-preview';
 import {
   APPLY_MODE_OPTIONS,
   type ApplyParams,
@@ -39,8 +41,8 @@ export interface ApplyDialogData {
  */
 @Component({
   selector: 'tp-apply-dialog',
-  imports: [Button, DialogShell, ErrorState, Icon, Spinner],
-  providers: [TemplatesStore],
+  imports: [ApplyPreviewView, Button, DialogShell, ErrorState, Icon, Spinner],
+  providers: [TemplatesStore, ApplyPreviewStore],
   templateUrl: './apply-dialog.html',
   styleUrl: './apply-dialog.scss',
 })
@@ -48,6 +50,7 @@ export class ApplyTemplateDialog implements OnInit {
   protected readonly data = inject<ApplyDialogData>(DIALOG_DATA);
   protected readonly ref = inject<DialogRef<unknown>>(DialogRef);
   protected readonly store = inject(TemplatesStore);
+  protected readonly previewStore = inject(ApplyPreviewStore);
   private readonly session = inject(SessionStore);
   private readonly clock = inject(ZoneClock);
 
@@ -112,6 +115,28 @@ export class ApplyTemplateDialog implements OnInit {
   protected readonly noTemplates = computed(
     () => this.store.status() === 'ready' && this.store.templates().length === 0,
   );
+
+  /** Text of a failed T6, shown inside the dialog under the choice. */
+  protected readonly previewError = computed(() => {
+    const error = this.previewStore.error();
+    return error === null ? null : messageFor(error);
+  });
+  /** «Заменить» with the tick: the manual events are deleted, not kept. */
+  protected readonly manualDeleted = computed(
+    () => this.mode() === 'REPLACE' && this.includeManual(),
+  );
+  /** «(n)» after the tick, from the plan of the backend once it is there. */
+  protected readonly manualCount = computed(
+    () => this.previewStore.preview()?.manualEventsInWeek ?? null,
+  );
+
+  constructor() {
+    // Any change of the choice asks T6 again (debounced and cancelling in the store).
+    effect(() => {
+      const params = this.params();
+      untracked(() => this.previewStore.request(params));
+    });
+  }
 
   ngOnInit(): void {
     this.store.load();
