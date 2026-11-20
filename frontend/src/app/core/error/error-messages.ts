@@ -66,4 +66,5 @@ export const FIELD_ERROR_MESSAGES = {
   maxlength: (max: number) => `Не больше ${max} ${plural(max, 'символа', 'символов', 'символов')}.`,
   tooLong: 'Слишком длинный текст.',
   invalid: 'Проверьте это поле.',
+  noParticipants: 'Выберите хотя бы одного участника.',
 } as const;
