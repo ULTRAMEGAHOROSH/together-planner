@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import type { IsoDate, Uuid } from '@core/api/models/common.models';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import type { NowMark } from '../../engine/model';
@@ -28,6 +28,14 @@ export class PersonPanel {
   readonly dayNavigation = input(false);
   readonly readOnly = input(false);
   readonly slotClick = output<SlotClick>();
+
+  /** «за неделю 74 ч без учёта сна» (prototype, WEEK-17); «за день» for one day, «в шаблоне» in the read-only preview. */
+  protected readonly stat = computed(() => {
+    const { days, busyMinutes } = this.panel().layout;
+    const hours = Math.round(busyMinutes / 60);
+    const period = this.readOnly() ? 'в шаблоне' : days.length === 1 ? 'за день' : 'за неделю';
+    return `${period} ${hours} ч без учёта сна`;
+  });
   readonly eventClick = output<Uuid>();
   readonly highlightedEventId = input<Uuid | null>(null);
   readonly hover = output<EventHover | null>();

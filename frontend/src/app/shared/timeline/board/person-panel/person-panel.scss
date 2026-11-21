@@ -37,6 +37,16 @@
   white-space: nowrap;
 }
 
+.stat {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tp-color-text-subtle);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .days {
   display: grid;
   grid-template-columns: repeat(var(--days), minmax(0, 1fr));

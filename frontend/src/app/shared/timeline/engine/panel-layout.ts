@@ -45,5 +45,12 @@ export function buildPanelLayout(
       free: showFree ? freeSlotBoxes(events, date) : [],
     };
   });
-  return { personId, days };
+  return { personId, days, busyMinutes: busyMinutes(byDay.flat()) };
+}
+
+/** The sum of the clipped segments of the range, without sleep (WEEK-17). */
+export function busyMinutes(segments: readonly Segment[]): number {
+  return segments
+    .filter((segment) => segment.event.category !== 'SLEEP')
+    .reduce((sum, segment) => sum + (segment.end - segment.start), 0);
 }

@@ -102,3 +102,45 @@ describe('buildPanelLayout (WEEK-04)', () => {
     expect(saturday.days[0].boxes.map((b) => [b.top, b.height])).toEqual([[1, 278]]);
   });
 });
+
+describe('busyMinutes of a panel (WEEK-17)', () => {
+  const minutes = (events: Parameters<typeof buildPanelLayout>[0], range = W, who = A) =>
+    buildPanelLayout(events, range, who, TODAY).busyMinutes;
+
+  it('no events: 0', () => {
+    expect(minutes([])).toBe(0);
+  });
+
+  it("the sum of the member's events, only theirs", () => {
+    const events = [
+      ev('2026-11-09T09:00', '2026-11-09T13:00', [A]), // 4 h
+      ev('2026-11-10T14:00', '2026-11-10T15:30', [A, B]), // 1.5 h, joint: counts for both
+      ev('2026-11-10T10:00', '2026-11-10T12:00', [B]), // not A's
+    ];
+    expect(minutes(events)).toBe(330);
+    expect(minutes(events, W, B)).toBe(90 + 120);
+  });
+
+  it('sleep is not counted', () => {
+    const events = [
+      ev('2026-11-09T23:30', '2026-11-10T07:00', [A], { category: 'SLEEP' }),
+      ev('2026-11-10T09:00', '2026-11-10T10:00', [A]),
+    ];
+    expect(minutes(events)).toBe(60);
+  });
+
+  it('an event over midnight counts in each day it touches, the part outside the range does not', () => {
+    const night = ev('2026-11-15T22:00', '2026-11-16T02:00', [A]); // Sunday 2 h + Monday (outside) 2 h
+    expect(minutes([night])).toBe(120);
+    const oneDay: DayRange = { firstDay: '2026-11-16', dayCount: 1 };
+    expect(minutes([night], oneDay)).toBe(120); // the Monday part
+  });
+
+  it('overlapping events are counted each, as in the prototype', () => {
+    const events = [
+      ev('2026-11-09T09:00', '2026-11-09T11:00', [A]),
+      ev('2026-11-09T10:00', '2026-11-09T12:00', [A]),
+    ];
+    expect(minutes(events)).toBe(240);
+  });
+});

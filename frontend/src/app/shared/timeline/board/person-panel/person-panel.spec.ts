@@ -79,3 +79,34 @@ describe('tp-person-panel (WEEK-05)', () => {
     expect(clicks).toEqual([{ date: '2026-11-13', minute: 540, personId: B }]);
   });
 });
+
+describe('tp-person-panel: hours (WEEK-17)', () => {
+  const stat = async (dayCount: 1 | 7, readOnly = false) => {
+    const fixture = TestBed.createComponent(PersonPanel);
+    const events = [
+      ev('2026-11-09T09:00', '2026-11-09T13:00', [B]), // 4 h
+      ev('2026-11-09T23:00', '2026-11-10T07:00', [B], { category: 'SLEEP' }),
+      ev('2026-11-10T09:00', '2026-11-10T10:30', [B]), // 1.5 h
+    ];
+    fixture.componentRef.setInput('panel', {
+      name: 'Партнёр',
+      seat: 2,
+      layout: buildPanelLayout(events, { firstDay: '2026-11-09', dayCount }, B, { today: null }),
+    });
+    fixture.componentRef.setInput('readOnly', readOnly);
+    await fixture.whenStable();
+    return (fixture.nativeElement as HTMLElement).querySelector('.stat')?.textContent;
+  };
+
+  it('«за неделю N ч без учёта сна»: hours rounded, sleep left out', async () => {
+    expect(await stat(7)).toBe('за неделю 6 ч без учёта сна'); // 5.5 h → 6
+  });
+
+  it('one day: «за день», the hours of that day only', async () => {
+    expect(await stat(1)).toBe('за день 4 ч без учёта сна');
+  });
+
+  it('the read-only preview of a template: «в шаблоне»', async () => {
+    expect(await stat(7, true)).toBe('в шаблоне 6 ч без учёта сна');
+  });
+});

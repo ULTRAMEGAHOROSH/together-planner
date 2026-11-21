@@ -133,4 +133,9 @@ export interface DayColumnLayout {
 export interface PanelLayout {
   readonly personId: Uuid;
   readonly days: readonly DayColumnLayout[];
+  /**
+   * Minutes of the member's events inside the range, without sleep (WEEK-17): the clipped
+   * segments are summed, so events that overlap are counted each (as in the prototype).
+   */
+  readonly busyMinutes: number;
 }

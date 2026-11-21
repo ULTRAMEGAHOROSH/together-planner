@@ -2,6 +2,7 @@
   <div class="person">
     <tp-avatar [name]="panel().name" [seat]="panel().seat" size="sm" />
     <span class="name">{{ panel().name }}</span>
+    <span class="stat">{{ stat() }}</span>
   </div>
   <div class="days">
     @for (day of panel().layout.days; track day.date) {

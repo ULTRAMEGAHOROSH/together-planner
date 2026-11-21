@@ -94,3 +94,36 @@ test('free time: on by default, the toggle removes the green blocks', async ({
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('tp-free-slot')).toHaveCount(0);
 });
+
+// WEEK-17: «за неделю N ч без учёта сна» in the header of each panel.
+test('hours of the week in the panel header, sleep left out', async ({
+  page,
+  request,
+  couple,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'a phone shows one day: «за день»');
+  const ws = couple.workspace.id;
+  await createEvent(request, couple.a, ws, {
+    title: 'Работа',
+    description: null,
+    start: '2030-03-12T09:00:00',
+    end: '2030-03-12T18:00:00',
+    participantIds: [couple.a.id],
+    category: 'WORK',
+    color: null,
+  });
+  await createEvent(request, couple.a, ws, {
+    title: 'Сон',
+    description: null,
+    start: '2030-03-12T23:00:00',
+    end: '2030-03-13T07:00:00',
+    participantIds: [couple.a.id],
+    category: 'SLEEP',
+    color: null,
+  });
+  await loginViaUi(page, couple.a);
+  await page.goto('/week/2030-03-11');
+  const panels = page.locator('tp-person-panel');
+  await expect(panels.nth(0).locator('.stat')).toHaveText('за неделю 9 ч без учёта сна');
+  await expect(panels.nth(1).locator('.stat')).toHaveText('за неделю 0 ч без учёта сна');
+});
