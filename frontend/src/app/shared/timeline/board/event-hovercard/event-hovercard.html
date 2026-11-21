@@ -1,12 +1,21 @@
+<div class="cat">
+  <span class="dot" aria-hidden="true" [style.background]="dot()"></span>
+  <span class="cat-name">{{ categoryLabel() }}</span>
+</div>
 <div class="title">{{ event().title }}</div>
 <div class="when">{{ when() }}</div>
-@if (who()) {
-  <div class="who">{{ who() }}</div>
+<div class="who">{{ duration() }} · {{ who() }}</div>
+@if (crossesMidnight()) {
+  <div class="note midnight" [style.color]="sleep.fg" [style.background]="sleep.bg">
+    Переходит через полночь, поэтому показано в обоих днях.
+  </div>
 }
 @if (event().description; as text) {
-  <p class="description">{{ text }}</p>
+  <div class="description">{{ text }}</div>
 }
 @if (template(); as name) {
-  <div class="template">из шаблона «{{ name }}»</div>
+  <div class="note template">
+    Из шаблона «{{ name }}». Если изменить шаблон, это событие останется как есть.
+  </div>
 }
 <div class="hint">Нажмите, чтобы изменить</div>

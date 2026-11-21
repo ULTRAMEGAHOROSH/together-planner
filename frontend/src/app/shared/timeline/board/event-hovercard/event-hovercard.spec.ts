@@ -27,7 +27,10 @@ describe('EventHovercard (WEEK-14)', () => {
     });
     expect(text('.title')).toBe('Ужин');
     expect(text('.when')).toBe('Ср, 25 нояб. · 19:00–21:00');
-    expect(text('.who')).toBe(WEEK.members.map((m) => m.displayName).join(' и '));
+    expect(text('.cat')).toBeTruthy();
+    expect(text('.who')).toBe(
+      `2 ч · вместе: ${WEEK.members.map((m) => m.displayName).join(' и ')}`,
+    );
     expect(text('.description')).toBe('у моря');
     expect(el().querySelector('.template')).toBeNull();
     expect(text('.hint')).toBe('Нажмите, чтобы изменить');
@@ -41,8 +44,18 @@ describe('EventHovercard (WEEK-14)', () => {
       participantIds: [WEEK.members[0].userId],
       source: { templateEventId: 'te', weekStart: '2026-11-23', templateName: 'Обычная неделя' },
     });
-    expect(text('.template')).toBe('из шаблона «Обычная неделя»');
+    expect(text('.template')).toContain('Из шаблона «Обычная неделя»');
     expect(el().querySelector('.description')).toBeNull();
-    expect(text('.who')).toBe(WEEK.members[0].displayName);
+    expect(text('.who')).toContain(WEEK.members[0].displayName);
+    expect(el().querySelector('.midnight')).toBeNull();
+  });
+
+  it('an event over midnight says it is shown in both days', async () => {
+    await render({
+      ...EVENT_CREATED_MANUAL,
+      start: '2026-11-25T23:00:00',
+      end: '2026-11-26T01:00:00',
+    });
+    expect(text('.midnight')).toContain('через полночь');
   });
 });
