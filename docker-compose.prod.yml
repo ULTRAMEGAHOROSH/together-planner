@@ -1,0 +1,46 @@
+# Production on a single VM (Oracle Cloud Always Free). Only Caddy is published to the world:
+#   80/443 → Caddy (automatic HTTPS) → nginx of `frontend` → SPA and /api → backend → postgres.
+# Start:  docker compose -f docker-compose.prod.yml up -d --build
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    env_file: .env
+    volumes: [pgdata:/var/lib/postgresql]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SWAGGER_ENABLED: "false"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on: [backend]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [frontend]
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
