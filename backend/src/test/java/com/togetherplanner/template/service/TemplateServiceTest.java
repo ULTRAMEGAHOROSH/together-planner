@@ -40,7 +40,7 @@ class TemplateServiceTest {
     private final TemplateMapper templateMapper = new TemplateMapper();
     private final WorkspaceAccessService workspaceAccessService = mock(WorkspaceAccessService.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final TemplateService service = new TemplateService(
+    private final TemplateServiceImpl service = new TemplateServiceImpl(
             weekTemplateRepository, templateApplicationRepository, templateMapper, workspaceAccessService, clock);
 
     private final UUID wsId = UUID.randomUUID();

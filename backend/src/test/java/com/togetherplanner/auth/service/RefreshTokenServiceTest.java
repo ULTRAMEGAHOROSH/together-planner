@@ -38,7 +38,7 @@ class RefreshTokenServiceTest {
     private final SecurityProperties properties = new SecurityProperties(
             Base64.getEncoder().encodeToString("x".repeat(32).getBytes()), "together-planner",
             Duration.ofMinutes(15), Duration.ofDays(30), Duration.ofSeconds(10), false);
-    private final RefreshTokenService service = new RefreshTokenService(repository, properties, jwtService, clock);
+    private final RefreshTokenServiceImpl service = new RefreshTokenServiceImpl(repository, properties, jwtService, clock);
 
     @Test
     void validTokenIsRotatedAndANewOneIsIssued() {

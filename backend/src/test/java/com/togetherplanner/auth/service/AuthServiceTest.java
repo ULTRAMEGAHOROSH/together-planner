@@ -28,7 +28,7 @@ class AuthServiceTest {
     private final UserService userService = mock(UserService.class);
     private final WorkspaceService workspaceService = mock(WorkspaceService.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
-    private final AuthService authService = new AuthService(userService, workspaceService, passwordEncoder);
+    private final AuthServiceImpl authService = new AuthServiceImpl(userService, workspaceService, passwordEncoder);
 
     @BeforeEach
     void initDummyHash() {

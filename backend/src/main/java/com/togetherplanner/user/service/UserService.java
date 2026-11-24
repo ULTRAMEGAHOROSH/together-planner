@@ -2,51 +2,19 @@ package com.togetherplanner.user.service;
 
 import com.togetherplanner.user.dto.UserCredentials;
 import com.togetherplanner.user.dto.UserResponse;
-import com.togetherplanner.user.entity.User;
-import com.togetherplanner.user.mapper.UserMapper;
-import com.togetherplanner.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.time.Clock;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-/** Called by the auth and workspace modules. */
-@Service
-@RequiredArgsConstructor
-public class UserService {
+/** Users: creation and lookups (credentials, profile, display names). */
+public interface UserService {
 
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final Clock clock;
+    UUID create(String email, String displayName, String passwordHash);
 
-    public UUID create(String email, String displayName, String passwordHash) {
-        User user = new User(email, displayName, passwordHash, clock.instant());
-        return userRepository.save(user).getId();
-    }
+    Optional<UserCredentials> findCredentialsByEmail(String email);
 
-    public Optional<UserCredentials> findCredentialsByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .map(u -> new UserCredentials(u.getId(), u.getPasswordHash()));
-    }
+    UserResponse getById(UUID id);
 
-    public UserResponse getById(UUID id) {
-        User user = userRepository.findById(id)
-                // There's no user deletion in this app, so a valid JWT should
-                // always point to an existing user. If it doesn't, that's a
-                // bug, not an expected client error - hence IllegalStateException
-                // rather than ApiException.
-                .orElseThrow(() -> new IllegalStateException(
-                        "User " + id + " referenced by a valid token no longer exists"));
-        return userMapper.toResponse(user);
-    }
-
-    public Map<UUID, String> displayNames(Collection<UUID> ids) {
-        return userRepository.findByIdIn(ids).stream()
-                .collect(Collectors.toMap(User::getId, User::getDisplayName));
-    }
+    Map<UUID, String> displayNames(Collection<UUID> ids);
 }
