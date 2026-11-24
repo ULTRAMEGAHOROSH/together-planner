@@ -2,8 +2,6 @@
 
 Приложение для двоих: общая неделя, события, шаблоны. Backend — модульный монолит: Java 21, Spring Boot 4.1.2,
 Spring Security (JWT), Spring Data JPA/Hibernate, PostgreSQL 18, Flyway.
-Полная спецификация — [docs/backend-spec-v2.md](docs/backend-spec-v2.md),
-план реализации по этапам — [docs/backend-implementation-roadmap.md](docs/backend-implementation-roadmap.md).
 
 ## Требования
 
@@ -93,9 +91,6 @@ cd backend
 ## Frontend
 
 Angular 22 (standalone, signals), Angular CDK, vitest, Playwright. Код — `frontend/`.
-Документы: [решения](docs/frontend-final-decisions.md),
-[план задач и журнал](docs/frontend-final-roadmap.md),
-[руководство по разработке](docs/frontend-development-guide.md).
 
 **Требования:** Node.js 24 (npm 11), поднятый backend на `localhost:8080` (см. выше).
 Для E2E — Chrome (Playwright использует установленный канал Chrome).
@@ -133,8 +128,6 @@ docker compose --profile app up --build
 
 ## Структура репозитория
 
-- `backend/` — исходный код и тесты (Maven-проект; модульный монолит —
-  границы модулей описаны в [docs/backend-spec-v2.md](docs/backend-spec-v2.md), §6).
+- `backend/` — исходный код и тесты (Maven-проект, модульный монолит).
 - `frontend/` — Angular-приложение, тесты и E2E (`frontend/e2e`), nginx-конфиг для образа.
-- `docs/` — спецификация backend, аудит, план реализации и frontend-документы.
 - `docker-compose.yml`, `backend/Dockerfile` — инфраструктура (§12.3 спецификации).
