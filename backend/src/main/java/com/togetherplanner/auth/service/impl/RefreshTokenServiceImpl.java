@@ -1,9 +1,10 @@
-package com.togetherplanner.auth.service;
+package com.togetherplanner.auth.service.impl;
 
 import com.togetherplanner.auth.dto.IssuedTokens;
 import com.togetherplanner.auth.entity.RefreshToken;
 import com.togetherplanner.auth.entity.RevokeReason;
 import com.togetherplanner.auth.repository.RefreshTokenRepository;
+import com.togetherplanner.auth.service.RefreshTokenService;
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
 import com.togetherplanner.security.IssuedAccessToken;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

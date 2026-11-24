@@ -1,4 +1,4 @@
-package com.togetherplanner.template.service;
+package com.togetherplanner.template.service.impl;
 
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
@@ -12,11 +12,11 @@ import com.togetherplanner.template.entity.WeekTemplate;
 import com.togetherplanner.template.mapper.TemplateMapper;
 import com.togetherplanner.template.repository.TemplateApplicationRepository;
 import com.togetherplanner.template.repository.WeekTemplateRepository;
+import com.togetherplanner.template.service.TemplateService;
 import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Clock;
 import java.util.HashSet;
 import java.util.List;

@@ -1,15 +1,15 @@
-package com.togetherplanner.template.service;
+package com.togetherplanner.template.service.impl;
 
 import com.togetherplanner.event.dto.TemplateOccurrenceDeletedEvent;
 import com.togetherplanner.template.entity.OccurrenceExclusion;
 import com.togetherplanner.template.entity.OccurrenceExclusionId;
 import com.togetherplanner.template.repository.OccurrenceExclusionRepository;
 import com.togetherplanner.template.repository.TemplateEventRepository;
+import com.togetherplanner.template.service.OccurrenceExclusionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;

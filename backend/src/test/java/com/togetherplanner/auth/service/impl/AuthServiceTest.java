@@ -1,4 +1,4 @@
-package com.togetherplanner.auth.service;
+package com.togetherplanner.auth.service.impl;
 
 import com.togetherplanner.auth.dto.RegisterRequest;
 import com.togetherplanner.common.error.ApiException;

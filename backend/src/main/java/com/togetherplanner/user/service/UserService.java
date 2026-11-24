@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Users: creation and lookups (credentials, profile, display names). */
 public interface UserService {
 
     UUID create(String email, String displayName, String passwordHash);

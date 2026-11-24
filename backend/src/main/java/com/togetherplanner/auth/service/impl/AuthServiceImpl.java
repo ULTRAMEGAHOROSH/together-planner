@@ -1,8 +1,10 @@
-package com.togetherplanner.auth.service;
+package com.togetherplanner.auth.service.impl;
 
 import com.togetherplanner.auth.dto.LoginRequest;
 import com.togetherplanner.auth.dto.MeResponse;
 import com.togetherplanner.auth.dto.RegisterRequest;
+import com.togetherplanner.auth.service.AuthService;
+import com.togetherplanner.auth.service.RefreshTokenService;
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
 import com.togetherplanner.user.dto.UserCredentials;
@@ -14,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Optional;

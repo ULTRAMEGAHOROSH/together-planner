@@ -1,4 +1,4 @@
-package com.togetherplanner.template.service;
+package com.togetherplanner.template.service.impl;
 
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;

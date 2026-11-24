@@ -1,4 +1,4 @@
-package com.togetherplanner.workspace.service;
+package com.togetherplanner.workspace.service.impl;
 
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
@@ -13,11 +13,12 @@ import com.togetherplanner.workspace.mapper.WorkspaceMapper;
 import com.togetherplanner.workspace.repository.WorkspaceInviteRepository;
 import com.togetherplanner.workspace.repository.WorkspaceMemberRepository;
 import com.togetherplanner.workspace.repository.WorkspaceRepository;
+import com.togetherplanner.workspace.service.InviteCodeGenerator;
+import com.togetherplanner.workspace.service.InviteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;

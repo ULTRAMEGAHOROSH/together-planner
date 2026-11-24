@@ -1,4 +1,4 @@
-package com.togetherplanner.template.service;
+package com.togetherplanner.template.service.impl;
 
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
@@ -21,13 +21,15 @@ import com.togetherplanner.template.entity.WeekTemplate;
 import com.togetherplanner.template.mapper.TemplateMapper;
 import com.togetherplanner.template.repository.TemplateApplicationRepository;
 import com.togetherplanner.template.repository.WeekTemplateRepository;
+import com.togetherplanner.template.service.ApplyPlanner;
+import com.togetherplanner.template.service.OccurrenceExclusionService;
+import com.togetherplanner.template.service.TemplateApplyService;
 import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;

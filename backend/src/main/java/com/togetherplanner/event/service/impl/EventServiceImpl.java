@@ -1,4 +1,4 @@
-package com.togetherplanner.event.service;
+package com.togetherplanner.event.service.impl;
 
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
@@ -13,6 +13,9 @@ import com.togetherplanner.event.entity.Event;
 import com.togetherplanner.event.entity.EventSource;
 import com.togetherplanner.event.mapper.EventMapper;
 import com.togetherplanner.event.repository.EventRepository;
+import com.togetherplanner.event.service.EventService;
+import com.togetherplanner.event.service.EventValidator;
+import com.togetherplanner.event.service.ValidatedEventTimes;
 import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -20,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

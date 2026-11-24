@@ -1,16 +1,16 @@
-package com.togetherplanner.schedule.service;
+package com.togetherplanner.schedule.service.impl;
 
-import com.togetherplanner.common.time.TimeService;
 import com.togetherplanner.common.time.TimeRules;
+import com.togetherplanner.common.time.TimeService;
 import com.togetherplanner.event.service.EventService;
 import com.togetherplanner.schedule.dto.WeekResponse;
+import com.togetherplanner.schedule.service.WeekViewService;
 import com.togetherplanner.template.service.TemplateApplyService;
 import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import com.togetherplanner.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;

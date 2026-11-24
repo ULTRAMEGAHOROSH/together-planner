@@ -1,4 +1,4 @@
-package com.togetherplanner.auth.service;
+package com.togetherplanner.auth.service.impl;
 
 import com.togetherplanner.auth.dto.IssuedTokens;
 import com.togetherplanner.auth.entity.RefreshToken;

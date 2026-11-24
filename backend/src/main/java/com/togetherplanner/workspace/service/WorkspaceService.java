@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Workspaces: create, read, update and list members. */
 public interface WorkspaceService {
 
     WorkspaceResponse create(UUID userId, CreateWorkspaceRequest request);

@@ -1,8 +1,8 @@
-package com.togetherplanner.common.time;
+package com.togetherplanner.common.time.impl;
 
+import com.togetherplanner.common.time.TimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

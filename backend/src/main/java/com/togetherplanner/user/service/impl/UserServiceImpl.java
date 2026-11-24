@@ -1,13 +1,13 @@
-package com.togetherplanner.user.service;
+package com.togetherplanner.user.service.impl;
 
 import com.togetherplanner.user.dto.UserCredentials;
 import com.togetherplanner.user.dto.UserResponse;
 import com.togetherplanner.user.entity.User;
 import com.togetherplanner.user.mapper.UserMapper;
 import com.togetherplanner.user.repository.UserRepository;
+import com.togetherplanner.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.util.Collection;
 import java.util.Map;

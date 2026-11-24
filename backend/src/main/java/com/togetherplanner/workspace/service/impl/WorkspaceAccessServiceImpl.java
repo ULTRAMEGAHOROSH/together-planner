@@ -1,4 +1,4 @@
-package com.togetherplanner.workspace.service;
+package com.togetherplanner.workspace.service.impl;
 
 import com.togetherplanner.common.error.ApiException;
 import com.togetherplanner.common.error.ErrorCode;
@@ -6,9 +6,9 @@ import com.togetherplanner.workspace.entity.Workspace;
 import com.togetherplanner.workspace.entity.WorkspaceMember;
 import com.togetherplanner.workspace.repository.WorkspaceMemberRepository;
 import com.togetherplanner.workspace.repository.WorkspaceRepository;
+import com.togetherplanner.workspace.service.WorkspaceAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.time.ZoneId;
 import java.util.Set;
 import java.util.UUID;
